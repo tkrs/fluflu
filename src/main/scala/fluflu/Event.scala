@@ -1,7 +1,7 @@
 package fluflu
 
 case class Event[A](
-  tag: String,
-  time: Long = System.currentTimeMillis,
-  record: A
+  label: String,
+  record: A,
+  time: Long = System.currentTimeMillis / 1000
 )

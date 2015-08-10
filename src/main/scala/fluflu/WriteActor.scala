@@ -15,7 +15,7 @@ object WriteActor {
     port: Int = 24224,
     timeout: Int = 3 * 1000,
     bufferCapacity: Int = 1 * 1024 * 1024
-  )(implicit strategy: Strategy, f: Event[A] => Json) =
+  )(implicit strategy: Strategy, f: A => Json) =
     new WriteActor[A](tagPrefix, host, port, timeout, bufferCapacity)
 }
 
@@ -25,29 +25,31 @@ class WriteActor[A](
     val port: Int,
     val timeout: Int,
     val bufferCapacity: Int
-)(implicit strategy: Strategy, f: Event[A] => Json) {
+)(implicit strategy: Strategy, f: A => Json) {
 
   import Actor._
 
   val name = s"${host}_${port}_${timeout}_${bufferCapacity}"
 
   private[this] val server = new InetSocketAddress(host, port)
-  private[this] val channel = SocketChannel.open(server)
+  val channel = SocketChannel.open(server)
   channel.socket().setSoTimeout(timeout)
 
   private[this] val act: Actor[Event[A]] =
     actor(
       { msg =>
-        val b = buf(msg)
-        channel.write(b)
+        channel.write(createBuffer(msg))
       }, { e: Throwable =>
-        println(e)
+        e.printStackTrace()
       }
     )
   def !(evt: Event[A]) = act ! evt
 
-  private[this] def buf(evt: Event[A])(implicit f: Event[A] => Json): Array[ByteBuffer] = {
-    val event = f(evt)
+  private[this] def createBuffer(evt: Event[A])(implicit f: A => Json): Array[ByteBuffer] = {
+    val tag = jString(s"${tagPrefix}.${evt.label}")
+    val time = jNumber(evt.time)
+    val record = f(evt.record)
+    val event = jArrayElements(tag, time, record)
     val instance = ArgonautMsgpack.jsonCodec(
       ArgonautUnpackOptions.default
     )
@@ -56,5 +58,7 @@ class WriteActor[A](
   }
 
   override def toString = name
+
+  override def finalize() = channel.close()
 
 }
