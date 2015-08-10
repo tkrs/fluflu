@@ -38,7 +38,7 @@ class WriteActor[A](
   private[this] val act: Actor[Event[A]] =
     actor(
       { msg =>
-        val _ = !channel.isConnected || channel.connect(server)
+        val _ = channel.isConnected || channel.connect(server)
         val __ = channel.write(createBuffer(msg))
       }, { e: Throwable =>
         e.printStackTrace()
