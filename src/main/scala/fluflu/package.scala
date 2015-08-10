@@ -1,10 +1,9 @@
 package object fluflu {
-
   // import argonaut._, Argonaut._, Shapeless._
   //
-  // implicitly[EncodeJson[Record]]
+  // implicitly[EncodeJson[Event[Record]]]
   //
-  // implicitly[DecodeJson[Record]]
+  // implicitly[DecodeJson[Event[Record]]]
   //
-  // implicit def record2Json(r: Record): Json = r.asJson
+  // implicit def record2Json(evt: Event[Record]): Json = evt.asJson
 }

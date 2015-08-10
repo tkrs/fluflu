@@ -47,7 +47,6 @@ class WriteActor[A](
   def !(evt: Event[A]) = act ! evt
 
   private[this] def buf(evt: Event[A])(implicit f: Event[A] => Json): Array[ByteBuffer] = {
-    // val event = Json("tag" := jString(s"${tag}.${evt.tag}")) -->>: Json("time" := jNumber(evt.time)) -->>: f(evt.record)
     val event = f(evt)
     val instance = ArgonautMsgpack.jsonCodec(
       ArgonautUnpackOptions.default
