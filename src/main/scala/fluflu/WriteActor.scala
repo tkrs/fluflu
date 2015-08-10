@@ -60,6 +60,9 @@ class WriteActor[A](
 
   override def toString = name
 
-  override def finalize() = channel.close()
+  override def finalize(): Unit = {
+    super.finalize()
+    channel.close()
+  }
 
 }
