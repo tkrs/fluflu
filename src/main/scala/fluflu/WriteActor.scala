@@ -59,7 +59,6 @@ class WriteActor[A](
   private[this] val act: Actor[Event[A]] =
     actor(
       { msg =>
-        println(msg)
         channel.isConnected || {
           channel = SocketChannel.open()
           connect(channel, server)
