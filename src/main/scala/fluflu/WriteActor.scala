@@ -1,12 +1,13 @@
 package fluflu
 
-import java.net.InetSocketAddress
+import java.net.{ InetSocketAddress, StandardSocketOptions }
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 
 import argonaut._, Argonaut._
 import msgpack4z._
 import scalaz.concurrent._
+import scala.util.Try
 
 object WriteActor {
   def apply[A](
@@ -31,17 +32,43 @@ class WriteActor[A](
 
   val name = s"${host}_${port}_${timeout}_${bufferCapacity}"
 
+  var channel = SocketChannel.open()
+
   private[this] val server = new InetSocketAddress(host, port)
-  val channel = SocketChannel.open(server)
-  channel.socket().setSoTimeout(timeout)
+
+  def connect(ch: SocketChannel, remote: InetSocketAddress): Boolean = {
+
+    val tryChannel = Try {
+      ch.socket().setSoTimeout(timeout)
+      ch.setOption[java.lang.Boolean](StandardSocketOptions.SO_REUSEADDR, true);
+      ch.setOption[java.lang.Boolean](StandardSocketOptions.SO_KEEPALIVE, true);
+      ch.connect(remote)
+    } recover {
+      case e: Throwable =>
+        e.printStackTrace()
+        false
+      case e => false
+    }
+
+    tryChannel.getOrElse(false)
+
+  }
+
+  connect(channel, server)
 
   private[this] val act: Actor[Event[A]] =
     actor(
       { msg =>
-        val _ = channel.isConnected || channel.connect(server)
-        val __ = channel.write(createBuffer(msg))
+        println(msg)
+        channel.isConnected || {
+          channel = SocketChannel.open()
+          connect(channel, server)
+        }
+        channel.write(createBuffer(msg))
       }, { e: Throwable =>
+        if (channel.isConnected) channel.close()
         e.printStackTrace()
+        throw e
       }
     )
   def !(evt: Event[A]) = act ! evt
