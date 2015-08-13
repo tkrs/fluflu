@@ -38,8 +38,8 @@ class DefaultSender(
       import java.lang.{ Boolean => JBool, Integer => JInt }
       import StandardSocketOptions._
       channel.socket().setSoTimeout(timeout)
-      channel.setOption[JBool](SO_REUSEADDR, true);
-      channel.setOption[JBool](SO_KEEPALIVE, true);
+      channel.setOption[JBool](SO_REUSEADDR, true)
+      channel.setOption[JBool](SO_KEEPALIVE, true)
       channel.connect(remote)
     } recover {
       case e: Throwable =>
