@@ -1,7 +1,5 @@
 package fluflu
 
-import argonaut._, Argonaut._
-import msgpack4z._
 import scalaz.concurrent._
 
 object WriteActor {

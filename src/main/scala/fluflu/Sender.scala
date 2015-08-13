@@ -35,7 +35,7 @@ class DefaultSender(
 
   private[this] def connect(): Boolean = {
     Try {
-      import java.lang.{ Boolean => JBool, Integer => JInt }
+      import java.lang.{ Boolean => JBool }
       import StandardSocketOptions._
       channel.socket().setSoTimeout(timeout)
       channel.setOption[JBool](SO_REUSEADDR, true)
