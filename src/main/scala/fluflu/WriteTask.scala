@@ -7,7 +7,12 @@ object WriteTask {
   def apply[A](
     tagPrefix: String,
     bufferCapacity: Int = 1 * 1024 * 1024
-  )(implicit sender: Sender, strategy: Strategy, decoder: RecordDecoder[A]) =
+  )(
+    implicit
+    sender: Sender,
+    strategy: Strategy,
+    decoder: RecordDecoder[A]
+  ) =
     new WriteTask[A](tagPrefix, bufferCapacity)
 
 }
@@ -15,7 +20,12 @@ object WriteTask {
 class WriteTask[A](
     val tagPrefix: String,
     val bufferCapacity: Int
-)(implicit sender: Sender, strategy: Strategy, decoder: RecordDecoder[A]) {
+)(
+    implicit
+    sender: Sender,
+    strategy: Strategy,
+    decoder: RecordDecoder[A]
+) {
 
   private[this] def write(event: Event[A]) = {
     val buf = Utils.createBuffer(tagPrefix, bufferCapacity, event)

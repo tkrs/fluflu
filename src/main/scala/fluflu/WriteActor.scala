@@ -6,7 +6,13 @@ object WriteActor {
   def apply[A](
     tagPrefix: String,
     bufferCapacity: Int = 1 * 1024 * 1024
-  )(implicit sender: Sender, strategy: Strategy, decoder: RecordDecoder[A], onError: Throwable => Unit) =
+  )(
+    implicit
+    sender: Sender,
+    strategy: Strategy,
+    decoder: RecordDecoder[A],
+    onError: Throwable => Unit
+  ) =
     new WriteActor[A](tagPrefix, bufferCapacity)
 
 }
@@ -14,7 +20,13 @@ object WriteActor {
 class WriteActor[A](
     val tagPrefix: String,
     val bufferCapacity: Int
-)(implicit sender: Sender, strategy: Strategy, decoder: RecordDecoder[A], onError: Throwable => Unit) {
+)(
+    implicit
+    sender: Sender,
+    strategy: Strategy,
+    decoder: RecordDecoder[A],
+    onError: Throwable => Unit
+) {
 
   import Actor._
 
