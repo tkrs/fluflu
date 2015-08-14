@@ -25,7 +25,6 @@ val a = WriteActor[Person]("tag-prefix")
 a ! event
 
 // Task case
-
 val t = WriteTask[Person]("tag-prefix")
 t(event) // => Task[Event[Person]]
 t run event // => Long
