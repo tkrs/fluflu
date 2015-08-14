@@ -17,7 +17,7 @@ implicit val personDecoder = RecordDecoder[Person] { person =>
 }
 import fluflu.WriteActorFunc.DefaultErrorHandle
 
-val person = Person("Takeru", 31)
+val person = Person("tkrs", 31)
 val event = Event("label.xxx", person)
 
 // Actor case
