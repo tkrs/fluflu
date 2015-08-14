@@ -39,8 +39,8 @@ scalacOptions := Seq(
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 lazy val scalazVersion = "7.1.3"
-lazy val scalacheckVersion = "1.12.3"
-lazy val scalatestVersion = "2.2.5"
+lazy val scalacheckVersion = "1.12.4"
+lazy val scalatestVersion = "2.2.4"
 
 lazy val scalaz = Seq(
   "org.scalaz" %% "scalaz-core" % scalazVersion,
@@ -50,7 +50,6 @@ lazy val scalaz = Seq(
 
 lazy val others = Seq(
   "io.argonaut" %% "argonaut" % "6.0.4",
-  "com.github.alexarchambault" %% "argonaut-shapeless_6.1" % "0.3.1",
   "com.github.xuwei-k" % "msgpack4z-api" % "0.1.0",
   "com.github.xuwei-k" %% "msgpack4z-core" % "0.1.4",
   "com.github.xuwei-k" %% "msgpack4z-native" % "0.1.1",
@@ -59,7 +58,8 @@ lazy val others = Seq(
 
 lazy val test = Seq(
   "org.scalatest" %% "scalatest" % scalatestVersion,
-  "org.scalacheck" %% "scalacheck" % scalacheckVersion
+  "org.scalacheck" %% "scalacheck" % scalacheckVersion,
+  "com.github.alexarchambault" %% "argonaut-shapeless_6.1" % "0.3.1"
 ) map (_ % "test")
 
 lazy val deps = (scalaz ++ others ++ test) map (_.withSources())

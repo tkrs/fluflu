@@ -3,11 +3,10 @@ package fluflu
 import java.io.IOException
 import java.net.{ InetSocketAddress, StandardSocketOptions }
 import java.nio.ByteBuffer
-import java.nio.channels.SocketChannel
+import java.nio.channels.{ NotYetConnectedException, SocketChannel }
 
 trait Sender {
-  def write(b: ByteBuffer): Long
-  def write(bs: Array[ByteBuffer]): Long
+  def write(b: ByteBuffer): Int
   def close(): Unit
 }
 
@@ -31,11 +30,17 @@ class DefaultSender(
 
   val _ = Channel.connect(remote, timeout)
 
-  def write(b: ByteBuffer): Long = write(Array(b))
-
-  def write(bs: Array[ByteBuffer]): Long = {
+  def write(bs: ByteBuffer): Int = {
     val c = Channel.connect(remote, timeout)
-    try { c.write(bs) } catch { case e: IOException => c.close(); throw e }
+    try {
+      c.write(bs)
+    } catch {
+      case e: NotYetConnectedException =>
+        throw e
+      case e: IOException =>
+        c.close()
+        throw e
+    }
   }
 
   def close() = Channel.close()
@@ -54,12 +59,19 @@ object Channel {
     import StandardSocketOptions._
 
     if (!channel.isConnected) {
-      val nc = reflesh()
-      nc.socket().setSoTimeout(timeout)
-      nc.setOption[JBool](SO_REUSEADDR, true)
-      nc.setOption[JBool](SO_KEEPALIVE, true)
-      nc.connect(remote)
-      nc
+      if (!channel.isConnectionPending) {
+        val nc = reflesh()
+        nc.configureBlocking(false)
+        nc.socket().setSoTimeout(timeout)
+        nc.setOption[JBool](SO_REUSEADDR, true)
+        nc.setOption[JBool](SO_KEEPALIVE, true)
+        nc.connect(remote)
+        nc.finishConnect()
+        nc
+      } else {
+        channel.finishConnect()
+        channel
+      }
     } else {
       channel
     }
@@ -71,6 +83,8 @@ object Channel {
     channel
   }
 
-  def close(): Unit = channel.close()
+  def close(): Unit = {
+    channel.close()
+  }
 
 }

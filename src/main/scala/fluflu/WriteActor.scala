@@ -3,34 +3,34 @@ package fluflu
 import scalaz.concurrent._
 
 object WriteActor {
-  def apply[A](
+  def apply(
     tagPrefix: String,
     bufferCapacity: Int = 1 * 1024 * 1024
   )(
     implicit
     sender: Sender,
-    strategy: Strategy,
-    decoder: RecordDecoder[A],
-    onError: Throwable => Unit
+    strategy: Strategy
   ) =
-    new WriteActor[A](tagPrefix, bufferCapacity)
+    new WriteActor(tagPrefix, bufferCapacity)
 
 }
 
-class WriteActor[A](
+class WriteActor(
     val tagPrefix: String,
     val bufferCapacity: Int
 )(
     implicit
     sender: Sender,
-    strategy: Strategy,
-    decoder: RecordDecoder[A],
-    onError: Throwable => Unit
+    strategy: Strategy
 ) {
 
   import Actor._
 
-  private[this] val act: Actor[Event[A]] =
+  private[this] def act[A](
+    implicit
+    dec: RecordDecoder[A],
+    onError: Throwable => Unit
+  ): Actor[Event[A]] =
     actor(
       { msg =>
         val buf = Utils.createBuffer(tagPrefix, bufferCapacity, msg)
@@ -38,13 +38,23 @@ class WriteActor[A](
       }, onError
     )
 
-  def apply(a: Event[A]): Unit = this ! a
+  def apply[A](a: Event[A])(
+    implicit
+    dec: RecordDecoder[A],
+    onError: Throwable => Unit
+  ): Unit = this ! a
 
-  def contramap[B](f: B => Event[A]): Actor[B] = new Actor[B](b => this ! f(b), onError)(strategy)
+  def contramap[B, A](f: B => Event[A])(
+    implicit
+    dec: RecordDecoder[A],
+    onError: Throwable => Unit
+  ): Actor[B] = new Actor[B](b => this ! f(b), onError)(strategy)
 
-  def !(evt: Event[A]): Unit = act ! evt
-
-  // def ?[B](evt: Event[A]): Task[B] = ???
+  def ![A](evt: Event[A])(
+    implicit
+    dec: RecordDecoder[A],
+    onError: Throwable => Unit
+  ): Unit = act ! evt
 
   def close() = sender.close()
 

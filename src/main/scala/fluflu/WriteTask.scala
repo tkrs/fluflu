@@ -4,49 +4,47 @@ import scalaz.\/
 import scalaz.concurrent.{ Task, Strategy }
 
 object WriteTask {
-  def apply[A](
+  def apply(
     tagPrefix: String,
     bufferCapacity: Int = 1 * 1024 * 1024
   )(
     implicit
     sender: Sender,
-    strategy: Strategy,
-    decoder: RecordDecoder[A]
+    strategy: Strategy
   ) =
-    new WriteTask[A](tagPrefix, bufferCapacity)
+    new WriteTask(tagPrefix, bufferCapacity)
 
 }
 
-class WriteTask[A](
+class WriteTask(
     val tagPrefix: String,
     val bufferCapacity: Int
 )(
     implicit
     sender: Sender,
-    strategy: Strategy,
-    decoder: RecordDecoder[A]
+    strategy: Strategy
 ) {
 
-  private[this] def write(event: Event[A]) = {
+  private[this] def write[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = {
     val buf = Utils.createBuffer(tagPrefix, bufferCapacity, event)
     sender.write(buf)
   }
 
-  def apply(event: Event[A]) = Task { this write event }
+  def apply[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = Task { this write event }
 
-  def runAsync(event: Event[A])(f: \/[Throwable, Long] => Unit) = Task {
+  def runAsync[A](event: Event[A])(f: \/[Throwable, Int] => Unit)(implicit decoder: RecordDecoder[A]) = Task {
     this write event
   } runAsync f
 
-  def run(event: Event[A]) = Task {
+  def run[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = Task {
     this write event
   } run
 
-  def attempt(event: Event[A]) = Task {
+  def attempt[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = Task {
     this write event
   } attempt
 
-  def attemptRun(event: Event[A]) = this attempt (event) run
+  def attemptRun[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = this attempt (event) run
 
   def close() = sender.close()
 
