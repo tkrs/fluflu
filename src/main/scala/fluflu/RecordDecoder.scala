@@ -1,6 +1,6 @@
 package fluflu
 
-import argonaut._, Argonaut._
+import argonaut._
 
 trait RecordDecoder[A] {
   def apply(a: A): Json

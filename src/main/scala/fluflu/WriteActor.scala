@@ -9,10 +9,6 @@ object WriteActor {
   )(implicit sender: Sender, strategy: Strategy, decoder: RecordDecoder[A], onError: Throwable => Unit) =
     new WriteActor[A](tagPrefix, bufferCapacity)
 
-  implicit def DefaultErrorHandle(e: Throwable): Unit = {
-    e.printStackTrace()
-    throw e
-  }
 }
 
 class WriteActor[A](
@@ -36,7 +32,7 @@ class WriteActor[A](
 
   def !(evt: Event[A]): Unit = act ! evt
 
-  def ?[B](evt: Event[A]): Task[B] = ???
+  // def ?[B](evt: Event[A]): Task[B] = ???
 
   def close() = sender.close()
 
@@ -45,4 +41,11 @@ class WriteActor[A](
     close()
   }
 
+}
+
+object WriteActorFunc {
+  implicit val DefaultErrorHandle: Throwable => Unit = { e =>
+    e.printStackTrace()
+    throw e
+  }
 }
