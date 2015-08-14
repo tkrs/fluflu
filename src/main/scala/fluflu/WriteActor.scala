@@ -27,10 +27,7 @@ class WriteActor[A](
       { msg =>
         val buf = Utils.createBuffer(tagPrefix, bufferCapacity, msg)
         sender.write(buf)
-      }, { e: Throwable =>
-        if (sender.isConnected) sender.close()
-        onError(e)
-      }
+      }, onError
     )
 
   def apply(a: Event[A]): Unit = this ! a
