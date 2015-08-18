@@ -1,5 +1,6 @@
 package fluflu
 
+import java.util.concurrent.{ ExecutorService }
 import scalaz.\/
 import scalaz.concurrent.{ Task, Strategy }
 
@@ -10,7 +11,7 @@ object WriteTask {
   )(
     implicit
     sender: Sender,
-    strategy: Strategy
+    strategy: ExecutorService = Strategy.DefaultExecutorService
   ) =
     new WriteTask(tagPrefix, bufferCapacity)
 
@@ -22,7 +23,7 @@ class WriteTask(
 )(
     implicit
     sender: Sender,
-    strategy: Strategy
+    strategy: ExecutorService
 ) {
 
   private[this] def write[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = {
@@ -50,7 +51,7 @@ class WriteTask(
 
   override def finalize(): Unit = {
     super.finalize()
-    close()
+    this.close()
   }
 
 }

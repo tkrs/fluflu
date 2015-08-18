@@ -32,7 +32,7 @@ a ! event
 val t = WriteTask("tag-prefix")
 t(event) // => Task[Event[Person]]
 t run event // => Long
-t attempt event // Taks[Throwable \/ Long]
+t attempt event // Task[Throwable \/ Long]
 ```
 
 ## TODO

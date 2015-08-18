@@ -32,7 +32,6 @@ class WriteTaskSpec extends FlatSpec with Matchers {
     implicitly[EncodeJson[Person]]
     implicitly[DecodeJson[Person]]
 
-    import scalaz.concurrent.Strategy.DefaultStrategy
     implicit val personDecoder = RecordDecoder[Person](_.asJson)
 
     val wt = WriteTask("tag-prefix")
@@ -71,7 +70,6 @@ class WriteTaskSpec extends FlatSpec with Matchers {
     implicitly[EncodeJson[Person]]
     implicitly[DecodeJson[Person]]
 
-    import scalaz.concurrent.Strategy.DefaultStrategy
     implicit val personDecoder = RecordDecoder[Person](_.asJson)
 
     val wt = WriteTask("tag-prefix")

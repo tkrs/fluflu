@@ -15,18 +15,15 @@ class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
 
   var port: AtomicInteger = new AtomicInteger()
 
-  def runServer(p: Option[Int]) = new Runnable {
+  def runServer(p: Option[Int] = None) = new Runnable {
     @tailrec
     def handler(ch: ServerSocketChannel): Unit = {
-      val client = ch.accept()
       val buffer = ByteBuffer.allocate(1024)
+      val client = ch.accept()
       client.read(buffer)
       val msg = new String(buffer.array(), "UTF8")
-
       println(s"recieve => ${msg}")
-
       handler(ch)
-
     }
     override def run(): Unit = {
       val ch = ServerSocketChannel.open()
@@ -44,7 +41,7 @@ class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
   it should "return buffer length when successful socket write" in {
 
     val pool = new ForkJoinPool()
-    pool.execute(runServer(None))
+    pool.execute(runServer())
 
     Thread.sleep(500)
 
@@ -69,7 +66,7 @@ class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
 
     val pool = new ForkJoinPool()
 
-    pool.execute(runServer(None))
+    pool.execute(runServer())
     Thread.sleep(500)
 
     val sender = DefaultSender("localhost", port.get)
@@ -80,24 +77,26 @@ class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
       val pool = new ForkJoinPool()
       pool.execute(runServer(Some(port.get)))
 
-      {
-        val bytes = "TEST2".getBytes("UTF8")
-
-        val ret = Seq(100L, 500L, 1000L, 1500L).map { t =>
-          try {
-            val buffer = ByteBuffer.wrap(bytes)
-            sender.write(buffer)
-          } catch {
-            case e: Throwable =>
-              println(s"${t} => ${e}")
-              Thread.sleep(t)
-              0
-          }
+      @tailrec
+      def run(buf: ByteBuffer, retries: Seq[Long]): Int = retries match {
+        case Nil => fail()
+        case h :: t => try {
+          sender.write(buf)
+        } catch {
+          case e: Throwable =>
+            println(s"${e}")
+            Thread.sleep(h)
+            run(buf, t)
         }
-
-        ret.last shouldEqual bytes.length
-
       }
+
+      val retries = Seq(100L, 500L, 1000L)
+      val bytes = "TEST2".getBytes("UTF8")
+      val buffer = ByteBuffer.wrap(bytes)
+      val ret = run(buffer, retries)
+
+      ret shouldEqual bytes.length
+
       pool.shutdownNow()
     }
   }
