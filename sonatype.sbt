@@ -8,7 +8,7 @@ pomExtra in Global := {
       <url>http://www.opensource.org/licenses/mit-license.php</url>
     </license>
   </licenses>
-  <connection>scm:git:github.com/(your repository URL)</connection>
+  <connection>scm:git:github.com/fluflu</connection>
   <developerConnection>scm:git:git@github.com:tkrs/fluflu</developerConnection>
   <url>github.com/tkrs/fluflu</url>
   <developers>
