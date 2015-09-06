@@ -1,10 +1,9 @@
 package fluflu
 
-import java.io.IOException
 import java.net.InetSocketAddress
 import java.nio._
 import java.nio.channels._
-import java.util.concurrent.{ TimeUnit, ForkJoinPool }
+import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.scalatest._

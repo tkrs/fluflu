@@ -5,32 +5,24 @@ import scalaz.concurrent._
 object WriteActor {
   def apply(
     tagPrefix: String,
-    bufferCapacity: Int = 1 * 1024 * 1024
-  )(
-    implicit
-    sender: Sender,
-    strategy: Strategy
-  ) =
+    bufferCapacity: Int = 1 * 1024 * 1024)(
+      implicit sender: Sender,
+      strategy: Strategy) =
     new WriteActor(tagPrefix, bufferCapacity)
 
 }
 
 class WriteActor(
     val tagPrefix: String,
-    val bufferCapacity: Int
-)(
-    implicit
-    sender: Sender,
-    strategy: Strategy
-) {
+    val bufferCapacity: Int)(
+        implicit sender: Sender,
+        strategy: Strategy) {
 
   import Actor._
 
   private[this] def act[A](
-    implicit
-    dec: RecordDecoder[A],
-    onError: Throwable => Unit
-  ): Actor[Event[A]] =
+    implicit dec: RecordDecoder[A],
+    onError: Throwable => Unit): Actor[Event[A]] =
     actor(
       { msg =>
         val buf = Utils.createBuffer(tagPrefix, bufferCapacity, msg)
@@ -39,22 +31,16 @@ class WriteActor(
     )
 
   def apply[A](a: Event[A])(
-    implicit
-    dec: RecordDecoder[A],
-    onError: Throwable => Unit
-  ): Unit = this ! a
+    implicit dec: RecordDecoder[A],
+    onError: Throwable => Unit): Unit = this ! a
 
-  def contramap[B, A](f: B => Event[A])(
-    implicit
-    dec: RecordDecoder[A],
-    onError: Throwable => Unit
-  ): Actor[B] = new Actor[B](b => this ! f(b), onError)(strategy)
+  def contramap[B, A](f: Event[B] => Event[A])(
+    implicit dec: RecordDecoder[A],
+    onError: Throwable => Unit): Actor[Event[B]] = new Actor[Event[B]](b => this ! f(b), onError)(strategy)
 
   def ![A](evt: Event[A])(
-    implicit
-    dec: RecordDecoder[A],
-    onError: Throwable => Unit
-  ): Unit = act ! evt
+    implicit dec: RecordDecoder[A],
+    onError: Throwable => Unit): Unit = act ! evt
 
   def close() = sender.close()
 

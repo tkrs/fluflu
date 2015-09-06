@@ -7,24 +7,18 @@ import scalaz.concurrent.{ Task, Strategy }
 object WriteTask {
   def apply(
     tagPrefix: String,
-    bufferCapacity: Int = 1 * 1024 * 1024
-  )(
-    implicit
-    sender: Sender,
-    strategy: ExecutorService = Strategy.DefaultExecutorService
-  ) =
+    bufferCapacity: Int = 1 * 1024 * 1024)(
+      implicit sender: Sender,
+      strategy: ExecutorService = Strategy.DefaultExecutorService) =
     new WriteTask(tagPrefix, bufferCapacity)
 
 }
 
 class WriteTask(
     val tagPrefix: String,
-    val bufferCapacity: Int
-)(
-    implicit
-    sender: Sender,
-    strategy: ExecutorService
-) {
+    val bufferCapacity: Int)(
+        implicit sender: Sender,
+        strategy: ExecutorService) {
 
   private[this] def write[A](event: Event[A])(implicit decoder: RecordDecoder[A]) = {
     val buf = Utils.createBuffer(tagPrefix, bufferCapacity, event)

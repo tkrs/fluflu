@@ -78,8 +78,7 @@ object Channel {
   }
 
   private[this] def reflesh(): SocketChannel = {
-    val c = SocketChannel.open()
-    channel = c
+    channel = SocketChannel.open()
     channel
   }
 

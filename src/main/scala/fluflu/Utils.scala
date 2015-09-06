@@ -8,9 +8,7 @@ import scalaz.concurrent._
 
 object Utils {
   private[fluflu] def createBuffer[A](tagPrefix: String, bufferCapacity: Int, evt: Event[A])(
-    implicit
-    f: RecordDecoder[A]
-  ): ByteBuffer = {
+    implicit f: RecordDecoder[A]): ByteBuffer = {
     val tag = jString(s"${tagPrefix}.${evt.label}")
     val time = jNumber(evt.time)
     val record = f(evt.record)
