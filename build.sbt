@@ -54,7 +54,9 @@ lazy val compilerOptions = Seq(
   "-Yopt:l:classpath"
 )
 
-lazy val specs2core = "org.specs2" %% "specs2-core" % "2.4.14"
+lazy val deps = (scalaz ++ others ++ tests) map (_.withSources())
+
+// lazy val specs2core = "org.specs2" %% "specs2-core" % "2.4.14"
 
 lazy val scalaz = Seq(
   "org.scalaz" %% "scalaz-core" % scalazVersion,
@@ -75,8 +77,6 @@ lazy val tests = Seq(
   "org.scalacheck" %% "scalacheck" % scalacheckVersion,
   "com.github.alexarchambault" %% "argonaut-shapeless_6.1" % "0.3.1"
 ) map (_ % "test")
-
-lazy val deps = (scalaz ++ others ++ tests) map (_.withSources())
 
 scalariformSettings
 
