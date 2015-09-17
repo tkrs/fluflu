@@ -5,8 +5,8 @@ val msgpackVersion = "0.2.0-SNAPSHOT"
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core)
-  .dependsOn(core)
+  .aggregate(core, msgpack)
+  .dependsOn(core, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings
 
