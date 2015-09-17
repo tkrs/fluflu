@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import org.scalatest._
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.Duration
 
 class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
 
@@ -48,9 +49,8 @@ class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
 
     {
       val bytes = "TEST1".getBytes("UTF8")
-      val buffer = ByteBuffer.wrap(bytes)
 
-      val ret = sender.write(buffer)
+      val ret = sender.write(bytes).run
 
       ret shouldEqual bytes.length
     }
@@ -76,23 +76,9 @@ class DefaultSenderSpec extends FlatSpec with Matchers with BeforeAndAfter {
       val pool = new ForkJoinPool()
       pool.execute(runServer(Some(port.get)))
 
-      @tailrec
-      def run(buf: ByteBuffer, retries: Seq[Long]): Int = retries match {
-        case Nil => fail()
-        case h :: t => try {
-          sender.write(buf)
-        } catch {
-          case e: Throwable =>
-            println(s"${e}")
-            Thread.sleep(h)
-            run(buf, t)
-        }
-      }
-
-      val retries = Seq(100L, 500L, 1000L)
+      val retries = Seq(Duration(100, "millis"), Duration(500L, "millis"), Duration(1000L, "millis"))
       val bytes = "TEST2".getBytes("UTF8")
-      val buffer = ByteBuffer.wrap(bytes)
-      val ret = run(buffer, retries)
+      val ret = sender write (bytes) retry (retries, { case e: Throwable => true }) run
 
       ret shouldEqual bytes.length
 

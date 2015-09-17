@@ -1,37 +1,117 @@
+val coreVersion = "0.2.0-SNAPSHOT"
+val msgpackVersion = "0.2.0-SNAPSHOT"
+
+
 lazy val root = (project in file("."))
   .settings(allSettings)
-
-//lazy val itSettings = (project in file("."))
-//  .configs(IntegrationTest)
-//  .settings(allSettings)
-//  .settings(Defaults.itSettings: _*)
-//  .settings(
-//    libraryDependencies += specs2core % "it"
-//  )
+  .settings(noPublishSettings)
+  .aggregate(core)
+  .dependsOn(core)
 
 lazy val allSettings = buildSettings ++ baseSettings
 
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  version := "0.1.1-SNAPSHOT",
+  version := coreVersion,
   scalaVersion := "2.11.7"
 )
+
+val circeVersion = "0.1.1"
+val scalazVersion = "7.1.3"
+val scalacheckVersion = "1.12.3"
+val scalatestVersion = "2.2.5"
+// val catsVersion = "0.1.2"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) := compilerOptions,
   scalacOptions in (Compile, test) := compilerOptions,
-  libraryDependencies ++= deps,
+  libraryDependencies ++= Seq(
+    // "org.spire-math" %% "cats" % catsVersion,
+    "org.scalaz" %% "scalaz-core" % scalazVersion,
+    "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-jawn" % circeVersion,
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
+  ) ++ tests,
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
     Resolver.bintrayRepo("scalaz", "releases")
   )
 )
 
-lazy val scalazVersion = "7.1.3"
-lazy val scalacheckVersion = "1.12.3"
-lazy val scalatestVersion = "2.2.5"
+lazy val publishSettings = Seq(
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+  homepage := Some(url("https://github.com/tkrs/fluflu")),
+  licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
+  publishMavenStyle := true,
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value)
+      Some("snapshots" at nexus + "content/repositories/snapshots")
+    else
+      Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+  },
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/fluflu"),
+      "scm:git:git@github.com:tkrs/fluflu.git"
+    )
+  ),
+  pomExtra := (
+    <developers>
+      <developer>
+        <id>tkrs</id>
+        <name>Takeru Sato</name>
+        <url>https://github.com/tkrs</url>
+      </developer>
+    </developers>
+  )
+)
+
+lazy val noPublishSettings = Seq(
+  publish := (),
+  publishLocal := (),
+  publishArtifact := false
+)
+
+lazy val core = project.in(file("core"))
+  .settings(
+    description := "fluflu core",
+    moduleName := "fluflu-core",
+    name := "core",
+    version := coreVersion
+  )
+  .settings(allSettings: _*)
+  .dependsOn(msgpack)
+
+lazy val msgpack = project.in(file("msgpack"))
+  .settings(
+    description := "fluflu msgpack",
+    moduleName := "fluflu-msgpack",
+    name := "msgpack",
+    version := msgpackVersion
+  )
+  .settings(allSettings: _*)
+
+lazy val example = project.in(file("example"))
+  .settings(
+    description := "fluflu example",
+    moduleName := "fluflu-example",
+    name := "example"
+  )
+  .settings(allSettings: _*)
+  .settings(noPublishSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.slf4j" % "slf4j-simple" % "1.7.12"
+    )
+  )
+  .dependsOn(core, msgpack)
 
 lazy val compilerOptions = Seq(
   "-deprecation",
@@ -54,41 +134,11 @@ lazy val compilerOptions = Seq(
   "-Yopt:l:classpath"
 )
 
-lazy val deps = (scalaz ++ others ++ tests) map (_.withSources())
-
-// lazy val specs2core = "org.specs2" %% "specs2-core" % "2.4.14"
-
-lazy val scalaz = Seq(
-  "org.scalaz" %% "scalaz-core" % scalazVersion,
-  "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
-  "org.scalaz" %% "scalaz-scalacheck-binding" % scalazVersion % "test"
-)
-
-lazy val others = Seq(
-  "io.argonaut" %% "argonaut" % "6.0.4",
-  "com.github.xuwei-k" % "msgpack4z-api" % "0.1.0",
-  "com.github.xuwei-k" %% "msgpack4z-core" % "0.1.4",
-  "com.github.xuwei-k" %% "msgpack4z-native" % "0.1.1",
-  "com.github.xuwei-k" %% "msgpack4z-argonaut" % "0.1.3"
-)
-
 lazy val tests = Seq(
   "org.scalatest" %% "scalatest" % scalatestVersion,
   "org.scalacheck" %% "scalacheck" % scalacheckVersion,
-  "com.github.alexarchambault" %% "argonaut-shapeless_6.1" % "0.3.1"
+  "org.scalaz" %% "scalaz-scalacheck-binding" % scalazVersion
 ) map (_ % "test")
 
 scalariformSettings
-
 // wartremoverErrors ++= Warts.all
-
-publishMavenStyle := true
-publishTo <<= version { (v: String) =>
-  val nexus = "https://oss.sonatype.org/"
-  if (v.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
-}
-publishArtifact in Test := false
-pomIncludeRepository := { _ => false }
