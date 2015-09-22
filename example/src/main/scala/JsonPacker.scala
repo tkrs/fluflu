@@ -7,7 +7,7 @@ object JsonPacker extends App {
       case (i, n) => (i + 8, ((l & 0xff).toLong << i) | n)
     })._2
 
-  val instance = Msgpack getInstance JSON
+  val instance = MessagePack getInstance JSON
 
   val x = instance pack Json.long(Long.MaxValue)
 

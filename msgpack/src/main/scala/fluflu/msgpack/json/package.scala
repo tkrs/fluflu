@@ -1,4 +1,2 @@
-package fluflu
-package msgpack
-
+package fluflu.msgpack
 package object json
