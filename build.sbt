@@ -1,6 +1,5 @@
 val coreVersion = "0.2.0-SNAPSHOT"
-val msgpackVersion = "0.2.0-SNAPSHOT"
-
+val msgpackVersion = "0.2.1-SNAPSHOT"
 
 lazy val root = (project in file("."))
   .settings(allSettings)
@@ -13,7 +12,6 @@ lazy val allSettings = buildSettings ++ baseSettings
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  version := coreVersion,
   scalaVersion := "2.11.7"
 )
 
