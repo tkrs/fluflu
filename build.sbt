@@ -1,4 +1,4 @@
-val coreVersion = "0.2.0-SNAPSHOT"
+val coreVersion = "0.2.1-SNAPSHOT"
 val msgpackVersion = "0.2.1-SNAPSHOT"
 
 lazy val root = (project in file("."))
