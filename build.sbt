@@ -28,7 +28,6 @@ lazy val baseSettings = Seq(
     "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
-    "io.circe" %% "circe-jawn" % circeVersion,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
   ) ++ tests,
   resolvers ++= Seq(
