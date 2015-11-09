@@ -1,6 +1,3 @@
-val coreVersion = "0.2.1-SNAPSHOT"
-val msgpackVersion = "0.2.1-SNAPSHOT"
-
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
@@ -15,11 +12,11 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.11.7"
 )
 
-val circeVersion = "0.1.1"
+val circeVersion = "0.2.0"
 val scalazVersion = "7.1.3"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
-// val catsVersion = "0.1.2"
+// val catsVersion = "0.2.0"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
@@ -31,7 +28,6 @@ lazy val baseSettings = Seq(
     "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
-    "io.circe" %% "circe-jawn" % circeVersion,
     "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
   ) ++ tests,
   resolvers ++= Seq(
@@ -81,8 +77,7 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core",
-    version := coreVersion
+    name := "core"
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
@@ -91,8 +86,7 @@ lazy val msgpack = project.in(file("msgpack"))
   .settings(
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
-    name := "msgpack",
-    version := msgpackVersion
+    name := "msgpack"
   )
   .settings(allSettings: _*)
 
