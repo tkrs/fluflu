@@ -4,7 +4,7 @@ lazy val root = (project in file("."))
   .aggregate(core, msgpack)
   .dependsOn(core, msgpack)
 
-lazy val allSettings = buildSettings ++ baseSettings
+lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
 lazy val buildSettings = Seq(
   name := "fluflu",
