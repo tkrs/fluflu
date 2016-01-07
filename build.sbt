@@ -4,7 +4,7 @@ lazy val root = (project in file("."))
   .aggregate(core, msgpack)
   .dependsOn(core, msgpack)
 
-lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
+lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
 
 lazy val buildSettings = Seq(
   name := "fluflu",
@@ -119,6 +119,3 @@ lazy val tests = Seq(
   "org.scalacheck" %% "scalacheck" % scalacheckVersion,
   "org.scalaz" %% "scalaz-scalacheck-binding" % scalazVersion
 ) map (_ % "test")
-
-scalariformSettings
-// wartremoverErrors ++= Warts.all

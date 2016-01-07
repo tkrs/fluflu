@@ -7,8 +7,6 @@ import java.net.{ InetSocketAddress, StandardSocketOptions }
 import java.lang.{ Boolean => JBool }
 import java.util.concurrent.TimeUnit
 
-import com.typesafe.scalalogging.LazyLogging
-
 import scalaz.{-\/, \/-}
 import scalaz.concurrent.Task
 
@@ -18,7 +16,7 @@ object Channel {
     channelMap getOrElseUpdate (s"$host-$port", new Channel(host, port, timeout: Int))
 }
 
-class Channel(host: String, port: Int, timeout: Int) extends LazyLogging {
+class Channel(host: String, port: Int, timeout: Int) {
 
   import Channel._
   import StandardSocketOptions._
