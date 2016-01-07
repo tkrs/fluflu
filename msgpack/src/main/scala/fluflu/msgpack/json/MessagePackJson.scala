@@ -1,8 +1,6 @@
 package fluflu.msgpack.json
 
-import com.typesafe.scalalogging.LazyLogging
-
-object MessagePackJson extends LazyLogging {
+object MessagePackJson {
 
   import scala.collection.mutable.ListBuffer
   import io.circe.{ HCursor, Json }
