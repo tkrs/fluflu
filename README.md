@@ -11,8 +11,8 @@ Add to your `build.sbt`
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.github.tkrs" %% "fluflu-core" % "0.2.0-SNAPSHOT",
-  "com.github.tkrs" %% "fluflu-msgpack" % "0.2.0-SNAPSHOT"
+  "com.github.tkrs" %% "fluflu-core" % "0.2.1",
+  "com.github.tkrs" %% "fluflu-msgpack" % "0.2.1"
 )
 ```
 
@@ -28,7 +28,6 @@ implicit val sender = DefaultSender()
 val person = Person("tkrs", 99)
 val event = Event("prefix", "person", person)
 
-// Task case
 val t = WriteTask()
 t(event) // => Task[Event[Person]]
 ```
