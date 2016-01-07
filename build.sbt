@@ -12,11 +12,11 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.11.7"
 )
 
-val circeVersion = "0.2.0"
+val circeVersion = "0.2.1"
 val scalazVersion = "7.1.3"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
-// val catsVersion = "0.2.0"
+// val catsVersion = "0.3.0"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
@@ -24,16 +24,10 @@ lazy val baseSettings = Seq(
   scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
     // "org.spire-math" %% "cats" % catsVersion,
-    "org.scalaz" %% "scalaz-core" % scalazVersion,
     "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
     "io.circe" %% "circe-core" % circeVersion,
-    "io.circe" %% "circe-generic" % circeVersion,
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.1.0"
-  ) ++ tests,
-  resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.bintrayRepo("scalaz", "releases")
-  )
+    "io.circe" %% "circe-generic" % circeVersion
+  ) ++ tests
 )
 
 lazy val publishSettings = Seq(
@@ -56,7 +50,7 @@ lazy val publishSettings = Seq(
       "scm:git:git@github.com:tkrs/fluflu.git"
     )
   ),
-  pomExtra := (
+  pomExtra :=
     <developers>
       <developer>
         <id>tkrs</id>
@@ -64,7 +58,6 @@ lazy val publishSettings = Seq(
         <url>https://github.com/tkrs</url>
       </developer>
     </developers>
-  )
 )
 
 lazy val noPublishSettings = Seq(
@@ -98,11 +91,6 @@ lazy val example = project.in(file("example"))
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.slf4j" % "slf4j-simple" % "1.7.12"
-    )
-  )
   .dependsOn(core, msgpack)
 
 lazy val compilerOptions = Seq(
