@@ -16,14 +16,14 @@ val circeVersion = "0.2.1"
 val scalazVersion = "7.1.3"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
-// val catsVersion = "0.3.0"
+val catsVersion = "0.3.0"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) := compilerOptions,
   scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
-    // "org.spire-math" %% "cats" % catsVersion,
+    "org.spire-math" %% "cats" % catsVersion,
     "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion
