@@ -2,10 +2,10 @@ package fluflu
 
 import java.io.IOException
 
-import fluflu.data.Event
 import org.scalatest._
-
 import scalaz.concurrent.Task
+
+import data.Event
 
 class WriteTaskSpec extends FlatSpec with Matchers {
 

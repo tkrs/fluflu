@@ -1,7 +1,7 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, msgpack)
+  .aggregate(core, msgpack, tests)
   .dependsOn(core, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
@@ -16,18 +16,18 @@ val circeVersion = "0.2.1"
 val scalazVersion = "7.1.3"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
-// val catsVersion = "0.3.0"
+val catsVersion = "0.3.0"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) := compilerOptions,
   scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
-    // "org.spire-math" %% "cats" % catsVersion,
-    "org.scalaz" %% "scalaz-concurrent" % scalazVersion,
+    "org.spire-math" %% "cats" % catsVersion,
     "io.circe" %% "circe-core" % circeVersion,
-    "io.circe" %% "circe-generic" % circeVersion
-  ) ++ tests
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parse" % circeVersion
+  )
 )
 
 lazy val publishSettings = Seq(
@@ -73,6 +73,11 @@ lazy val core = project.in(file("core"))
     name := "core"
   )
   .settings(allSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalaz" %% "scalaz-concurrent" % scalazVersion
+    )
+  )
   .dependsOn(msgpack)
 
 lazy val msgpack = project.in(file("msgpack"))
@@ -91,6 +96,23 @@ lazy val example = project.in(file("example"))
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
+  .dependsOn(core, msgpack)
+
+lazy val tests = project.in(file("tests"))
+  .settings(
+    description := "fluflu tests",
+    moduleName := "fluflu-tests",
+    name := "tests"
+  )
+  .settings(allSettings: _*)
+  .settings(noPublishSettings)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % scalatestVersion,
+      "org.scalacheck" %% "scalacheck" % scalacheckVersion
+    )
+  )
+  .settings(fork := true)
   .dependsOn(core, msgpack)
 
 lazy val compilerOptions = Seq(
@@ -113,9 +135,3 @@ lazy val compilerOptions = Seq(
   "-optimize",
   "-Yopt:l:classpath"
 )
-
-lazy val tests = Seq(
-  "org.scalatest" %% "scalatest" % scalatestVersion,
-  "org.scalacheck" %% "scalacheck" % scalacheckVersion,
-  "org.scalaz" %% "scalaz-scalacheck-binding" % scalazVersion
-) map (_ % "test")

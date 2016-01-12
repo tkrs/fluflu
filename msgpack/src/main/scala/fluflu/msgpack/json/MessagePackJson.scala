@@ -1,66 +1,49 @@
 package fluflu.msgpack.json
 
+import cats.data.Xor
+import io.circe.{ JsonObject, JsonNumber, HCursor, Json }
+import fluflu.msgpack.MessagePack
+import scala.collection.mutable.ListBuffer
+
 object MessagePackJson {
 
-  import scala.collection.mutable.ListBuffer
-  import io.circe.{ HCursor, Json }
-  import fluflu.msgpack.MessagePack
   import MessagePack._
 
   def apply() = new MessagePack[Json]() {
 
-    override def pack(doc: Json): Array[Byte] = {
-      val buffer: ListBuffer[Byte] = ListBuffer.empty
-      go(doc.hcursor, buffer)
-      buffer.toArray
-    }
+    override def pack(doc: Json): Throwable Xor Array[Byte] =
+      Xor.catchOnly[Throwable](go(doc).toArray)
 
-    private[this] def go(hc: HCursor, buffer: ListBuffer[Byte]): Unit =
-      hc.focus match {
-        case js if js.isArray =>
-          js.asArray match {
-            case None => // TODO: error?
-            case Some(arr) =>
-              buffer ++= markArray(arr.size)
-              arr.foreach(e => go(e.hcursor, buffer))
-          }
-        case js if js.isObject => //
-          js.asObject match {
-            case None => // TODO: error?
-            case Some(e) =>
-              val l = e.toList
-              markMap(l.size).foreach(buffer += _)
-              l.foreach {
-                case (k, v) =>
-                  formatOfString(k).foreach(buffer += _)
-                  go(v.hcursor, buffer)
-              }
-          }
-        case js if js.isNull => buffer ++= nilFormat
-        case js if js.isBoolean => js.asBoolean match {
-          case None => // TODO: error?
-          case Some(x) => buffer ++= boolFormat(x)
+    val go: (Json) => Vector[Byte] = _.fold(
+      {
+        nilFormat()
+      },
+      { x: Boolean =>
+        boolFormat(x)
+      },
+      { x: JsonNumber =>
+        val n = x.toBigDecimal
+        if (n.isWhole() && Long.MinValue <= n)
+          intFormat(n.toLong)
+        else
+          formatOfDouble(n.toDouble)
+      },
+      { xs: String =>
+        formatOfString(xs)
+      },
+      { xs: List[Json] =>
+        markArray(xs.size) ++ xs.foldLeft(Vector.empty[Byte])(_ ++ go(_))
+      },
+      { x: JsonObject =>
+        val xs = x.toList
+        val vec = markMap(xs.size)
+        vec ++ xs.foldLeft(Vector.empty[Byte]) {
+          case (acc, (key, v)) =>
+            acc ++ formatOfString(key) ++ go(v)
         }
-        case js if js.isNumber =>
-          val num = js.asNumber
-          num match {
-            case None => // TODO: error?
-            case Some(x) =>
-              val n = x.toBigDecimal
-              if (n.isWhole())
-                buffer ++= intFormat(n.toLong)
-              else
-                buffer ++= formatOfDouble(n.toDouble)
-          }
-        case js if js.isString =>
-          js.asString match {
-            case None => // TODO: error?
-            case Some(s) => buffer ++= formatOfString(s)
-          }
-        case _ => println(hc)
       }
+    )
 
     override def unpack(a: Array[Byte]): Option[Json] = ???
   }
 }
-
