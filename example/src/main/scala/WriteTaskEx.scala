@@ -1,14 +1,14 @@
-package fluflu
-import data.Event
-import io.circe.Encoder
-
+import fluflu._, data._
 import io.circe.generic.auto._
 
-import scalaz.{ \/-, -\/ }
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 object WriteTaskEx extends App {
 
-  implicit val sender = DefaultSender(host = "192.168.99.100")
+  // implicit val sender = DefaultSender(host = "192.168.99.100")
+  implicit val sender = DefaultSender(host = "127.0.0.1")
 
   val wt = WriteTask()
 
@@ -20,10 +20,7 @@ object WriteTaskEx extends App {
 
   val ccc = CCC("foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
 
-  wt(Event("debug", "ccc", ccc)).attemptRun match {
-    case -\/(e) => e.printStackTrace()
-    case \/-(o) => println(o)
-  }
+  Await.result(wt(Event("debug", "ccc", ccc)), 1000 millis)
 
   case class BBB(
     zzz: Long,
@@ -35,8 +32,6 @@ object WriteTaskEx extends App {
 
   val bbb = BBB(Long.MaxValue, Long.MinValue, Int.MinValue, Int.MaxValue, ccc)
 
-  wt(Event("debug", "bbb", bbb)).attemptRun match {
-    case -\/(e) => e.printStackTrace()
-    case \/-(o) => println(o)
-  }
+  Await.result(wt(Event("debug", "bbb", bbb)), 1000 millis)
+
 }

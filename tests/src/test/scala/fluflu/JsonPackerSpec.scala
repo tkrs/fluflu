@@ -3,7 +3,7 @@ package fluflu
 import cats.data.Xor
 import fluflu.msgpack._
 import io.circe.Json
-import io.circe.parse._
+import io.circe.parser._
 import io.circe.generic.auto._
 import org.scalatest._
 

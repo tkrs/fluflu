@@ -2,10 +2,10 @@ package fluflu
 
 import java.nio.ByteBuffer
 
-import scalaz.concurrent.Task
+import scala.concurrent.Future
 
 trait Sender {
-  def write(b: Array[Byte]): Task[Int]
+  def write(b: Array[Byte]): Future[Int]
   def close(): Unit
 }
 
@@ -27,10 +27,8 @@ class DefaultSender(
   val ch = Channel(host, port, timeout)
   ch connect ()
 
-  def write(ba: Array[Byte]): Task[Int] = Task delay {
-    val bs = ByteBuffer wrap ba
-    (ch write bs) run
-  }
+  def write(ba: Array[Byte]): Future[Int] =
+    ch write (ByteBuffer wrap ba)
 
   def close() = ch close ()
 
