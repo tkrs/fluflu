@@ -4,36 +4,34 @@ import java.util.concurrent.ExecutorService
 
 import cats.data.Xor
 
-import scalaz.concurrent.{ Task, Strategy }
+import scala.concurrent.{ ExecutionContext, Future }
 
 object WriteTask {
   def apply()(
     implicit
-    sender: Sender,
-    strategy: ExecutorService = Strategy DefaultExecutorService
-  ) = {
-    new WriteTask()
-  }
+    s: Sender,
+    ec: ExecutionContext
+  ) = new WriteTask()
 
 }
 
 class WriteTask()(
     implicit
-    sender: Sender,
-    strategy: ExecutorService
+    s: Sender,
+    ec: ExecutionContext
 ) {
 
   import data.Event
   import io.circe.Encoder
 
   // TODO: Want to be break up with scalaz.Task
-  def apply[A](event: Event[A])(implicit encoder: Encoder[A]): Task[Int] =
+  def apply[A](event: Event[A])(implicit encoder: Encoder[A]): Future[Int] =
     Message pack event match {
-      case Xor.Left(e) => Task fail e
-      case Xor.Right(v) => sender write v
+      case Xor.Left(e) => Future.failed(e)
+      case Xor.Right(v) => s write v
     }
 
-  def close() = sender.close()
+  def close() = s.close()
 
   override def finalize(): Unit = {
     super.finalize()

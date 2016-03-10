@@ -3,12 +3,11 @@ package fluflu
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels._
-import java.net.{ InetSocketAddress, StandardSocketOptions }
-import java.lang.{ Boolean => JBool }
+import java.net.{InetSocketAddress, StandardSocketOptions}
+import java.lang.{Boolean => JBool}
 import java.util.concurrent.TimeUnit
 
-import scalaz.{-\/, \/-}
-import scalaz.concurrent.Task
+import scala.concurrent.{Future, Promise}
 
 object Channel {
   private[fluflu] val channelMap = scala.collection.concurrent.TrieMap[String, Channel]()
@@ -35,28 +34,30 @@ class Channel(host: String, port: Int, timeout: Int) {
     }
   }
 
-  def write(buf: ByteBuffer): Task[Int] =
-    Task.async[Int] { register =>
-      try {
-        channel write(
-          buf,
-          timeout,
-          TimeUnit.MILLISECONDS,
-          (),
-          new CompletionHandler[Integer, Unit] {
-            override def completed(result: Integer, attachment: Unit): Unit = register(\/-(result))
-            override def failed(exc: Throwable, attachment: Unit): Unit = {
-              exc match {
-                case e: IOException => connect(true)
-              }
-              register(-\/(exc))
+  def write(buf: ByteBuffer): Future[Int] = {
+    val p = Promise[Int]
+    try {
+      channel write(
+        buf,
+        timeout,
+        TimeUnit.MILLISECONDS,
+        (),
+        new CompletionHandler[Integer, Unit] {
+          override def completed(result: Integer, attachment: Unit): Unit = p.success(result)
+
+          override def failed(exc: Throwable, attachment: Unit): Unit = {
+            exc match {
+              case e: IOException => connect(true)
             }
+            p.failure(exc)
           }
-        )
-      } catch {
-        case e: Throwable => register(-\/(e))
-      }
+        }
+      )
+    } catch {
+      case e: Throwable => p.failure(e)
     }
+    p.future
+  }
 
   def close(): Unit = {
     channel close()

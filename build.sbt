@@ -9,24 +9,21 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scala
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.11.7"
+  scalaVersion := "2.11.8"
 )
 
-val circeVersion = "0.2.1"
-val scalazVersion = "7.1.3"
+val circeVersion = "0.3.0"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
-val catsVersion = "0.3.0"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) := compilerOptions,
   scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
-    "org.spire-math" %% "cats" % catsVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
-    "io.circe" %% "circe-parse" % circeVersion
+    "io.circe" %% "circe-parser" % circeVersion
   )
 )
 
@@ -73,11 +70,6 @@ lazy val core = project.in(file("core"))
     name := "core"
   )
   .settings(allSettings: _*)
-  .settings(
-    libraryDependencies ++= Seq(
-      "org.scalaz" %% "scalaz-concurrent" % scalazVersion
-    )
-  )
   .dependsOn(msgpack)
 
 lazy val msgpack = project.in(file("msgpack"))

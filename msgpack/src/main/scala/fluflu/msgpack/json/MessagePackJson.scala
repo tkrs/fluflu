@@ -23,10 +23,14 @@ object MessagePackJson {
       },
       { x: JsonNumber =>
         val n = x.toBigDecimal
-        if (n.isWhole() && Long.MinValue <= n)
-          intFormat(n.toLong)
-        else
-          formatOfDouble(n.toDouble)
+        n match {
+          case None => throw new ArithmeticException()
+          case Some(v) =>
+            if (v.isWhole() && Long.MinValue <= v)
+              intFormat(v.toLong)
+            else
+              formatOfDouble(v.toDouble)
+        }
       },
       { xs: String =>
         formatOfString(xs)
