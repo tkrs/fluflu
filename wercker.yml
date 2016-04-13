@@ -9,11 +9,11 @@ build:
           apk-install git
 
     - script:
-        name: sbt clean coverage test
+        name: sbt test
         code: |
-          sbt coverage test
+          sbt test
 
-    - script:
-        name: push report to codecov
-        code: |
-          bash <(curl -s https://codecov.io/bash)
+    # - script:
+    #     name: push report to codecov
+    #     code: |
+    #       bash <(curl -s https://codecov.io/bash)

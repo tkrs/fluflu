@@ -17,7 +17,7 @@ class JsonPackerSpec extends FlatSpec with Matchers {
   val instance = MessagePack getInstance JSON
 
   it should "pack to long" in {
-    val x = instance pack Json.long(Long.MaxValue)
+    val x = instance pack Json.fromLong(Long.MaxValue)
 
     x match {
       case Xor.Right(v) => assert(bytesToLong(v) == Long.MaxValue)
@@ -28,7 +28,7 @@ class JsonPackerSpec extends FlatSpec with Matchers {
 
     val js = """{"name": "Shun Yanaura"}"""
 
-    val emp = parse(js).getOrElse(Json.empty)
+    val emp = parse(js).getOrElse(Json.Null)
 
     val y = instance pack emp
     y match {

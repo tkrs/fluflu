@@ -11,9 +11,9 @@ object Message {
 
   def pack[A](e: Event[A])(implicit encoder: Encoder[A]): Throwable Xor Array[Byte] = e match {
     case Event(prefix, label, record, time) =>
-      val event = Json array (
-        Json string s"$prefix.$label",
-        Json long time,
+      val event = Json arr (
+        Json fromString s"$prefix.$label",
+        Json fromLong time,
         record asJson
       )
       MessagePackJson() pack event

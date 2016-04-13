@@ -12,7 +12,7 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.11.8"
 )
 
-val circeVersion = "0.3.0"
+val circeVersion = "0.4.0"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
 
