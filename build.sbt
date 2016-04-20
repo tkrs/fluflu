@@ -67,7 +67,11 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core"
+    name := "core",
+    scalaVersion := "2.11.8",
+    libraryDependencies ++= Seq(
+      "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0"
+    )
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
