@@ -43,7 +43,7 @@ lazy val publishSettings = Seq(
   },
   scmInfo := Some(
     ScmInfo(
-      url("https://github.com/fluflu"),
+      url("https://github.com/tkrs/fluflu"),
       "scm:git:git@github.com:tkrs/fluflu.git"
     )
   ),
