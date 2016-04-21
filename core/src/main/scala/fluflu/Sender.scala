@@ -2,7 +2,7 @@ package fluflu
 
 import java.nio.ByteBuffer
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait Sender {
   def write(b: Array[Byte]): Future[Int]
@@ -15,13 +15,20 @@ object DefaultSender {
     port: Int = 24224,
     timeout: Int = 3 * 1000,
     bufferCapacity: Int = 2 * 1024 * 1024
+  )(
+    implicit
+    ec: ExecutionContext
   ): Sender = new DefaultSender(host, port, timeout)
+
 }
 
 class DefaultSender(
     host: String,
     port: Int,
     timeout: Int
+)(
+    implicit
+    ec: ExecutionContext
 ) extends Sender {
 
   val ch = Channel(host, port, timeout)
