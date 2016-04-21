@@ -11,25 +11,25 @@ Add to your `build.sbt`
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.github.tkrs" %% "fluflu-core" % "0.2.2",
-  "com.github.tkrs" %% "fluflu-msgpack" % "0.2.2"
+  "com.github.tkrs" %% "fluflu-core" % "0.4.0",
+  "com.github.tkrs" %% "fluflu-msgpack" % "0.4.0"
 )
 ```
 
 ```scala
 import fluflu._
 import io.circe.generic.auto._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class Person(name: String, age: Int)
 
-import scalaz.concurrent.Strategy.DefaultStrategy
 implicit val sender = DefaultSender()
 
 val person = Person("tkrs", 99)
 val event = Event("prefix", "person", person)
 
 val t = WriteTask()
-t(event) // => Task[Event[Person]]
+val f: Future[Int] = t(event)
 ```
 
 ## TODO

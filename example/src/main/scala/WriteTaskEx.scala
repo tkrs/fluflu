@@ -45,7 +45,9 @@ object WriteTaskEx extends App {
 
   val bbb = BBB(Long.MaxValue, Long.MinValue, Int.MinValue, Int.MaxValue, ccc)
 
-  Await.result(wt(Event("debug", "bbb", bbb)), 1000 millis)
+  val f = wt(Event("debug", "bbb", bbb))
+
+  Await.result(f, 1000 millis)
 
   wt.close()
 
