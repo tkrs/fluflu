@@ -11,8 +11,8 @@ Add to your `build.sbt`
 
 ```scala
 libraryDependencies ++= Seq(
-  "com.github.tkrs" %% "fluflu-core" % "0.4.0",
-  "com.github.tkrs" %% "fluflu-msgpack" % "0.4.0"
+  "com.github.tkrs" %% "fluflu-core" % "0.4.1",
+  "com.github.tkrs" %% "fluflu-msgpack" % "0.4.1"
 )
 ```
 
