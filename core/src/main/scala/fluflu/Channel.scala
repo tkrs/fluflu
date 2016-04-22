@@ -1,5 +1,6 @@
 package fluflu
 
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels._
 import java.net.{ InetSocketAddress, StandardSocketOptions }
@@ -36,7 +37,11 @@ class Channel(host: String, port: Int, timeout: Int) {
   }
 
   def write(buf: ByteBuffer)(implicit ec: ExecutionContext): Future[Int] =
-    Future(channel.get.write(buf))
+    Future(channel.get.write(buf)).recover {
+      case e: IOException =>
+        connect(true); throw e
+      case e: NotYetConnectedException => throw e
+    }
 
   def close(): Unit = {
     channel.get.close()
