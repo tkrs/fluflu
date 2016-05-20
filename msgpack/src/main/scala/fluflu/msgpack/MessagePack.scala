@@ -17,7 +17,7 @@ object MessagePack {
 
   import java.nio.charset.StandardCharsets.UTF_8
 
-  def markArray(size: Int): Vector[Byte] =
+  def formatArrayFamilyHeader(size: Int): Vector[Byte] =
     if (size < 16)
       Vector((0x90 | size).toByte)
     else if (size < 65536)
@@ -25,7 +25,7 @@ object MessagePack {
     else
       Vector(0xdd, size >>> 24, size >>> 16, size >>> 8, size >>> 0).map(_.toByte)
 
-  def markMap(sz: Int): Vector[Byte] =
+  def formatMapFamilyHeader(sz: Int): Vector[Byte] =
     if (sz < 16)
       Vector((0x80 | sz).toByte)
     else if (sz < 65536)
@@ -33,7 +33,7 @@ object MessagePack {
     else
       Vector(0xdf, sz >>> 24, sz >>> 16, sz >>> 8, sz >>> 0).map(_.toByte)
 
-  def markString(sz: Int): Vector[Byte] =
+  def formatStrFamilyHeader(sz: Int): Vector[Byte] =
     if (sz < 32)
       Vector((0xa0 | sz).toByte)
     else if (sz < 65536)
@@ -41,52 +41,43 @@ object MessagePack {
     else
       Vector(0xdb, sz >>> 24, sz >>> 16, sz >>> 8, sz >>> 0).map(_.toByte)
 
-  def nilFormat(): Vector[Byte] = Vector(0xc0.toByte)
+  def formatNil: Vector[Byte] = Vector(0xc0.toByte)
 
-  def boolFormat(v: Boolean): Vector[Byte] = v match {
+  def formatBoolFamily(v: Boolean): Vector[Byte] = v match {
     case true => Vector(0xc3.toByte)
     case false => Vector(0xc2.toByte)
   }
 
-  def intFormat(l: Long): Vector[Byte] =
-    if (Long.MaxValue < l) ???
-    else if (4294967296L <= l) formatOfLong(0xcf, l)
-    else if (65536L <= l) formatOfInt(0xce, l.toInt)
-    else if (256L <= l) formatOfShort(0xcd, l.toInt)
-    else if (0 <= l) formatOfByte(0xcc, l.toInt)
-    else if (l >= -32L) formatOfByte(0xe0 | (l + 32).toInt)
-    else if (l >= Byte.MinValue.toLong) formatOfByte(0xd0, l.toInt)
-    else if (l >= Short.MinValue.toLong) formatOfShort(0xd1, l.toInt)
-    else if (l >= Int.MinValue.toLong) formatOfInt(0xd2, l.toInt)
-    else formatOfLong(0xd3, l)
-
-  def floatFormat(v: Double): Vector[Byte] =
-    if (Float.MinValue <= v && v <= Float.MaxValue)
-      formatOfFloat(v.toFloat)
-    else if (Double.MinValue <= v && v <= Double.MaxValue)
-      formatOfDouble(v)
-    else ???
-
-  import java.lang.Float.floatToIntBits
-  def formatOfFloat(v: Float): Vector[Byte] =
-    (floatToIntBits _ andThen (x => Vector(0xca.toByte, (x >>> 24).toByte, (x >>> 16).toByte, (x >>> 8).toByte, (x >>> 0).toByte)))(v)
+  def formatIntFamily(l: Long): Vector[Byte] =
+    if (4294967296L <= l) formatLong(0xcf, l)
+    else if (65536L <= l) formatInt(0xce, l.toInt)
+    else if (256L <= l) formatShort(0xcd, l.toInt)
+    else if (128 <= l) formatByte(0xcc, l.toInt)
+    else if (0 <= l) Vector(l.toByte)
+    else if (l >= -32L) formatByte(0xe0 | (l + 32).toInt)
+    else if (l >= Byte.MinValue.toLong) formatByte(0xd0, l.toInt)
+    else if (l >= Short.MinValue.toLong) formatShort(0xd1, l.toInt)
+    else if (l >= Int.MinValue.toLong) formatInt(0xd2, l.toInt)
+    else formatLong(0xd3, l)
+  def formatIntFamily(t: BigInt, v: BigInt): Vector[Byte] =
+    Vector(t, v >> 56, v >> 48, v >> 40, v >> 32, v >> 24, v >> 16, v >> 8, v >> 0).map(_.toByte)
 
   import java.lang.Double.doubleToLongBits
-  def formatOfDouble(v: Double): Vector[Byte] =
+  def formatFloatFamily(v: Double): Vector[Byte] =
     (doubleToLongBits _ andThen (x => Vector(0xcb.toLong, x >>> 56, x >>> 48, x >>> 40, x >>> 32, x >>> 24, x >>> 16, x >>> 8, x >>> 0)))(v).map(_.toByte)
 
-  def formatOfString(v: String): Vector[Byte] =
-    markString(strSize(v.toCharArray)) ++ v.getBytes(UTF_8)
+  def formatStrFamily(v: String): Vector[Byte] =
+    formatStrFamilyHeader(strSize(v.toCharArray)) ++ v.getBytes(UTF_8)
 
-  def formatOfByte(v: Int): Vector[Byte] =
+  def formatByte(v: Int): Vector[Byte] =
     Vector(v.toByte)
-  def formatOfByte(t: Int, v: Int): Vector[Byte] =
+  def formatByte(t: Int, v: Int): Vector[Byte] =
     Vector(t, v).map(_.toByte)
-  def formatOfShort(t: Int, v: Int): Vector[Byte] =
+  def formatShort(t: Int, v: Int): Vector[Byte] =
     Vector(t, v >>> 8, v >>> 0).map(_.toByte)
-  def formatOfInt(t: Int, v: Int): Vector[Byte] =
+  def formatInt(t: Int, v: Int): Vector[Byte] =
     Vector(t, v >>> 24, v >>> 16, v >>> 8, v >>> 0).map(_.toByte)
-  def formatOfLong(t: Long, v: Long): Vector[Byte] =
+  def formatLong(t: Long, v: Long): Vector[Byte] =
     Vector(t, v >>> 56, v >>> 48, v >>> 40, v >>> 32, v >>> 24, v >>> 16, v >>> 8, v >>> 0).map(_.toByte)
 
   def strSize(value: Array[Char]): Int = strSize(value, 0)
