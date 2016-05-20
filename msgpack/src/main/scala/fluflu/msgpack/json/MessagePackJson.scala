@@ -14,36 +14,41 @@ object MessagePackJson {
     override def pack(doc: Json): Throwable Xor Array[Byte] =
       Xor.catchOnly[Throwable](go(doc).toArray)
 
+    def double(x: BigDecimal): Boolean =
+      (x.isDecimalDouble || x.isBinaryDouble || x.isExactDouble) && x.scale > 0
+
     val go: (Json) => Vector[Byte] = _.fold(
       {
-        nilFormat()
+        formatNil
       },
       { x: Boolean =>
-        boolFormat(x)
+        formatBoolFamily(x)
       },
       { x: JsonNumber =>
         val n = x.toBigDecimal
         n match {
-          case None => throw new ArithmeticException()
+          case None =>
+            throw new ArithmeticException()
+          case Some(v) if double(v) =>
+            formatFloatFamily(v.toDouble)
+          case Some(v) if v.isValidLong =>
+            formatIntFamily(v.toLong)
           case Some(v) =>
-            if (v.isWhole() && Long.MinValue <= v)
-              intFormat(v.toLong)
-            else
-              formatOfDouble(v.toDouble)
+            formatIntFamily(BigInt(0xcf.toLong), v.toBigInt())
         }
       },
       { xs: String =>
-        formatOfString(xs)
+        formatStrFamily(xs)
       },
       { xs: List[Json] =>
-        markArray(xs.size) ++ xs.foldLeft(Vector.empty[Byte])(_ ++ go(_))
+        formatArrayFamilyHeader(xs.size) ++ xs.foldLeft(Vector.empty[Byte])(_ ++ go(_))
       },
       { x: JsonObject =>
         val xs = x.toList
-        val vec = markMap(xs.size)
+        val vec = formatMapFamilyHeader(xs.size)
         vec ++ xs.foldLeft(Vector.empty[Byte]) {
           case (acc, (key, v)) =>
-            acc ++ formatOfString(key) ++ go(v)
+            acc ++ formatStrFamily(key) ++ go(v)
         }
       }
     )
