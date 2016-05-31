@@ -12,6 +12,7 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.11.8"
 )
 
+val catsVersion = "0.4.1"
 val circeVersion = "0.4.0"
 val scalacheckVersion = "1.12.3"
 val scalatestVersion = "2.2.5"
@@ -21,6 +22,7 @@ lazy val baseSettings = Seq(
   scalacOptions in (Compile, console) := compilerOptions,
   scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
+    "org.typelevel" %% "cats" % catsVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion
@@ -92,6 +94,7 @@ lazy val example = project.in(file("example"))
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
+  .settings(fork := true)
   .dependsOn(core, msgpack)
 
 lazy val tests = project.in(file("tests"))
@@ -102,6 +105,7 @@ lazy val tests = project.in(file("tests"))
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
+  .settings(fork in test := true)
   .settings(
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalatestVersion,
