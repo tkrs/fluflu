@@ -41,7 +41,7 @@ object Main extends App {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   import cats.implicits._
-  val rt: Future[Stream[Throwable Xor Unit]] = st.traverse(a => if (!wt.die) wt.write(a) else Future.failed(new Exception("die")))
+  val rt: Future[Stream[Throwable Xor Unit]] = st.traverse(a => if (!wt.die) wt.writeFuture(a) else Future.failed(new Exception("die")))
 
   Await.result(rt, Duration.Inf)
 

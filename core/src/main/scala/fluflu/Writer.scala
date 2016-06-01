@@ -34,7 +34,10 @@ final case class Writer(
 
   def die: Boolean = client.die
 
-  def write[A](e: Event[A])(implicit A: Encoder[A], E: ExecutionContext): Future[Throwable Xor Unit] =
+  def write[A](e: Event[A])(implicit A: Encoder[A]): Throwable Xor Unit =
+    Message.pack(e).map(msg => client enqueue Letter(msg, 0))
+
+  def writeFuture[A](e: Event[A])(implicit A: Encoder[A], E: ExecutionContext): Future[Throwable Xor Unit] =
     Future(Message pack e) map (packed => packed map (msg => client enqueue Letter(msg, 0)))
 
   def close(): Unit = client.close()
