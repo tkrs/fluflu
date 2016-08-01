@@ -1,6 +1,6 @@
 package fluflu
 
-import algebra.Eq
+import cats.Eq
 import cats.data.Xor
 import fluflu.msgpack._
 import io.circe.Json
