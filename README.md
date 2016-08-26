@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/tkrs/fluflu.png?label=ready&title=Ready)](https://waffle.io/tkrs/fluflu)
 # fluflu
 fluent logger for scala
 
