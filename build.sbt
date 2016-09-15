@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, msgpack, tests)
-  .dependsOn(core, msgpack)
+  .aggregate(core, task, msgpack, tests)
+  .dependsOn(core, task, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
 
@@ -12,10 +12,11 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.11.8"
 )
 
-val catsVersion = "0.6.0"
-val circeVersion = "0.5.0-M2"
+val catsVersion = "0.7.0"
+val catbirdVersion = "0.7.0"
+val circeVersion = "0.5.0-M3"
 val scalacheckVersion = "1.12.3"
-val scalatestVersion = "2.2.5"
+val scalatestVersion = "3.0.0"
 
 lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions,
@@ -25,7 +26,8 @@ lazy val baseSettings = Seq(
     "org.typelevel" %% "cats" % catsVersion,
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
-    "io.circe" %% "circe-parser" % circeVersion
+    "io.circe" %% "circe-parser" % circeVersion,
+    "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0"
   )
 )
 
@@ -70,13 +72,24 @@ lazy val core = project.in(file("core"))
     description := "fluflu core",
     moduleName := "fluflu-core",
     name := "core",
+    scalaVersion := "2.11.8"
+  )
+  .settings(allSettings: _*)
+  .dependsOn(msgpack)
+
+lazy val task = project.in(file("task"))
+  .settings(
+    description := "fluflu task",
+    moduleName := "fluflu-task",
+    name := "task",
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0"
+      "io.catbird" %% "catbird-util" % catbirdVersion
     )
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
+
 
 lazy val msgpack = project.in(file("msgpack"))
   .settings(
@@ -95,7 +108,7 @@ lazy val example = project.in(file("example"))
   .settings(allSettings: _*)
   .settings(noPublishSettings)
   .settings(fork := true)
-  .dependsOn(core, msgpack)
+  .dependsOn(core, task, msgpack)
 
 lazy val tests = project.in(file("tests"))
   .settings(
