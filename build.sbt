@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, task, msgpack, tests)
-  .dependsOn(core, task, msgpack)
+  .aggregate(core, task, sf, msgpack, tests)
+  .dependsOn(core, task, sf, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
 
@@ -90,6 +90,15 @@ lazy val task = project.in(file("task"))
   .settings(allSettings: _*)
   .dependsOn(msgpack)
 
+lazy val sf = project.in(file("sf"))
+  .settings(
+    description := "fluflu scala future",
+    moduleName := "fluflu-sf",
+    name := "sf",
+    scalaVersion := "2.11.8"
+  )
+  .settings(allSettings: _*)
+  .dependsOn(msgpack)
 
 lazy val msgpack = project.in(file("msgpack"))
   .settings(
@@ -108,7 +117,7 @@ lazy val example = project.in(file("example"))
   .settings(allSettings: _*)
   .settings(noPublishSettings)
   .settings(fork := true)
-  .dependsOn(core, task, msgpack)
+  .dependsOn(core, task, sf, msgpack)
 
 lazy val tests = project.in(file("tests"))
   .settings(
