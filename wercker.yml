@@ -1,19 +1,19 @@
 build:
   box:
-    id: 1science/sbt
+    id: hseeberger/scala-sbt
 
   steps:
     - script:
         name: install git #for codecov
         code: |
-          apk-install git
+          apt-get update && apt-get install git
 
     - script:
         name: sbt test
         code: |
-          sbt test
+          sbt coverage test coverageReport
 
-    # - script:
-    #     name: push report to codecov
-    #     code: |
-    #       bash <(curl -s https://codecov.io/bash)
+    - script:
+        name: push coverage report to codecov
+        code: |
+          bash <(curl -s https://codecov.io/bash)
