@@ -4,7 +4,7 @@ build:
 
   steps:
     - script:
-        name: install git #for codecov
+        name: install git # for codecov
         code: |
           apt-get update && apt-get install git
 

@@ -11,7 +11,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 final case class Writer(
     host: String,
     port: Int,
-    timeout: Long,
     clientPoolSize: Int = 1,
     messengerPoolSize: Int = 1,
     maxConnectionRetries: Int = 10,
@@ -23,7 +22,6 @@ final case class Writer(
   private[this] val client = Client(
     host,
     port,
-    timeout,
     clientPoolSize,
     messengerPoolSize,
     maxConnectionRetries,
