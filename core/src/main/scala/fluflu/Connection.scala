@@ -4,10 +4,13 @@ import java.io.IOException
 import java.lang.{ Boolean => JBool }
 import java.net.{ InetSocketAddress, StandardSocketOptions }
 import java.nio.ByteBuffer
-import java.nio.channels.SocketChannel
+import java.nio.channels.{ NotYetConnectedException, SocketChannel }
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
 import scala.compat.java8.FunctionConverters._
+import scala.concurrent.blocking
+import scala.util.{ Failure, Try }
 
 final case class Connection(remote: InetSocketAddress, maxConnectRetries: Int, backoff: Backoff) {
   import StandardSocketOptions._
@@ -33,7 +36,9 @@ final case class Connection(remote: InetSocketAddress, maxConnectRetries: Int, b
             if (x.connect(remote)) return x else retries += 1
           } catch {
             case e: IOException =>
-              blocker(backoff.nextDelay(retries))
+              blocking {
+                TimeUnit.NANOSECONDS.sleep(backoff.nextDelay(retries).toNanos)
+              }
               x.close()
               x = open
               retries += 1
@@ -53,17 +58,15 @@ final case class Connection(remote: InetSocketAddress, maxConnectRetries: Int, b
 
   def isClosed: Boolean = channel.get == null
 
-  def write(message: ByteBuffer): Unit = {
-    try {
-      channel.get.write(message)
-    } catch {
+  def write(message: ByteBuffer): Unit =
+    Try(channel.get.write(message)) recoverWith {
+      case e: NotYetConnectedException =>
+        channel.get.finishConnect()
+        Failure(e)
       case e: IOException =>
         close()
-        throw e
-      case e: Throwable =>
-        throw e
+        Failure(e)
     }
-  }
 
   def close(): Unit =
     channel.getAndUpdate(asJavaUnaryOperator { c =>

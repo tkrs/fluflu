@@ -5,10 +5,11 @@ import java.net.InetSocketAddress
 import java.nio.channels._
 import java.util.concurrent._
 
+import scala.concurrent.blocking
+
 final case class Client(
     host: String,
     port: Int,
-    timeout: Long,
     clientPoolSize: Int,
     consumerPoolSize: Int,
     maxConnectRetries: Int,
@@ -20,32 +21,31 @@ final case class Client(
   private[this] val dest = new InetSocketAddress(host, port)
   private[this] val letterQueue: ConcurrentLinkedDeque[Letter] = new ConcurrentLinkedDeque
   private[this] val connection = Connection(dest, maxConnectRetries, reconnectionBackoff)
-  private[this] val pool = Executors.newWorkStealingPool(clientPoolSize)
-  private[this] val messenger = Messenger(connection, letterQueue, timeout, consumerPoolSize, handleRetry)
+  private[this] val pool = Executors.newCachedThreadPool
+  private[this] val messenger = Messenger(connection, letterQueue, consumerPoolSize, handleRetry)
   pool.submit(messenger)
 
-  def die = connection.noLongerRetriable
+  def die: Boolean = connection.noLongerRetriable
 
   def enqueue(letter: Letter): Unit = messenger.enqueue(letter)
 
   private[this] def retry(letter: Letter): Unit =
     if (letter.retries < maxWriteRetries) {
-      blocker(rewriteBackoff.nextDelay(letter.retries))
+      blocking {
+        TimeUnit.NANOSECONDS.sleep(rewriteBackoff.nextDelay(letter.retries).toNanos)
+      }
       letter.message.flip()
       messenger.enqueueFront(letter.copy(retries = letter.retries + 1))
     }
 
   private[this] def handleRetry(letter: Letter): PartialFunction[Throwable, Unit] = {
-    case ee: ExecutionException => ee.getCause match {
-      case e: NotYetConnectedException => retry(letter)
-      case e: IOException => retry(letter)
-    }
-    case e: TimeoutException => retry(letter)
+    case e: NotYetConnectedException => retry(letter)
+    case e: IOException => retry(letter)
   }
 
   def close(): Unit = {
-    pool.shutdown()
-    messenger.close()
+    pool.awaitTermination(10, TimeUnit.SECONDS)
+    pool.shutdownNow()
     connection.close()
   }
 }
