@@ -5,14 +5,20 @@ import java.lang.{ Boolean => JBool }
 import java.net.{ InetSocketAddress, StandardSocketOptions }
 import java.nio.ByteBuffer
 import java.nio.channels.{ NotYetConnectedException, SocketChannel }
+import java.time.{ Clock, Duration, Instant }
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
 
+import scala.annotation.tailrec
 import scala.compat.java8.FunctionConverters._
 import scala.concurrent.blocking
 import scala.util.{ Failure, Try }
 
-final case class Connection(remote: InetSocketAddress, maxConnectRetries: Int, backoff: Backoff) {
+final case class Connection(
+    remote: InetSocketAddress,
+    connectionRetryTimeout: Duration,
+    backoff: Backoff
+)(implicit clock: Clock) {
   import StandardSocketOptions._
 
   private[this] val channel: AtomicReference[SocketChannel] =
@@ -28,37 +34,33 @@ final case class Connection(remote: InetSocketAddress, maxConnectRetries: Int, b
 
   def connect(): Unit =
     channel.updateAndGet(asJavaUnaryOperator { c =>
-      var x = if (c == null) { open } else c
-      def doConnect(retries: Int): SocketChannel = {
-        var retries = 0
-        while (retries < maxConnectRetries) {
-          try {
-            if (x.connect(remote)) return x else retries += 1
-          } catch {
-            case e: IOException =>
+      val x = if (c == null) { open } else c
+      @tailrec def doConnect(retries: Int, start: Instant): SocketChannel = {
+        try {
+          if (x.connect(remote)) x else throw new Exception()
+        } catch {
+          case _: IOException =>
+            if (Instant.now(clock).minusNanos(connectionRetryTimeout.toNanos).compareTo(start) <= 0) {
               blocking {
                 TimeUnit.NANOSECONDS.sleep(backoff.nextDelay(retries).toNanos)
               }
               x.close()
-              x = open
-              retries += 1
-          }
+              doConnect(retries + 1, start)
+            } else {
+              if (x.isOpen) x.close()
+              noLongerRetriable = true
+              null
+            }
         }
-        if (retries == maxConnectRetries) {
-          if (x.isOpen) x.close()
-          noLongerRetriable = true
-          return null
-        }
-        x
       }
-      doConnect(0)
+      doConnect(0, Instant.now(clock))
     })
 
   connect()
 
   def isClosed: Boolean = channel.get == null
 
-  def write(message: ByteBuffer): Unit =
+  def write(message: ByteBuffer): Try[Int] =
     Try(channel.get.write(message)) recoverWith {
       case e: NotYetConnectedException =>
         channel.get.finishConnect()
