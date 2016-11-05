@@ -2,7 +2,6 @@ import java.time.{ Clock, Duration }
 
 import cats.data.Xor
 import fluflu._
-import data._
 import io.circe.generic.auto._
 
 import scala.concurrent.duration.Duration._
@@ -35,7 +34,7 @@ object Main extends App {
 
   val ccc = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
 
-  val xs = Stream.from(1).map(x => Event("docker", "ccc", ccc.copy(i = x))).take(2000)
+  val xs = Stream.from(1).map(x => Event("docker", "ccc", ccc.copy(i = x))).take(5000)
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
