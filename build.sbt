@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, task, sf, msgpack, tests)
-  .dependsOn(core, task, sf, msgpack)
+  .aggregate(core, queue, sf, msgpack, tests)
+  .dependsOn(core, queue, sf, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
 
@@ -12,10 +12,10 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.11.8"
 )
 
-val catsVersion = "0.7.0"
+val catsVersion = "0.7.2"
 val catbirdVersion = "0.7.0"
-val circeVersion = "0.5.0-M3"
-val scalacheckVersion = "1.12.3"
+val circeVersion = "0.5.4"
+val scalacheckVersion = "1.13.4"
 val scalatestVersion = "3.0.0"
 
 lazy val baseSettings = Seq(
@@ -23,11 +23,7 @@ lazy val baseSettings = Seq(
   scalacOptions in (Compile, console) := compilerOptions,
   scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
-    "org.typelevel" %% "cats" % catsVersion,
-    "io.circe" %% "circe-core" % circeVersion,
-    "io.circe" %% "circe-generic" % circeVersion,
-    "io.circe" %% "circe-parser" % circeVersion,
-    "org.scala-lang.modules" %% "scala-java8-compat" % "0.7.0"
+    "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   )
 )
 
@@ -77,18 +73,21 @@ lazy val core = project.in(file("core"))
   .settings(allSettings: _*)
   .dependsOn(msgpack)
 
-lazy val task = project.in(file("task"))
+lazy val queue = project.in(file("queue"))
   .settings(
-    description := "fluflu task",
-    moduleName := "fluflu-task",
-    name := "task",
+    description := "fluflu queue",
+    moduleName := "fluflu-queue",
+    name := "queue",
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
-      "io.catbird" %% "catbird-util" % catbirdVersion
+      "org.typelevel" %% "cats" % catsVersion,
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion
     )
   )
   .settings(allSettings: _*)
-  .dependsOn(msgpack)
+  .dependsOn(core, msgpack)
 
 lazy val sf = project.in(file("sf"))
   .settings(
@@ -98,13 +97,18 @@ lazy val sf = project.in(file("sf"))
     scalaVersion := "2.11.8"
   )
   .settings(allSettings: _*)
-  .dependsOn(msgpack)
+  .dependsOn(core, msgpack)
 
 lazy val msgpack = project.in(file("msgpack"))
   .settings(
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
-    name := "msgpack"
+    name := "msgpack",
+    libraryDependencies ++= Seq(
+      "io.circe" %% "circe-core" % circeVersion,
+      "io.circe" %% "circe-generic" % circeVersion,
+      "io.circe" %% "circe-parser" % circeVersion
+    )
   )
   .settings(allSettings: _*)
 
@@ -117,7 +121,7 @@ lazy val example = project.in(file("example"))
   .settings(allSettings: _*)
   .settings(noPublishSettings)
   .settings(fork := true)
-  .dependsOn(core, task, sf, msgpack)
+  .dependsOn(queue, msgpack)
 
 lazy val tests = project.in(file("tests"))
   .settings(
