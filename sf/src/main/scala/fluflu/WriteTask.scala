@@ -1,36 +1,32 @@
 package fluflu
 
-import cats.data.Xor
+import java.time.{ Clock, Duration, Instant }
+
+import io.circe.Encoder
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-object WriteTask {
-  def apply()(
-    implicit
-    s: Sender,
-    ec: ExecutionContext
-  ) = new WriteTask()
-}
+final case class Writer(
+    host: String = "127.0.0.1",
+    port: Int = 24224,
+    reconnectionTimeout: Duration,
+    rewriteTimeout: Duration,
+    reconnectionBackoff: Backoff,
+    rewriteBackoff: Backoff
+)(implicit clock: Clock) {
 
-class WriteTask()(
-    implicit
-    s: Sender,
-    ec: ExecutionContext
-) {
+  private[this] val messenger = Messenger(
+    host,
+    port,
+    reconnectionTimeout,
+    rewriteTimeout,
+    reconnectionBackoff,
+    rewriteBackoff
+  )
+  def write[A: Encoder](e: Event[A])(implicit ec: ExecutionContext): Future[Unit] =
+    Future(Message pack e) map (packed => packed map (msg => messenger.write(Letter(msg), 0, Instant.now(clock))))
 
-  import data.Event
-  import io.circe.Encoder
-
-  def apply[A](event: Event[A])(implicit encoder: Encoder[A]): Future[Int] =
-    Message pack event match {
-      case Xor.Left(e) => Future.failed(e)
-      case Xor.Right(bs) => s.write(bs)
-    }
-
-  def close() = s.close()
-
-  override def finalize(): Unit = {
-    super.finalize()
-    close()
+  def close(): Unit = {
+    messenger.close()
   }
 }

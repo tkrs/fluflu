@@ -34,10 +34,9 @@ final case class Connection(
 
   def connect(): Unit =
     channel.updateAndGet(asJavaUnaryOperator { c =>
-      val x = if (c == null) { open } else c
-      @tailrec def doConnect(retries: Int, start: Instant): SocketChannel = {
+      @tailrec def doConnect(x: SocketChannel, retries: Int, start: Instant): SocketChannel = {
         try {
-          if (x.connect(remote)) x else throw new Exception()
+          if (x.connect(remote)) x else throw new IOException()
         } catch {
           case _: IOException =>
             if (Instant.now(clock).minusNanos(reconnectionTimeout.toNanos).compareTo(start) <= 0) {
@@ -45,7 +44,7 @@ final case class Connection(
                 TimeUnit.NANOSECONDS.sleep(reconnectionBackoff.nextDelay(retries).toNanos)
               }
               x.close()
-              doConnect(retries + 1, start)
+              doConnect(open, retries + 1, start)
             } else {
               if (x.isOpen) x.close()
               noLongerRetriable = true
@@ -53,7 +52,8 @@ final case class Connection(
             }
         }
       }
-      doConnect(0, Instant.now(clock))
+      val x = if (c == null) { open } else c
+      doConnect(x, 0, Instant.now(clock))
     })
 
   connect()

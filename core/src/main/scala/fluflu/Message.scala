@@ -3,7 +3,6 @@ package fluflu
 import java.nio.ByteBuffer
 
 import cats.data.Xor
-import data.Event
 import fluflu.msgpack.{ JSON, MessagePack }
 import io.circe.{ Encoder, Json }
 import io.circe.syntax._

@@ -1,5 +1,4 @@
 import java.time.{ Clock, Duration }
-import java.util.concurrent.TimeUnit
 
 import cats.data.Xor
 import fluflu._
