@@ -20,8 +20,8 @@ object Main extends App {
   val wt = Writer(
     host = args(0),
     port = args(1).toInt,
-    connectionRetryTimeout = Duration.ofSeconds(10),
-    writeRetryTimeout = Duration.ofSeconds(10),
+    reconnectionTimeout = Duration.ofSeconds(10),
+    rewriteTimeout = Duration.ofSeconds(10),
     reconnectionBackoff = reconnectionBackoff,
     rewriteBackoff = rewriteBackoff
   )

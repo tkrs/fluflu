@@ -16,8 +16,8 @@ import scala.util.{ Failure, Try }
 
 final case class Connection(
     remote: InetSocketAddress,
-    connectionRetryTimeout: Duration,
-    backoff: Backoff
+    reconnectionTimeout: Duration,
+    reconnectionBackoff: Backoff
 )(implicit clock: Clock) {
   import StandardSocketOptions._
 
@@ -40,9 +40,9 @@ final case class Connection(
           if (x.connect(remote)) x else throw new Exception()
         } catch {
           case _: IOException =>
-            if (Instant.now(clock).minusNanos(connectionRetryTimeout.toNanos).compareTo(start) <= 0) {
+            if (Instant.now(clock).minusNanos(reconnectionTimeout.toNanos).compareTo(start) <= 0) {
               blocking {
-                TimeUnit.NANOSECONDS.sleep(backoff.nextDelay(retries).toNanos)
+                TimeUnit.NANOSECONDS.sleep(reconnectionBackoff.nextDelay(retries).toNanos)
               }
               x.close()
               doConnect(retries + 1, start)

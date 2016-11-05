@@ -11,8 +11,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 final case class Writer(
     host: String = "127.0.0.1",
     port: Int = 24224,
-    connectionRetryTimeout: Duration,
-    writeRetryTimeout: Duration,
+    reconnectionTimeout: Duration,
+    rewriteTimeout: Duration,
     reconnectionBackoff: Backoff,
     rewriteBackoff: Backoff
 )(implicit clock: Clock) {
@@ -20,8 +20,8 @@ final case class Writer(
   private[this] val messenger = Messenger(
     host,
     port,
-    connectionRetryTimeout,
-    writeRetryTimeout,
+    reconnectionTimeout,
+    rewriteTimeout,
     reconnectionBackoff,
     rewriteBackoff
   )

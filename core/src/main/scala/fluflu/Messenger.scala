@@ -11,8 +11,8 @@ import scala.util.{ Failure, Success }
 final case class Messenger(
     host: String,
     port: Int,
-    connectionRetryTimeout: Duration,
-    writeRetryTimeout: Duration,
+    reconnectionTimeout: Duration,
+    rewriteTimeout: Duration,
     reconnectionBackoff: Backoff,
     rewriteBackoff: Backoff
 )(implicit clock: Clock) {
@@ -20,14 +20,14 @@ final case class Messenger(
   private[this] val blockingDuration: Long = 50
   private[this] val dest = new InetSocketAddress(host, port)
   private[this] val letterQueue: BlockingDeque[Letter] = new LinkedBlockingDeque[Letter]()
-  private[this] val connection = Connection(dest, connectionRetryTimeout, reconnectionBackoff)
+  private[this] val connection = Connection(dest, reconnectionTimeout, reconnectionBackoff)
   private[this] val executor = Executors.newSingleThreadExecutor()
 
   executor.execute(new Runnable {
     @tailrec def doWrite(letter: Letter, retries: Int, start: Instant): Unit =
       connection.write(letter.message) match {
         case Failure(e) =>
-          if (Instant.now(clock).minusNanos(writeRetryTimeout.toNanos).compareTo(start) <= 0) {
+          if (Instant.now(clock).minusNanos(rewriteTimeout.toNanos).compareTo(start) <= 0) {
             blocking {
               TimeUnit.NANOSECONDS.sleep(rewriteBackoff.nextDelay(letter.retries).toNanos)
             }
