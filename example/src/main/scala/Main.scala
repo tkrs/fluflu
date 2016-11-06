@@ -15,7 +15,7 @@ object Main extends App {
   val reconnectionBackoff = ExponentialBackoff(Duration.ofNanos(500000000L), Duration.ofSeconds(5), new Random(System.nanoTime()))
   val rewriteBackoff = ExponentialBackoff(Duration.ofNanos(500000000L), Duration.ofSeconds(5), new Random(System.nanoTime()))
 
-  val wt = Writer(
+  val messenger = fluflu.DefaultMessenger(
     host = args(0),
     port = args(1).toInt,
     reconnectionTimeout = Duration.ofSeconds(10),
@@ -23,6 +23,8 @@ object Main extends App {
     reconnectionBackoff = reconnectionBackoff,
     rewriteBackoff = rewriteBackoff
   )
+
+  val wt = Writer(messenger)
 
   case class CCC(
     i: Int,
@@ -34,7 +36,7 @@ object Main extends App {
 
   val ccc = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
 
-  val xs = Stream.from(1).map(x => Event("docker", "ccc", ccc.copy(i = x))).take(5000)
+  val xs: Stream[Event[CCC]] = Stream.from(1).map(x => Event("docker", "ccc", ccc.copy(i = x))).take(5000)
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
