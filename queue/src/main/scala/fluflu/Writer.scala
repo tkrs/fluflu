@@ -9,27 +9,11 @@ import io.circe.Encoder
 import scala.annotation.tailrec
 import scala.concurrent.{ blocking, ExecutionContext, Future }
 
-final case class Writer(
-    host: String = "127.0.0.1",
-    port: Int = 24224,
-    reconnectionTimeout: Duration,
-    rewriteTimeout: Duration,
-    reconnectionBackoff: Backoff,
-    rewriteBackoff: Backoff
-)(implicit clock: Clock) {
+final case class Writer(messenger: Messenger)(implicit clock: Clock) {
 
   private[this] val letterQueue: BlockingDeque[Letter] = new LinkedBlockingDeque[Letter]()
-
-  private[this] val messenger = Messenger(
-    host,
-    port,
-    reconnectionTimeout,
-    rewriteTimeout,
-    reconnectionBackoff,
-    rewriteBackoff
-  )
-
   private[this] val executor = Executors.newSingleThreadExecutor()
+
   executor.execute(new Runnable {
     private[this] val blockingDuration: Long = 5000
     override def run(): Unit = {

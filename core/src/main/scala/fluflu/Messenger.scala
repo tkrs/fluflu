@@ -8,14 +8,20 @@ import scala.annotation.tailrec
 import scala.concurrent.blocking
 import scala.util.{ Failure, Success }
 
-final case class Messenger(
+trait Messenger {
+  def write(letter: Letter, retries: Int, start: Instant): Unit
+  def die: Boolean
+  def close(): Unit
+}
+
+final case class DefaultMessenger(
     host: String,
     port: Int,
     reconnectionTimeout: Duration,
     rewriteTimeout: Duration,
     reconnectionBackoff: Backoff,
     rewriteBackoff: Backoff
-)(implicit clock: Clock) {
+)(implicit clock: Clock) extends Messenger {
 
   private[this] val dest = new InetSocketAddress(host, port)
   private[this] val connection = Connection(dest, reconnectionTimeout, reconnectionBackoff)
