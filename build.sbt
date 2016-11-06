@@ -121,7 +121,7 @@ lazy val example = project.in(file("example"))
   .settings(allSettings: _*)
   .settings(noPublishSettings)
   .settings(fork := true)
-  .dependsOn(queue, msgpack)
+  .dependsOn(queue)
 
 lazy val tests = project.in(file("tests"))
   .settings(

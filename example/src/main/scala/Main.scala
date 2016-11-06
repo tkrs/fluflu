@@ -1,19 +1,36 @@
 import java.time.{ Clock, Duration }
 
+import cats.MonadError
 import cats.data.Xor
+import cats.instances.future._
+import cats.instances.stream._
+import cats.syntax.traverse._
 import fluflu._
 import io.circe.generic.auto._
 
 import scala.concurrent.duration.Duration._
 import scala.concurrent.{ Await, Future }
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 object Main extends App {
 
-  implicit val clock = Clock.systemUTC()
+  case class CCC(
+    i: Int,
+    ttt: String,
+    uuu: String,
+    sss: Int,
+    mmm: Map[String, String],
+    ggg: Seq[Double]
+  )
 
-  val reconnectionBackoff = ExponentialBackoff(Duration.ofNanos(500000000L), Duration.ofSeconds(5), new Random(System.nanoTime()))
-  val rewriteBackoff = ExponentialBackoff(Duration.ofNanos(500000000L), Duration.ofSeconds(5), new Random(System.nanoTime()))
+  implicit val clock: Clock = Clock.systemUTC()
+
+  val rnd: Random = new Random(System.nanoTime())
+  val reconnectionBackoff: Backoff =
+    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
+  val rewriteBackoff: Backoff =
+    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
 
   val messenger = fluflu.DefaultMessenger(
     host = args(0),
@@ -24,26 +41,22 @@ object Main extends App {
     rewriteBackoff = rewriteBackoff
   )
 
-  val wt = Writer(messenger)
+  val writer: Writer = Writer(messenger)
 
-  case class CCC(
-    i: Int,
-    ttt: String,
-    uuu: String,
-    sss: Int, mmm: Map[String, String],
-    ggg: Seq[Double]
-  )
+  val ccc: CCC = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
 
-  val ccc = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
+  val xs: Stream[Event[CCC]] =
+    Stream.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000)
 
-  val xs: Stream[Event[CCC]] = Stream.from(1).map(x => Event("docker", "ccc", ccc.copy(i = x))).take(5000)
+  val write: Event[CCC] => Future[Unit] = { a =>
+    if (writer.die) Future.failed(new Exception("die"))
+    else writer.writeFuture(a).flatMap(_.fold(Future.failed, Future.successful))
+  }
 
-  import scala.concurrent.ExecutionContext.Implicits.global
+  val f: Future[Stream[Unit]] = xs.traverse(write)
+  val fa: Future[Xor[Throwable, Stream[Unit]]] = MonadError[Future, Throwable].attempt(f)
+  val r: Xor[Throwable, Stream[Unit]] = Await.result(fa, Inf)
+  println(r.isRight)
 
-  import cats.implicits._
-  println("start")
-  val rt: Future[Stream[Throwable Xor Unit]] = xs.traverse(a => if (!wt.die) wt.writeFuture(a) else Future.failed(new Exception("die")))
-  Await.result(rt, Inf)
-  println("done")
-  wt.close()
+  writer.close()
 }

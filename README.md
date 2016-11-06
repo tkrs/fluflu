@@ -10,35 +10,75 @@ fluent logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies ++= Seq(
-  "com.github.tkrs" %% "fluflu-core" % "0.4.1",
-  "com.github.tkrs" %% "fluflu-msgpack" % "0.4.1"
-)
+libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.4"
 ```
 
 ```scala
+import java.time.{ Clock, Duration }
+
+import cats.data.Xor
+import cats.instances.future._
+import cats.instances.stream._
+import cats.syntax.traverse._
 import fluflu._
 import io.circe.generic.auto._
+
+import scala.concurrent.duration.Duration._
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
 
-case class Person(name: String, age: Int)
+object Main extends App {
 
-implicit val sender = DefaultSender()
+  case class CCC(
+    i: Int,
+    ttt: String,
+    uuu: String,
+    sss: Int, mmm: Map[String, String],
+    ggg: Seq[Double]
+  )
 
-val person = Person("tkrs", 99)
-val event = Event("prefix", "person", person)
+  implicit val clock: Clock = Clock.systemUTC()
 
-val t = WriteTask()
-val f: Future[Int] = t(event)
+  val rnd: Random = new Random(System.nanoTime())
+  val reconnectionBackoff: Backoff =
+    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
+  val rewriteBackoff: Backoff =
+    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
+
+  val messenger = fluflu.DefaultMessenger(
+    host = "127.0.0.1",
+    port = 24224,
+    reconnectionTimeout = Duration.ofSeconds(10),
+    rewriteTimeout = Duration.ofSeconds(10),
+    reconnectionBackoff = reconnectionBackoff,
+    rewriteBackoff = rewriteBackoff
+  )
+
+  val writer: Writer = Writer(messenger)
+
+  val ccc: CCC = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
+
+  val xs: Stream[Event[CCC]] =
+    Stream.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000)
+
+  val write: Event[CCC] => Future[Unit] = { a =>
+    if (writer.die) Future.failed(new Exception("die"))
+    else writer.writeFuture(a).flatMap(_.fold(Future.failed, Future.successful))
+  }
+
+  val f: Future[Stream[Unit]] = xs.traverse(write)
+  val fa: Future[Xor[Throwable, Stream[Unit]]] = MonadError[Future, Throwable].attempt(f)
+  val r: Xor[Throwable, Stream[Unit]] = Await.result(fa, Inf)
+  println(r)
+
+  writer.close()
+}
 ```
 
 ## TODO
 
 - TEST
-
-## COPYRIGHT
-
-Copyright (c) 2015 Takeru Sato
 
 ## LICENSE
 
