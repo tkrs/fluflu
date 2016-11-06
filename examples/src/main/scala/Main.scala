@@ -13,6 +13,9 @@ import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
+/**
+  * sbt "examples/runMain Main 127.0.0.1 24224"
+  */
 object Main extends App {
 
   case class CCC(

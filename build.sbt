@@ -112,11 +112,11 @@ lazy val msgpack = project.in(file("msgpack"))
   )
   .settings(allSettings: _*)
 
-lazy val example = project.in(file("example"))
+lazy val examples = project.in(file("examples"))
   .settings(
-    description := "fluflu example",
-    moduleName := "fluflu-example",
-    name := "example"
+    description := "fluflu examples",
+    moduleName := "fluflu-examples",
+    name := "examples"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
