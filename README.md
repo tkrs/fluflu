@@ -13,6 +13,7 @@ Add to your `build.sbt`
 libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.4"
 ```
 
+## Example
 ```scala
 import java.time.{ Clock, Duration }
 
