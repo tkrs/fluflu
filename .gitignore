@@ -19,3 +19,5 @@ project/plugins/project/
 # Intellij idea
 .idea/
 *.iml
+
+.wercker/
