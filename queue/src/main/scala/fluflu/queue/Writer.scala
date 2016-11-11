@@ -5,15 +5,16 @@ import java.time.{ Clock, Instant }
 import java.util.concurrent.{ BlockingDeque, Executors, LinkedBlockingDeque, TimeUnit }
 
 import cats.data.Xor
+import com.typesafe.scalalogging.LazyLogging
 import fluflu.{ Event, Letter, Message, Messenger }
 import io.circe.Encoder
 
 import scala.annotation.tailrec
-import scala.concurrent.{ ExecutionContext, Future, blocking }
+import scala.concurrent.blocking
 
-final case class Writer(messenger: Messenger)(implicit clock: Clock) {
+final case class Writer(messenger: Messenger)(implicit clock: Clock) extends LazyLogging {
 
-  private[this] val letterQueue: BlockingDeque[Letter] = new LinkedBlockingDeque[Letter]()
+  private[this] val letterQueue: BlockingDeque[() => Throwable Xor Letter] = new LinkedBlockingDeque()
   private[this] val executor = Executors.newSingleThreadExecutor()
 
   private[this] val command: Runnable = new Runnable {
@@ -25,13 +26,19 @@ final case class Writer(messenger: Messenger)(implicit clock: Clock) {
           Option(letterQueue.poll()) match {
             case None =>
               blocking(TimeUnit.NANOSECONDS.sleep(blockingDuration))
-            case Some(letter) =>
-              try {
-                if (buffer.limit < letter.message.length) buffer.limit(letter.message.length)
-                buffer.put(letter.message).flip()
-                messenger.write(buffer, 0, Instant.now(clock))
-              } finally {
-                buffer.clear()
+            case Some(f) =>
+              f() match {
+                case Xor.Left(e) => logger.error(s"Failed to pack a message", e)
+                case Xor.Right(letter) =>
+                  try {
+                    if (buffer.limit < letter.message.length) buffer.limit(letter.message.length)
+                    buffer.put(letter.message).flip()
+                    messenger.write(buffer, 0, Instant.now(clock))
+                  } catch {
+                    case e: Throwable => logger.error(s"Failed to logging a message", e)
+                  } finally {
+                    buffer.clear()
+                  }
               }
           }
           go()
@@ -44,11 +51,8 @@ final case class Writer(messenger: Messenger)(implicit clock: Clock) {
 
   def die: Boolean = messenger.die
 
-  def write[A: Encoder](e: Event[A]): Throwable Xor Unit =
-    Message.pack(e).map(msg => letterQueue addLast Letter(msg))
-
-  def writeFuture[A: Encoder](e: Event[A])(implicit ec: ExecutionContext): Future[Throwable Xor Unit] =
-    Future(Message pack e) map (packed => packed map (msg => letterQueue addLast Letter(msg)))
+  def push[A: Encoder](e: Event[A]): Unit =
+    letterQueue offer (() => Message.pack(e).map(Letter))
 
   def close(): Unit = {
     executor.shutdown()

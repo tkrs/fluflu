@@ -1,4 +1,4 @@
-import java.time.{Clock, Duration}
+import java.time.{ Clock, Duration }
 
 import cats.MonadError
 import cats.data.Xor
@@ -10,7 +10,7 @@ import fluflu.queue.Writer
 import io.circe.generic.auto._
 
 import scala.concurrent.duration.Duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
@@ -54,7 +54,7 @@ object Main extends App {
 
   val write: Event[CCC] => Future[Unit] = { a =>
     if (writer.die) Future.failed(new Exception("die"))
-    else writer.writeFuture(a).flatMap(_.fold(Future.failed, Future.successful))
+    else Future.successful(writer.push(a))
   }
 
   val f: Future[Stream[Unit]] = xs.traverse(write)
