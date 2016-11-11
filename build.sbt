@@ -83,7 +83,8 @@ lazy val queue = project.in(file("queue"))
       "org.typelevel" %% "cats" % catsVersion,
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion
+      "io.circe" %% "circe-parser" % circeVersion,
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
     )
   )
   .settings(allSettings: _*)
@@ -120,7 +121,10 @@ lazy val examples = project.in(file("examples"))
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
-  .settings(fork := true)
+  .settings(
+    fork := true,
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
+  )
   .dependsOn(queue)
 
 lazy val tests = project.in(file("tests"))
