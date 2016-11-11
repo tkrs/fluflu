@@ -1,13 +1,14 @@
-package fluflu
+package fluflu.queue
 
-import java.time.{ Clock, Duration, Instant }
+import java.time.{ Clock, Instant }
 import java.util.concurrent.{ BlockingDeque, Executors, LinkedBlockingDeque, TimeUnit }
 
 import cats.data.Xor
+import fluflu.{ Event, Letter, Message, Messenger }
 import io.circe.Encoder
 
 import scala.annotation.tailrec
-import scala.concurrent.{ blocking, ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContext, Future, blocking }
 
 final case class Writer(messenger: Messenger)(implicit clock: Clock) {
 

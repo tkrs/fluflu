@@ -1,4 +1,4 @@
-import java.time.{ Clock, Duration }
+import java.time.{Clock, Duration}
 
 import cats.MonadError
 import cats.data.Xor
@@ -6,10 +6,11 @@ import cats.instances.future._
 import cats.instances.stream._
 import cats.syntax.traverse._
 import fluflu._
+import fluflu.queue.Writer
 import io.circe.generic.auto._
 
 import scala.concurrent.duration.Duration._
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
