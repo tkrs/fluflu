@@ -13,7 +13,6 @@ trait Messenger {
   def host: String
   def port: Int
   def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit
-  def die: Boolean
   def close(): Unit
 }
 
@@ -43,8 +42,6 @@ final case class DefaultMessenger(
       case Success(_) => Right(())
     }
   }
-
-  def die: Boolean = connection.noLongerRetriable
 
   def close(): Unit = connection.close()
 }

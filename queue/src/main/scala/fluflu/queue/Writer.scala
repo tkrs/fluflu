@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fluflu.{ Event, Letter, Message, Messenger }
 import io.circe.Encoder
 
+import scala.util.{ Either => \/ }
 import scala.compat.java8.FunctionConverters._
 
 final case class Writer(
@@ -40,22 +41,23 @@ final case class Writer(
             buffer.clear()
           }
         )
+        letterQueue.remove(fn)
       })
     } finally {
       buffer.clear()
     }
   }
 
-  private[this] val _: ScheduledFuture[_] = scheduler.scheduleWithFixedDelay(command, initialDelay, delay, delayTimeUnit)
+  private[this] val _: ScheduledFuture[_] =
+    scheduler.scheduleWithFixedDelay(command, initialDelay, delay, delayTimeUnit)
 
-  def die: Boolean = messenger.die
-
-  def push[A: Encoder](e: Event[A]): Unit =
-    letterQueue offer (() => Message.pack(e).map(Letter))
+  def push[A: Encoder](e: Event[A]): Exception \/ Unit =
+    if (letterQueue offer (() => Message.pack(e).map(Letter))) Right(())
+    else Left(new Exception("A queue no space is currently available"))
 
   def close(): Unit = {
     scheduler.shutdown()
-    scheduler.awaitTermination(10, TimeUnit.SECONDS)
+    scheduler.awaitTermination(terminationDelay, terminationDelayTimeUnit)
     if (!scheduler.isTerminated) scheduler.shutdownNow()
     command.run()
     messenger.close()

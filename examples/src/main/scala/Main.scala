@@ -57,8 +57,7 @@ object Main extends App {
     terminationDelayTimeUnit = TimeUnit.SECONDS
   )
   val write: Event[CCC] => Future[Unit] = { a =>
-    if (writer.die) Future.failed(new Exception("die"))
-    else Future.successful(writer.push(a))
+    writer.push(a).fold(Future.failed, Future.successful)
   }
   val xs: Vector[Event[CCC]] =
     Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000).toVector
