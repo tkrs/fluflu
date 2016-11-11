@@ -121,7 +121,10 @@ lazy val examples = project.in(file("examples"))
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
-  .settings(fork := true)
+  .settings(
+    fork := true,
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
+  )
   .dependsOn(queue)
 
 lazy val tests = project.in(file("tests"))

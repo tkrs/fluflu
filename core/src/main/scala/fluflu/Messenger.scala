@@ -7,10 +7,12 @@ import java.util.concurrent._
 
 import scala.annotation.tailrec
 import scala.concurrent.blocking
-import scala.util.{ Failure, Success }
+import scala.util.{ Either => \/, Failure, Success }
 
 trait Messenger {
-  def write(buffer: ByteBuffer, retries: Int, start: Instant): Unit
+  def host: String
+  def port: Int
+  def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit
   def die: Boolean
   def close(): Unit
 }
@@ -28,7 +30,7 @@ final case class DefaultMessenger(
   private[this] val dest = new InetSocketAddress(host, port)
   private[this] val connection = Connection(dest, reconnectionTimeout, reconnectionBackoff)
 
-  @tailrec def write(buffer: ByteBuffer, retries: Int, start: Instant): Unit = {
+  @tailrec def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit = {
     connection.write(buffer) match {
       case Failure(e) =>
         buffer.flip()
@@ -36,9 +38,9 @@ final case class DefaultMessenger(
           blocking(NANOSECONDS.sleep(rewriteBackoff.nextDelay(retries).toNanos))
           write(buffer, retries + 1, start)
         } else {
-          throw e
+          Left(e)
         }
-      case Success(_) => ()
+      case Success(_) => Right(())
     }
   }
 
