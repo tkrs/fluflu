@@ -13,7 +13,7 @@ import io.circe.Encoder
 import scala.util.{ Either => \/ }
 import scala.compat.java8.FunctionConverters._
 
-final case class Writer(
+final case class Async(
     messenger: Messenger,
     initialBufferSize: Int = 1024,
     initialDelay: Long = 0,
@@ -65,8 +65,8 @@ final case class Writer(
     scheduler.scheduleWithFixedDelay(command, initialDelay, delay, delayTimeUnit)
 
   def push[A: Encoder](e: Event[A]): Exception \/ Unit =
-    if (letterQueue offer (() => Message.pack(e).map(Letter))) Right(())
-    else Left(new Exception("A queue no space is currently available"))
+    if (letterQueue offer (() => Message.pack(e).map(Letter))) \/.right(())
+    else \/.left(new Exception("A queue no space is currently available"))
 
   def close(): Unit = {
     scheduler.shutdown()
