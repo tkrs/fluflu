@@ -3,6 +3,7 @@ package fluflu
 import java.nio.ByteBuffer
 import java.time.{ Clock, Instant }
 
+import cats.syntax.either._
 import io.circe.Encoder
 
 import scala.concurrent.{ ExecutionContext, Future }

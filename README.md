@@ -15,22 +15,6 @@ libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.4"
 
 ## Example
 ```scala
-import java.time.{ Clock, Duration }
-
-import cats.data.Xor
-import cats.instances.future._
-import cats.instances.stream._
-import cats.syntax.traverse._
-import fluflu._
-import io.circe.generic.auto._
-
-import scala.concurrent.duration.Duration._
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Random
-
-object Main extends App {
-
   case class CCC(
     i: Int,
     ttt: String,
@@ -56,22 +40,18 @@ object Main extends App {
     rewriteBackoff = rewriteBackoff
   )
 
-  val writer: Writer = Writer(messenger)
+  val writer: Writer = Writer(
+    messenger = messenger,
+    initialBufferSize = 1024,
+    initialDelay = 500,
+    delay = 500,
+    delayTimeUnit = TimeUnit.MILLISECONDS,
+    terminationDelay = 10,
+    terminationDelayTimeUnit = TimeUnit.SECONDS
+  )
 
   val ccc: CCC = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
-
-  val xs: Stream[Event[CCC]] =
-    Stream.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000)
-
-  val write: Event[CCC] => Future[Unit] = { a =>
-    if (writer.die) Future.failed(new Exception("die"))
-    else writer.writeFuture(a).flatMap(_.fold(Future.failed, Future.successful))
-  }
-
-  val f: Future[Stream[Unit]] = xs.traverse(write)
-  val fa: Future[Xor[Throwable, Stream[Unit]]] = MonadError[Future, Throwable].attempt(f)
-  val r: Xor[Throwable, Stream[Unit]] = Await.result(fa, Inf)
-  println(r)
+  writer.push(ccc)
 
   writer.close()
 }

@@ -3,8 +3,9 @@ package fluflu.queue
 import java.nio.ByteBuffer
 import java.time.{ Clock, Instant }
 import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicReference
 
-import cats.data.Xor
+import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import fluflu.{ Event, Letter, Message, Messenger }
 import io.circe.Encoder
@@ -22,29 +23,41 @@ final case class Writer(
     terminationDelayTimeUnit: TimeUnit = TimeUnit.SECONDS
 )(implicit clock: Clock) extends LazyLogging {
 
-  private[this] val letterQueue: BlockingDeque[() => Throwable Xor Letter] = new LinkedBlockingDeque()
+  private[this] val letterQueue: BlockingDeque[() => Throwable \/ Letter] = new LinkedBlockingDeque()
   private[this] val scheduler = Executors.newScheduledThreadPool(1)
 
   private[this] val command: Runnable = new Runnable {
-    private[this] val buffer = ByteBuffer.allocateDirect(initialBufferSize)
+    private[this] val buffer =
+      new AtomicReference[ByteBuffer](ByteBuffer.allocateDirect(initialBufferSize))
     override def run(): Unit = try {
       letterQueue.forEach(asJavaConsumer { fn =>
         fn().fold(
           e => logger.error(s"Failed to encode a message to message-pack", e),
-          letter => {
-            if (buffer.limit < letter.message.length) buffer.limit(letter.message.length)
-            buffer.put(letter.message).flip()
-            messenger.write(buffer, 0, Instant.now(clock)).fold(
+          { letter =>
+            val buf = buffer.updateAndGet(asJavaUnaryOperator { b =>
+              if (b.limit >= letter.message.length) b
+              else {
+                if (b.capacity() < letter.message.length) {
+                  b.clear()
+                  ByteBuffer.allocateDirect(letter.message.length)
+                } else {
+                  b.limit(letter.message.length)
+                  b
+                }
+              }
+            })
+            buf.put(letter.message).flip()
+            messenger.write(buf, 0, Instant.now(clock)).fold(
               e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
               _ => ()
             )
-            buffer.clear()
+            buf.clear()
           }
         )
         letterQueue.remove(fn)
       })
     } finally {
-      buffer.clear()
+      buffer.get.clear()
     }
   }
 

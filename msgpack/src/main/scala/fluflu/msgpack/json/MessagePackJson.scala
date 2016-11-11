@@ -1,9 +1,11 @@
 package fluflu.msgpack.json
 
-import cats.data.Xor
-import io.circe.{ JsonObject, JsonNumber, HCursor, Json }
+import cats.syntax.option._
+import cats.syntax.either._
+import io.circe.{ Json, JsonNumber, JsonObject }
 import fluflu.msgpack.MessagePack
-import scala.collection.mutable.ListBuffer
+
+import scala.util.{ Either => \/ }
 
 object MessagePackJson {
 
@@ -11,8 +13,8 @@ object MessagePackJson {
 
   def apply() = new MessagePack[Json]() {
 
-    override def pack(doc: Json): Throwable Xor Array[Byte] =
-      Xor.catchOnly[Throwable](go(doc).toArray)
+    override def pack(doc: Json): Throwable \/ Array[Byte] =
+      \/.catchNonFatal(go(doc).toArray)
 
     def double(x: BigDecimal): Boolean =
       (x.isDecimalDouble || x.isBinaryDouble || x.isExactDouble) && x.scale > 0
@@ -53,6 +55,6 @@ object MessagePackJson {
       }
     )
 
-    override def unpack(a: Array[Byte]): Option[Json] = ???
+    override def unpack(a: Array[Byte]): Option[Json] = none
   }
 }
