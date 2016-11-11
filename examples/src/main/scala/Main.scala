@@ -7,7 +7,7 @@ import cats.instances.vector._
 import cats.syntax.traverse._
 import cats.syntax.applicativeError._
 import fluflu._
-import fluflu.queue.Writer
+import fluflu.queue.Async
 import io.circe.generic.auto._
 
 import scala.concurrent.duration.Duration._
@@ -47,7 +47,7 @@ object Main extends App {
     reconnectionBackoff = reconnectionBackoff,
     rewriteBackoff = rewriteBackoff
   )
-  val writer: Writer = Writer(
+  val writer: Async = Async(
     messenger = messenger,
     initialBufferSize = 1024,
     initialDelay = 500,
