@@ -1,5 +1,6 @@
 package fluflu.queue
 
+import java.nio.ByteBuffer
 import java.time.{ Clock, Instant }
 import java.util.concurrent.{ BlockingDeque, Executors, LinkedBlockingDeque, TimeUnit }
 
@@ -15,7 +16,8 @@ final case class Writer(messenger: Messenger)(implicit clock: Clock) {
   private[this] val letterQueue: BlockingDeque[Letter] = new LinkedBlockingDeque[Letter]()
   private[this] val executor = Executors.newSingleThreadExecutor()
 
-  executor.execute(new Runnable {
+  private[this] val command: Runnable = new Runnable {
+    private[this] val buffer = ByteBuffer.allocateDirect(1024)
     private[this] val blockingDuration: Long = 5000
     override def run(): Unit = {
       @tailrec def go(): Unit =
@@ -24,13 +26,21 @@ final case class Writer(messenger: Messenger)(implicit clock: Clock) {
             case None =>
               blocking(TimeUnit.NANOSECONDS.sleep(blockingDuration))
             case Some(letter) =>
-              messenger.write(letter, 0, Instant.now(clock))
+              try {
+                if (buffer.limit < letter.message.length) buffer.limit(letter.message.length)
+                buffer.put(letter.message).flip()
+                messenger.write(buffer, 0, Instant.now(clock))
+              } finally {
+                buffer.clear()
+              }
           }
           go()
         }
       go()
     }
-  })
+  }
+
+  executor.execute(command)
 
   def die: Boolean = messenger.die
 

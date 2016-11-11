@@ -1,5 +1,3 @@
-import java.nio.ByteBuffer
-
 package object fluflu
 
 package fluflu {
@@ -11,5 +9,5 @@ package fluflu {
     time: Long = System.currentTimeMillis / 1000
   )
 
-  final case class Letter(message: ByteBuffer) extends AnyVal
+  final case class Letter(message: Array[Byte]) extends AnyVal
 }
