@@ -7,7 +7,7 @@ import java.util.concurrent._
 
 import scala.annotation.tailrec
 import scala.concurrent.blocking
-import scala.util.{ Either => \/, Failure, Success }
+import scala.util.{ Either => \/ }
 
 trait Messenger {
   def host: String
@@ -31,7 +31,7 @@ final case class DefaultMessenger(
 
   @tailrec def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit = {
     connection.write(buffer) match {
-      case Failure(e) =>
+      case Left(e) =>
         buffer.flip()
         if (Instant.now(clock).minusNanos(rewriteTimeout.toNanos).compareTo(start) <= 0) {
           blocking(NANOSECONDS.sleep(rewriteBackoff.nextDelay(retries).toNanos))
@@ -39,7 +39,7 @@ final case class DefaultMessenger(
         } else {
           Left(e)
         }
-      case Success(_) => Right(())
+      case r => r
     }
   }
 

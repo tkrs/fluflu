@@ -11,7 +11,9 @@ build:
     - script:
         name: sbt test
         code: |
-          sbt coverage test coverageReport
+          for v in "2.11.8" "2.12.0"; do
+            sbt ++${v} coverage test coverageReport
+          done
 
     - script:
         name: push coverage report to codecov

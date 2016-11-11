@@ -9,22 +9,27 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scala
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.11.8"
+  scalaVersion := "2.12.0",
+  crossScalaVersions := Seq("2.11.8", "2.12.0")
 )
 
-val catsVersion = "0.7.2"
-val catbirdVersion = "0.7.0"
-val circeVersion = "0.5.4"
+val catsVersion = "0.8.1"
+val circeVersion = "0.6.0"
 val scalacheckVersion = "1.13.4"
 val scalatestVersion = "3.0.0"
 
 lazy val baseSettings = Seq(
-  scalacOptions ++= compilerOptions,
-  scalacOptions in (Compile, console) := compilerOptions,
-  scalacOptions in (Compile, test) := compilerOptions,
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
-  )
+  ),
+  scalacOptions in (Compile, test) := compilerOptions,
+  scalacOptions ++= compilerOptions ++ (
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 11)) => Seq("-Ywarn-unused-import")
+      case _ => Seq.empty
+    }
+  ),
+  scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import"))
 )
 
 lazy val publishSettings = Seq(
@@ -67,8 +72,7 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core",
-    scalaVersion := "2.11.8"
+    name := "core"
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
@@ -94,8 +98,7 @@ lazy val sf = project.in(file("sf"))
   .settings(
     description := "fluflu scala future",
     moduleName := "fluflu-sf",
-    name := "sf",
-    scalaVersion := "2.11.8"
+    name := "sf"
   )
   .settings(allSettings: _*)
   .dependsOn(core, msgpack)
@@ -153,15 +156,11 @@ lazy val compilerOptions = Seq(
   "-language:existentials",
   "-language:higherKinds",
   "-language:implicitConversions",
-  "-language:postfixOps",
+  "-unchecked",
+  "-Yno-adapted-args",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
-  "-Xfuture",
-  "-Yinline-warnings",
-  "-Xlint",
-  "-Ybackend:GenBCode",
   "-Ydelambdafy:method",
-  "-target:jvm-1.8",
-  "-optimize",
-  "-Yopt:l:classpath"
+  "-Xfuture",
+  "-Xlint"
 )

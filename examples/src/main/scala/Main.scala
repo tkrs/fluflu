@@ -49,11 +49,11 @@ object Main extends App {
   )
   val writer: Writer = Writer(
     messenger = messenger,
-    initialBufferSize = 2048,
+    initialBufferSize = 1024,
     initialDelay = 500,
     delay = 500,
     delayTimeUnit = TimeUnit.MILLISECONDS,
-    terminationDelay = 5,
+    terminationDelay = 10,
     terminationDelayTimeUnit = TimeUnit.SECONDS
   )
   val write: Event[CCC] => Future[Unit] = { a =>

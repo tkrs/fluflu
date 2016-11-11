@@ -1,16 +1,18 @@
 package fluflu.msgpack
 
-import cats.data.Xor
 import fluflu.msgpack.json.MessagePackJson
+import io.circe.Json
+
+import scala.util.{ Either => \/ }
 
 trait MessagePack[A] {
-  def pack(a: A): Throwable Xor Array[Byte]
+  def pack(a: A): Throwable \/ Array[Byte]
   def unpack(a: Array[Byte]): Option[A]
 }
 
 object MessagePack {
 
-  def getInstance(i: Instances) = i match {
+  def getInstance(i: Instances): MessagePack[Json] = i match {
     case JSON => MessagePackJson()
     // case MAP => ???
   }
@@ -43,10 +45,8 @@ object MessagePack {
 
   def formatNil: Vector[Byte] = Vector(0xc0.toByte)
 
-  def formatBoolFamily(v: Boolean): Vector[Byte] = v match {
-    case true => Vector(0xc3.toByte)
-    case false => Vector(0xc2.toByte)
-  }
+  def formatBoolFamily(v: Boolean): Vector[Byte] =
+    if (v) Vector(0xc3.toByte) else Vector(0xc2.toByte)
 
   def formatIntFamily(l: Long): Vector[Byte] =
     if (4294967296L <= l) formatLong(0xcf, l)
@@ -98,10 +98,9 @@ object MessagePack {
 
 sealed abstract class Instances(t: String)
 object Instances {
-  def of(t: String) = t match {
+  def of(t: String): Instances = t match {
     case "JSON" => JSON
     // case "MAP" => MAP
-    case _ => ???
   }
 }
 case object JSON extends Instances("JSON")
