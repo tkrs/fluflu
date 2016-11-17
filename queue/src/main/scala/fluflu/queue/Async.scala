@@ -1,4 +1,5 @@
-package fluflu.queue
+package fluflu
+package queue
 
 import java.nio.ByteBuffer
 import java.time.{ Clock, Instant }
@@ -7,7 +8,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
-import fluflu.{ Event, Letter, Message, Messenger }
 import io.circe.Encoder
 
 import scala.util.{ Either => \/ }

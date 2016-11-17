@@ -1,23 +1,16 @@
-package fluflu.msgpack
+package fluflu
+package msgpack
 
-import fluflu.msgpack.json.MessagePackJson
-import io.circe.Json
+import java.nio.charset.StandardCharsets.UTF_8
+
+import cats.syntax.either._
+import io.circe.{ Json, JsonNumber, JsonObject }
 
 import scala.util.{ Either => \/ }
 
-trait MessagePack[A] {
-  def pack(a: A): Throwable \/ Array[Byte]
-  def unpack(a: Array[Byte]): Option[A]
-}
+object MessagePacker {
 
-object MessagePack {
-
-  def getInstance(i: Instances): MessagePack[Json] = i match {
-    case JSON => MessagePackJson()
-    // case MAP => ???
-  }
-
-  import java.nio.charset.StandardCharsets.UTF_8
+  def apply() = new MessagePacker()
 
   def formatArrayFamilyHeader(size: Int): Vector[Byte] =
     if (size < 16)
@@ -59,6 +52,7 @@ object MessagePack {
     else if (l >= Short.MinValue.toLong) formatShort(0xd1, l.toInt)
     else if (l >= Int.MinValue.toLong) formatInt(0xd2, l.toInt)
     else formatLong(0xd3, l)
+
   def formatIntFamily(t: BigInt, v: BigInt): Vector[Byte] =
     Vector(t, v >> 56, v >> 48, v >> 40, v >> 32, v >> 24, v >> 16, v >> 8, v >> 0).map(_.toByte)
 
@@ -96,13 +90,48 @@ object MessagePack {
 
 }
 
-sealed abstract class Instances(t: String)
-object Instances {
-  def of(t: String): Instances = t match {
-    case "JSON" => JSON
-    // case "MAP" => MAP
-  }
-}
-case object JSON extends Instances("JSON")
-// case object MAP extends Instances("MAP")
+final class MessagePacker {
+  import MessagePacker._
 
+  def pack(doc: Json): Throwable \/ Array[Byte] =
+    \/.catchNonFatal(go(doc).toArray)
+
+  def double(x: BigDecimal): Boolean =
+    (x.isDecimalDouble || x.isBinaryDouble || x.isExactDouble) && x.scale > 0
+
+  val go: (Json) => Vector[Byte] = _.fold(
+    {
+      formatNil
+    },
+    { x: Boolean =>
+      formatBoolFamily(x)
+    },
+    { x: JsonNumber =>
+      val n = x.toBigDecimal
+      n match {
+        case None =>
+          throw new ArithmeticException()
+        case Some(v) if double(v) =>
+          formatFloatFamily(v.toDouble)
+        case Some(v) if v.isValidLong =>
+          formatIntFamily(v.toLong)
+        case Some(v) =>
+          formatIntFamily(BigInt(0xcf.toLong), v.toBigInt())
+      }
+    },
+    { xs: String =>
+      formatStrFamily(xs)
+    },
+    { xs: List[Json] =>
+      formatArrayFamilyHeader(xs.size) ++ xs.foldLeft(Vector.empty[Byte])(_ ++ go(_))
+    },
+    { x: JsonObject =>
+      val xs = x.toList
+      val vec = formatMapFamilyHeader(xs.size)
+      vec ++ xs.foldLeft(Vector.empty[Byte]) {
+        case (acc, (key, v)) =>
+          acc ++ formatStrFamily(key) ++ go(v)
+      }
+    }
+  )
+}
