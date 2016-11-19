@@ -40,7 +40,7 @@ libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.4"
     rewriteBackoff = rewriteBackoff
   )
 
-  val writer: Writer = Writer(
+  val async: Async = Async(
     messenger = messenger,
     initialBufferSize = 1024,
     initialDelay = 500,
@@ -51,9 +51,11 @@ libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.4"
   )
 
   val ccc: CCC = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
-  writer.push(ccc)
+  async.push(ccc)
 
-  writer.close()
+  Thread.sleep(1000)
+
+  async.close()
 }
 ```
 
