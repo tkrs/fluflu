@@ -2,14 +2,13 @@ package fluflu
 
 import java.nio.ByteBuffer
 
-import cats.instances.either._
 import cats.syntax.either._
 import io.circe.Json
 import org.scalatest.WordSpec
 
 import scala.util.{ Either => \/ }
 
-class MessageUnpackSpec extends WordSpec {
+class MessageUnpackerSpec extends WordSpec {
   import msgpack.MessageUnpacker
 
   val instance: Array[Byte] => MessageUnpacker = src => new MessageUnpacker(ByteBuffer.wrap(src))

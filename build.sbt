@@ -23,12 +23,7 @@ lazy val baseSettings = Seq(
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
   scalacOptions in (Compile, test) := compilerOptions,
-  scalacOptions ++= compilerOptions ++ (
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 11)) => Seq("-Ywarn-unused-import")
-      case _ => Seq.empty
-    }
-  ),
+  scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import"))
 )
 
@@ -160,6 +155,7 @@ lazy val compilerOptions = Seq(
   "-unchecked",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
+  "-Ywarn-unused-import",
   "-Ywarn-numeric-widen",
   "-Ydelambdafy:method",
   "-Xfuture",
