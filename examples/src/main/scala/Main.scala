@@ -47,7 +47,7 @@ object Main extends App {
     reconnectionBackoff = reconnectionBackoff,
     rewriteBackoff = rewriteBackoff
   )
-  val writer: Async = Async(
+  val async: Async = Async(
     messenger = messenger,
     initialBufferSize = 1024,
     initialDelay = 500,
@@ -56,8 +56,8 @@ object Main extends App {
     terminationDelay = 10,
     terminationDelayTimeUnit = TimeUnit.SECONDS
   )
-  val write: Event[CCC] => Future[Unit] = { a =>
-    writer.push(a).fold(Future.failed, Future.successful)
+  val push: Event[CCC] => Future[Unit] = { a =>
+    async.push(a).fold(Future.failed, Future.successful)
   }
   val xs: Vector[Event[CCC]] =
     Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000).toVector
@@ -68,7 +68,7 @@ object Main extends App {
   val worker = new Runnable {
     override def run(): Unit = {
       val start = System.nanoTime()
-      val r = Await.result(xs traverse write attempt, Inf)
+      val r = Await.result(xs traverse push attempt, Inf)
       val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
       println(("worker", i.getAndIncrement(), r.isRight, elapsed))
     }
@@ -82,5 +82,5 @@ object Main extends App {
   scheduler.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
   scheduler.shutdownNow()
   pool.shutdown()
-  writer.close()
+  async.close()
 }

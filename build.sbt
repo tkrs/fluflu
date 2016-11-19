@@ -156,6 +156,7 @@ lazy val compilerOptions = Seq(
   "-language:existentials",
   "-language:higherKinds",
   "-language:implicitConversions",
+  "-language:postfixOps",
   "-unchecked",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
