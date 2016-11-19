@@ -2,19 +2,19 @@ package fluflu
 
 import cats.Eq
 import cats.syntax.either._
-import fluflu.msgpack._
 import io.circe.Json
 import io.circe.parser._
 import org.scalatest._
+import msgpack.MessagePacker
 
 import scala.util.{ Either => \/ }
 
-class JsonPackerSpec extends WordSpec {
+class MessagePackerSpec extends WordSpec {
 
   implicit val throwableEq = Eq.instance[Throwable](_ == _)
   implicit val arrayEq = Eq.instance[Array[Byte]](_.zip(_).forall { case (a, b) => a == b })
 
-  val instance = MessagePack getInstance JSON
+  val instance = MessagePacker()
 
   val fmt: Byte => String = "0x%02x" format _
   val p: Array[Byte] => Unit = a => println(a.map(fmt).mkString(" "))
