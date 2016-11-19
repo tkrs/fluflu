@@ -1,13 +1,7 @@
 build:
   box:
     id: hseeberger/scala-sbt
-
   steps:
-    - script:
-        name: install git # for codecov
-        code: |
-          apt-get update && apt-get install git
-
     - script:
         name: sbt test
         code: |
