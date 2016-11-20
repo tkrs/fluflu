@@ -10,7 +10,7 @@ fluent logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.5"
+libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.6"
 ```
 
 ## Example
