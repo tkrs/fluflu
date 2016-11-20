@@ -2,13 +2,18 @@ package fluflu
 package msgpack
 
 import java.nio.charset.StandardCharsets.UTF_8
+import java.lang.Double.doubleToLongBits
 
 import cats.syntax.either._
-import io.circe.{ Json, JsonNumber, JsonObject }
+import io.circe.{ Encoder, Json, JsonNumber, JsonObject }
 
+import scala.annotation.tailrec
 import scala.util.{ Either => \/ }
 
 object MessagePacker {
+
+  final val `0x3d` = BigInt(0xd3.toLong)
+  final val `0xcf` = BigInt(0xcf.toLong)
 
   def apply() = new MessagePacker()
 
@@ -56,7 +61,6 @@ object MessagePacker {
   def formatIntFamily(t: BigInt, v: BigInt): Vector[Byte] =
     Vector(t, v >> 56, v >> 48, v >> 40, v >> 32, v >> 24, v >> 16, v >> 8, v >> 0).map(_.toByte)
 
-  import java.lang.Double.doubleToLongBits
   def formatFloatFamily(v: Double): Vector[Byte] =
     (doubleToLongBits _ andThen (x => Vector(0xcb.toLong, x >>> 56, x >>> 48, x >>> 40, x >>> 32, x >>> 24, x >>> 16, x >>> 8, x >>> 0)))(v).map(_.toByte)
 
@@ -75,13 +79,13 @@ object MessagePacker {
     Vector(t, v >>> 56, v >>> 48, v >>> 40, v >>> 32, v >>> 24, v >>> 16, v >>> 8, v >>> 0).map(_.toByte)
 
   def strSize(value: Array[Char]): Int = strSize(value, 0)
-  def strSize(value: Array[Char], count: Int): Int = value match {
+  @tailrec def strSize(value: Array[Char], count: Int): Int = value match {
     case a if a.isEmpty => 0
     case Array(h) => count + charSize(h)
     case _ => strSize(value.tail, count + charSize(value(0)))
   }
 
-  def charSize(ch: Char): Int =
+  @inline def charSize(ch: Char): Int =
     if (ch < 0x80) 1
     else if (ch < 0x800) 2
     else if (Character isHighSurrogate ch) 2
@@ -93,11 +97,12 @@ object MessagePacker {
 final class MessagePacker {
   import MessagePacker._
 
+  def encode[A](a: A)(implicit A: Encoder[A]): Throwable \/ Array[Byte] = pack(A(a))
+
   def pack(doc: Json): Throwable \/ Array[Byte] =
     \/.catchNonFatal(go(doc).toArray)
 
-  def double(x: BigDecimal): Boolean =
-    (x.isDecimalDouble || x.isBinaryDouble || x.isExactDouble) && x.scale > 0
+  def double(x: BigDecimal): Boolean = x.scale != 0
 
   val go: (Json) => Vector[Byte] = _.fold(
     {
@@ -109,14 +114,11 @@ final class MessagePacker {
     { x: JsonNumber =>
       val n = x.toBigDecimal
       n match {
-        case None =>
-          throw new ArithmeticException()
-        case Some(v) if double(v) =>
-          formatFloatFamily(v.toDouble)
-        case Some(v) if v.isValidLong =>
-          formatIntFamily(v.toLong)
-        case Some(v) =>
-          formatIntFamily(BigInt(0xcf.toLong), v.toBigInt())
+        case None => throw new ArithmeticException()
+        case Some(v) if double(v) => formatFloatFamily(v.toDouble)
+        case Some(v) if v.isValidLong => formatIntFamily(v.toLong)
+        case Some(v) if v.signum == -1 => formatIntFamily(`0x3d`, v.toBigInt())
+        case Some(v) => formatIntFamily(`0xcf`, v.toBigInt())
       }
     },
     { xs: String =>
