@@ -1,4 +1,5 @@
 package fluflu
+package msgpack
 
 import java.nio.ByteBuffer
 
@@ -9,7 +10,6 @@ import org.scalatest.WordSpec
 import scala.util.{ Either => \/ }
 
 class MessageUnpackerSpec extends WordSpec {
-  import msgpack.MessageUnpacker
 
   val instance: Array[Byte] => MessageUnpacker = src => new MessageUnpacker(ByteBuffer.wrap(src))
 

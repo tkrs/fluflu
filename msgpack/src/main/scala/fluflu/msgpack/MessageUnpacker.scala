@@ -57,20 +57,10 @@ object MessageUnpacker {
 
   def utf8ToString(buf: ByteBuffer, offset: Int, length: Int): String = {
     val limit = offset + length
-    @tailrec def loop(i: Int, chars: Int, acc: Array[Char]): String = {
-      if (i == limit) new String(acc)
-      else {
-        val b1 = buf.get(i).toInt
-        if (b1 >= 0) {
-          acc(chars) = b1.toChar
-          loop(i + 1, chars + 1, acc)
-        } else if ((b1 >> 5) == -2) {
-          acc(chars) = (((b1 << 6) ^ buf.get(i + 1).toInt) ^ 0x0f80).toChar
-          loop(i + 2, chars + 1, acc)
-        } else new String(buf.array(), offset, length, UTF_8)
-      }
-    }
-    loop(offset, 0, Array.ofDim[Char](length))
+    val arr = Array.ofDim[Byte](length)
+    buf.position(offset)
+    buf.get(arr)
+    new String(arr, UTF_8)
   }
 
 }
