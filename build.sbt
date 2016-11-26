@@ -55,7 +55,15 @@ lazy val publishSettings = Seq(
         <name>Takeru Sato</name>
         <url>https://github.com/tkrs</url>
       </developer>
-    </developers>
+    </developers>,
+  pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.getBytes.map(_.toChar))
+) ++ credentialSettings
+
+lazy val credentialSettings = Seq(
+  credentials ++= (for {
+    username <- Option(System.getenv().get("SONATYPE_USERNAME"))
+    password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
+  } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
 )
 
 lazy val noPublishSettings = Seq(
