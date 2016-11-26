@@ -20,7 +20,7 @@ deploy:
         name: deploy to snapshot repository
         code: |
           mkdir -p .sbt/gpg
-          if [ $(cat version.sbt) =~ "-SNAPSHOT" ]; then
+          if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
             for v in "2.11.8" "2.12.0"; do
               sbt ++${v} publishSigned
             done
