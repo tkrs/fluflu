@@ -22,12 +22,13 @@ lazy val baseSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
-  scalacOptions in (Compile, test) := compilerOptions,
   scalacOptions ++= compilerOptions,
+  scalacOptions in (Compile, test) := compilerOptions,
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import"))
 )
 
 lazy val publishSettings = Seq(
+  releaseCrossBuild := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   homepage := Some(url("https://github.com/tkrs/fluflu")),
   licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
