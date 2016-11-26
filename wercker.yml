@@ -13,3 +13,14 @@ build:
         name: push coverage report to codecov
         code: |
           bash <(curl -s https://codecov.io/bash)
+
+deploy:
+  steps:
+    - script:
+        name: deploy to snapshot repository
+        code: |
+          if [ $(cat version.sbt) =~ "-SNAPSHOT" ]; then
+            for v in "2.11.8" "2.12.0"; do
+              sbt ++${v} publishSigned
+            done
+          fi
