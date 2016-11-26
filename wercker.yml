@@ -1,6 +1,6 @@
+box: hseeberger/scala-sbt
+
 build:
-  box:
-    id: hseeberger/scala-sbt
   steps:
     - script:
         name: sbt test
@@ -15,8 +15,6 @@ build:
           bash <(curl -s https://codecov.io/bash)
 
 deploy:
-  box:
-    id: hseeberger/scala-sbt
   steps:
     - script:
         name: deploy to snapshot repository
