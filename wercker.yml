@@ -17,9 +17,15 @@ build:
 deploy:
   steps:
     - script:
+        name: setup gpg secring.asc
+        code: |
+          gpg_key_path=$HOME/.sbt/gpg
+          mkdir -p $gpg_key_path
+          echo $GPG_KEY | base64 -d > $gpg_key_path/secring.asc
+
+    - script:
         name: deploy to snapshot repository
         code: |
-          mkdir -p .sbt/gpg
           if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
             for v in "2.11.8" "2.12.0"; do
               sbt ++${v} publishSigned
