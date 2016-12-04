@@ -36,7 +36,7 @@ final case class Connection(
 
   @tailrec private[this] def go(x: SocketChannel, retries: Int, start: Instant): Throwable \/ Option[SocketChannel] = {
     try {
-      if (x.connect(remote)) \/.right(x.some) else throw new IOException()
+      if (x.connect(remote)) \/.right(x.some) else \/.left(new IOException("Failed to connect"))
     } catch {
       case e: IOException =>
         if (Instant.now(clock).minusNanos(reconnectionTimeout.toNanos).compareTo(start) <= 0) {
