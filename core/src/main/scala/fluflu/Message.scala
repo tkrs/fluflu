@@ -1,9 +1,7 @@
 package fluflu
 
-import java.nio.charset.StandardCharsets
-
 import cats.syntax.either._
-import io.circe.{ Encoder, Json, Printer }
+import io.circe.{ Encoder, Json }
 import io.circe.syntax._
 
 import scala.util.{ Either => \/ }
