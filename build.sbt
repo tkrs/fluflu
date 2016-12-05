@@ -89,9 +89,6 @@ lazy val queue = project.in(file("queue"))
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats" % catsVersion,
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
     )
   )
@@ -152,6 +149,15 @@ lazy val tests = project.in(file("tests"))
   .settings(fork := true)
   .dependsOn(core, msgpack)
 
+lazy val benchmark = (project in file("benchmark"))
+  .settings(
+    description := "fluflu benchmark",
+    moduleName := "fluflu-benchmark",
+    scalaVersion := "2.12.0"
+  )
+  .enablePlugins(JmhPlugin)
+  .dependsOn(msgpack)
+
 lazy val compilerOptions = Seq(
   "-deprecation",
   "-encoding", "UTF-8",
@@ -166,7 +172,6 @@ lazy val compilerOptions = Seq(
   "-Ywarn-dead-code",
   "-Ywarn-unused-import",
   "-Ywarn-numeric-widen",
-  "-Ydelambdafy:method",
   "-Xfuture",
   "-Xlint"
 )
