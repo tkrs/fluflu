@@ -1,6 +1,9 @@
 package fluflu
 
-import io.circe.{ Encoder, Json }
+import java.nio.charset.StandardCharsets
+
+import cats.syntax.either._
+import io.circe.{ Encoder, Json, Printer }
 import io.circe.syntax._
 
 import scala.util.{ Either => \/ }
