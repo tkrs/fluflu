@@ -10,6 +10,8 @@ import org.scalatest.prop.Checkers
 
 class MessagePackerUnpackerChecker extends FunSuite with Checkers {
 
+  // implicit override val generatorDrivenConfig = PropertyCheckConfig(minSize = 10, maxSize = 30)
+
   implicit val arbBigInt: Arbitrary[BigInt] = Arbitrary(genBigInt)
 
   def roundTrip[A: Encoder: Decoder: Arbitrary: Shrink]: Assertion =
