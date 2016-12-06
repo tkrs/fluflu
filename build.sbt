@@ -9,8 +9,8 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scala
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.12.0",
-  crossScalaVersions := Seq("2.11.8", "2.12.0")
+  scalaVersion := "2.12.1",
+  crossScalaVersions := Seq("2.11.8", "2.12.1")
 )
 
 val catsVersion = "0.8.1"
@@ -76,7 +76,8 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core"
+    name := "core",
+    scalaVersion := "2.12.1"
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
@@ -86,7 +87,8 @@ lazy val queue = project.in(file("queue"))
     description := "fluflu queue",
     moduleName := "fluflu-queue",
     name := "queue",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.12.1",
+    crossScalaVersions := Seq("2.12.1"),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats" % catsVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
@@ -121,7 +123,8 @@ lazy val examples = project.in(file("examples"))
   .settings(
     description := "fluflu examples",
     moduleName := "fluflu-examples",
-    name := "examples"
+    name := "examples",
+    scalaVersion := "2.12.1"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
@@ -135,7 +138,8 @@ lazy val tests = project.in(file("tests"))
   .settings(
     description := "fluflu tests",
     moduleName := "fluflu-tests",
-    name := "tests"
+    name := "tests",
+    scalaVersion := "2.12.1"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
@@ -153,7 +157,7 @@ lazy val benchmark = (project in file("benchmark"))
   .settings(
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
-    scalaVersion := "2.12.0"
+    scalaVersion := "2.12.1"
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(msgpack)

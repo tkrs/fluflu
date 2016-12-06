@@ -1,6 +1,5 @@
 package fluflu
 
-import cats.syntax.either._
 import io.circe.{ Encoder, Json }
 import io.circe.syntax._
 
