@@ -47,7 +47,7 @@ object Main extends App {
     reconnectionBackoff = reconnectionBackoff,
     rewriteBackoff = rewriteBackoff
   )
-  val async: Async = Async(
+  val asyncQueue: Async = Async(
     messenger = messenger,
     initialBufferSize = 1024,
     initialDelay = 500,
@@ -57,7 +57,7 @@ object Main extends App {
     terminationDelayTimeUnit = TimeUnit.SECONDS
   )
   val push: Event[CCC] => Future[Unit] = { a =>
-    async.push(a).fold(Future.failed, Future.successful)
+    asyncQueue.push(a).fold(Future.failed, Future.successful)
   }
   val xs: Vector[Event[CCC]] =
     Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000).toVector
@@ -82,5 +82,5 @@ object Main extends App {
   scheduler.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
   scheduler.shutdownNow()
   pool.shutdown()
-  async.close()
+  asyncQueue.close()
 }

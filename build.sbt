@@ -56,7 +56,7 @@ lazy val publishSettings = Seq(
         <url>https://github.com/tkrs</url>
       </developer>
     </developers>,
-  pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.getBytes.map(_.toChar))
+  pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray)
 ) ++ credentialSettings
 
 lazy val credentialSettings = Seq(
