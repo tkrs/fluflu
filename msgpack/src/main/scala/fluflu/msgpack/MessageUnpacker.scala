@@ -85,7 +85,7 @@ final class MessageUnpacker(src: ByteBuffer) {
   def decode[A](implicit decoder: Decoder[A]): Error \/ A =
     \/.catchOnly[Exception](unpack)
       .leftMap(e => DecodingFailure(e.getMessage, List.empty))
-      .flatMap(_.as[A])
+      .flatMap(_.as[A].toEither)
 
   def unpack: Json = readAt(1) & 0xff match {
     case 0xc0 => Json.Null

@@ -7,14 +7,13 @@ lazy val root = (project in file("."))
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
 
 lazy val buildSettings = Seq(
-  name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.12.0",
-  crossScalaVersions := Seq("2.11.8", "2.12.0")
+  scalaVersion := "2.11.8"
+  // crossScalaVersions := Seq("2.11.8", "2.12.0")
 )
 
-val catsVersion = "0.8.1"
-val circeVersion = "0.6.1"
+val catsVersion = "0.7.2"
+val circeVersion = "0.5.4"
 val scalacheckVersion = "1.13.4"
 val scalatestVersion = "3.0.1"
 
@@ -75,8 +74,9 @@ lazy val noPublishSettings = Seq(
 lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
-    moduleName := "fluflu-core",
-    name := "core"
+    moduleName := "fluflu-core-dep",
+    name := "core",
+    scalaVersion := "2.11.8"
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
@@ -84,7 +84,7 @@ lazy val core = project.in(file("core"))
 lazy val queue = project.in(file("queue"))
   .settings(
     description := "fluflu queue",
-    moduleName := "fluflu-queue",
+    moduleName := "fluflu-queue-dep",
     name := "queue",
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
@@ -98,8 +98,9 @@ lazy val queue = project.in(file("queue"))
 lazy val sf = project.in(file("sf"))
   .settings(
     description := "fluflu scala future",
-    moduleName := "fluflu-sf",
-    name := "sf"
+    moduleName := "fluflu-sf-dep",
+    name := "sf",
+    scalaVersion := "2.11.8"
   )
   .settings(allSettings: _*)
   .dependsOn(core, msgpack)
@@ -107,8 +108,9 @@ lazy val sf = project.in(file("sf"))
 lazy val msgpack = project.in(file("msgpack"))
   .settings(
     description := "fluflu msgpack",
-    moduleName := "fluflu-msgpack",
+    moduleName := "fluflu-msgpack-dep",
     name := "msgpack",
+    scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
@@ -120,8 +122,9 @@ lazy val msgpack = project.in(file("msgpack"))
 lazy val examples = project.in(file("examples"))
   .settings(
     description := "fluflu examples",
-    moduleName := "fluflu-examples",
-    name := "examples"
+    moduleName := "fluflu-examples-dep",
+    name := "examples",
+    scalaVersion := "2.11.8"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
@@ -134,8 +137,9 @@ lazy val examples = project.in(file("examples"))
 lazy val tests = project.in(file("tests"))
   .settings(
     description := "fluflu tests",
-    moduleName := "fluflu-tests",
-    name := "tests"
+    moduleName := "fluflu-tests-dep",
+    name := "tests",
+    scalaVersion := "2.11.8"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
@@ -152,8 +156,8 @@ lazy val tests = project.in(file("tests"))
 lazy val benchmark = (project in file("benchmark"))
   .settings(
     description := "fluflu benchmark",
-    moduleName := "fluflu-benchmark",
-    scalaVersion := "2.12.0"
+    moduleName := "fluflu-benchmark-dep",
+    scalaVersion := "2.11.8"
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(msgpack)
