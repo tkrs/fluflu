@@ -72,6 +72,7 @@ final case class Async(
     scheduler.shutdown()
     scheduler.awaitTermination(terminationDelay, terminationDelayTimeUnit)
     if (!scheduler.isTerminated) scheduler.shutdownNow()
+    if (!letterQueue.isEmpty) logger.debug(s"message queue has remaining: ${letterQueue.size()}")
     command.run()
     messenger.close()
   }

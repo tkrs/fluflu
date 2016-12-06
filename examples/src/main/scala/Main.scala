@@ -22,11 +22,64 @@ object Main extends App {
 
   case class CCC(
     i: Int,
-    ttt: String,
-    uuu: String,
+    aaa: String,
+    bbb: String,
+    ccc: String,
+    ddd: Int,
+    eee: Map[String, String],
+    ffff: Seq[Double],
+    ggg: Int,
+    hhh: String,
+    iii: Int,
+    jjj: String,
+    kkk: String,
+    lll: String,
+    mmm: String,
+    nnn: String,
+    ooo: String,
+    ppp: String,
+    qqq: Int,
+    rrr: Int,
     sss: Int,
-    mmm: Map[String, String],
-    ggg: Seq[Double]
+    ttt: Int,
+    uuu: Int,
+    vvv: Int,
+    www: Int,
+    xxx: Int,
+    yyy: Int,
+    zzz: Int
+  )
+
+  val rnd0 = new Random()
+
+  val ccc: CCC = CCC(
+    0,
+    rnd0.nextString(1000),
+    rnd0.nextString(10),
+    rnd0.nextString(100),
+    rnd0.nextInt(Int.MaxValue),
+    Map("name" -> "fluflu"),
+    Seq(1.2, Double.MaxValue, Double.MinValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextString(30),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextString(30),
+    rnd0.nextString(30),
+    rnd0.nextString(30),
+    rnd0.nextString(30),
+    rnd0.nextString(30),
+    rnd0.nextString(30),
+    rnd0.nextString(30),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue),
+    rnd0.nextInt(Int.MaxValue)
   )
 
   implicit val clock: Clock = Clock.systemUTC()
@@ -37,8 +90,6 @@ object Main extends App {
   val rewriteBackoff: Backoff =
     ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
 
-  val ccc: CCC = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
-
   val messenger = fluflu.DefaultMessenger(
     host = args(0),
     port = args(1).toInt,
@@ -47,7 +98,7 @@ object Main extends App {
     reconnectionBackoff = reconnectionBackoff,
     rewriteBackoff = rewriteBackoff
   )
-  val async: Async = Async(
+  val asyncQueue: Async = Async(
     messenger = messenger,
     initialBufferSize = 1024,
     initialDelay = 500,
@@ -57,12 +108,14 @@ object Main extends App {
     terminationDelayTimeUnit = TimeUnit.SECONDS
   )
   val push: Event[CCC] => Future[Unit] = { a =>
-    async.push(a).fold(Future.failed, Future.successful)
+    asyncQueue.push(a).fold(Future.failed, Future.successful)
   }
-  val xs: Vector[Event[CCC]] =
-    Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = x))).take(5000).toVector
 
-  val i = new AtomicInteger(1)
+  val idx = new AtomicInteger(0)
+  val xs: Vector[Event[CCC]] =
+    Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = idx.getAndIncrement()))).take(5000).toVector
+
+  val wokers = new AtomicInteger(1)
 
   val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
   val worker = new Runnable {
@@ -70,7 +123,7 @@ object Main extends App {
       val start = System.nanoTime()
       val r = Await.result(xs traverse push attempt, Inf)
       val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
-      println(("worker", i.getAndIncrement(), r.isRight, elapsed))
+      println(("worker", wokers.getAndIncrement(), r.isRight, elapsed))
     }
   }
 
@@ -82,5 +135,5 @@ object Main extends App {
   scheduler.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
   scheduler.shutdownNow()
   pool.shutdown()
-  async.close()
+  asyncQueue.close()
 }
