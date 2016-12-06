@@ -8,6 +8,4 @@ package fluflu {
     record: A,
     time: Long = System.currentTimeMillis / 1000
   )
-
-  final case class Letter(message: Array[Byte]) extends AnyVal
 }

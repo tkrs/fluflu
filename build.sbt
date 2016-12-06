@@ -1,4 +1,4 @@
-lazy val root = (project in file("."))
+lazy val fluflu = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
   .aggregate(core, queue, sf, msgpack, tests)
@@ -20,10 +20,12 @@ val scalatestVersion = "3.0.1"
 
 lazy val baseSettings = Seq(
   libraryDependencies ++= Seq(
+    "io.circe" %% "circe-core" % circeVersion,
+    "io.circe" %% "circe-generic" % circeVersion,
+    "io.circe" %% "circe-parser" % circeVersion,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
   scalacOptions ++= compilerOptions,
-  scalacOptions in (Compile, test) := compilerOptions,
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import"))
 )
 
@@ -77,7 +79,10 @@ lazy val core = project.in(file("core"))
     description := "fluflu core",
     moduleName := "fluflu-core",
     name := "core",
-    scalaVersion := "2.12.1"
+    scalaVersion := "2.12.1",
+    libraryDependencies ++= Seq(
+      "io.netty" % "netty-all" % "4.0.37.Final"
+    )
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
@@ -110,12 +115,7 @@ lazy val msgpack = project.in(file("msgpack"))
   .settings(
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
-    name := "msgpack",
-    libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion
-    )
+    name := "msgpack"
   )
   .settings(allSettings: _*)
 
