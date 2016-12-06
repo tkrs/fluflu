@@ -82,6 +82,8 @@ object Main extends App {
     rnd0.nextInt(Int.MaxValue)
   )
 
+  println(ccc)
+
   implicit val clock: Clock = Clock.systemUTC()
 
   val rnd: Random = new Random(System.nanoTime())
@@ -101,8 +103,8 @@ object Main extends App {
   val asyncQueue: Async = Async(
     messenger = messenger,
     initialBufferSize = 1024,
-    initialDelay = 500,
-    delay = 500,
+    initialDelay = 50,
+    delay = 100,
     delayTimeUnit = TimeUnit.MILLISECONDS,
     terminationDelay = 10,
     terminationDelayTimeUnit = TimeUnit.SECONDS
@@ -113,13 +115,14 @@ object Main extends App {
 
   val idx = new AtomicInteger(0)
   val xs: Vector[Event[CCC]] =
-    Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = idx.getAndIncrement()))).take(5000).toVector
+    Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = idx.getAndIncrement()))).take(args(3).toInt).toVector
 
   val wokers = new AtomicInteger(1)
 
   val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
   val worker = new Runnable {
     override def run(): Unit = {
+      println(("worker", "queue has remaining", asyncQueue.size))
       val start = System.nanoTime()
       val r = Await.result(xs traverse push attempt, Inf)
       val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)

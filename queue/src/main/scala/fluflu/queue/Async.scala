@@ -64,6 +64,8 @@ final case class Async(
   private[this] val _: ScheduledFuture[_] =
     scheduler.scheduleWithFixedDelay(command, initialDelay, delay, delayTimeUnit)
 
+  def size: Int = letterQueue.size
+
   def push[A: Encoder](e: Event[A]): Exception \/ Unit =
     if (letterQueue offer (() => Message.pack(e).map(Letter))) \/.right(())
     else \/.left(new Exception("A queue no space is currently available"))
