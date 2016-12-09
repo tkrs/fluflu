@@ -1,8 +1,9 @@
 package fluflu
+package msgpack
 
 import org.scalacheck.Gen
 
-package object msgpack {
+object gen {
 
   val int64Min = BigInt("-9223372036854775808")
   val uint64Max = BigInt("18446744073709551615")

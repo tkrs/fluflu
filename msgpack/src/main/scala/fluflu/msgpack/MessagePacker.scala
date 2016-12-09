@@ -15,30 +15,6 @@ object MessagePacker {
 
   val encoder: CharsetEncoder = StandardCharsets.UTF_8.newEncoder()
 
-  final val `0xc0`: Byte = 0xc0.toByte
-  final val `0xc3`: Byte = 0xc3.toByte
-  final val `0xc2`: Byte = 0xc2.toByte
-
-  final val `0xcb`: Byte = 0xcb.toByte
-  final val `0xcf`: Byte = 0xcf.toByte
-  final val `0xce`: Byte = 0xce.toByte
-  final val `0xcd`: Byte = 0xcd.toByte
-  final val `0xcc`: Byte = 0xcc.toByte
-  final val `0xd0`: Byte = 0xd0.toByte
-  final val `0xd1`: Byte = 0xd1.toByte
-  final val `0xd2`: Byte = 0xd2.toByte
-  final val `0xd3`: Byte = 0xd3.toByte
-  final val `0x3d`: Byte = 0xd3.toByte
-
-  final val `0xda`: Byte = 0xda.toByte
-  final val `0xdb`: Byte = 0xdb.toByte
-  final val `0xdd`: Byte = 0xdd.toByte
-
-  // final val `0x90`: Byte = 0x90.toByte
-  final val `0xdc`: Byte = 0xdc.toByte
-  final val `0xde`: Byte = 0xde.toByte
-  final val `0xdf`: Byte = 0xdf.toByte
-
   def apply() = new MessagePacker()
 
   def formatArrayFamilyHeader(size: Int, builder: mutable.ArrayBuilder[Byte]): Unit = {
@@ -133,8 +109,9 @@ object MessagePacker {
   def formatStrFamily(v: String, builder: mutable.ArrayBuilder[Byte]): Unit = {
     val cb = CharBuffer.wrap(v)
     val buf = encoder.encode(cb)
-    formatStrFamilyHeader(strSize(cb), builder)
-    val arr = Array.ofDim[Byte](buf.remaining())
+    val len = buf.remaining()
+    formatStrFamilyHeader(len, builder)
+    val arr = Array.ofDim[Byte](len)
     buf.get(arr)
     builder ++= arr
     buf.clear()
@@ -170,17 +147,6 @@ object MessagePacker {
     builder += (v >>> 8).toByte
     builder += (v >>> 0).toByte
   }
-
-  def strSize(cb: CharBuffer): Int =
-    (0 until cb.capacity()).foldLeft(0)((l, r) => l + charSize(cb.get(r)))
-
-  def charSize(ch: Char): Int =
-    if (ch < 0x80) 1
-    else if (ch < 0x800) 2
-    else if (Character isHighSurrogate ch) 2
-    else if (Character isLowSurrogate ch) 2
-    else 3
-
 }
 
 final class MessagePacker {
@@ -198,49 +164,36 @@ final class MessagePacker {
 
   def double(x: BigDecimal): Boolean = x.scale != 0
 
-  def go(json: Json, acc: mutable.ArrayBuilder[Byte]): Unit =
-    if (json.isNull)
-      formatNil(acc)
-    else if (json.isBoolean) json.asBoolean match {
-      case None => ()
-      case Some(x) => formatBoolFamily(x, acc)
+  def go(json: Json, acc: mutable.ArrayBuilder[Byte]): Unit = json.fold[Unit](
+    formatNil(acc),
+    x => formatBoolFamily(x, acc),
+    x => {
+      val n = x.toBigDecimal
+      n match {
+        case None => ()
+        case Some(v) if double(v) =>
+          formatFloatFamily(v.toDouble, acc)
+        case Some(v) if v.isValidLong =>
+          formatIntFamily(v.toLong, acc)
+        case Some(v) if v.signum == -1 =>
+          formatIntFamily(`0x3d`, v.toBigInt(), acc)
+        case Some(v) =>
+          formatIntFamily(`0xcf`, v.toBigInt(), acc)
+      }
+    },
+    x => formatStrFamily(x, acc),
+    xs => {
+      formatArrayFamilyHeader(xs.size, acc)
+      xs.foreach(go(_, acc))
+    },
+    x => {
+      val xs = x.toList
+      formatMapFamilyHeader(xs.size, acc)
+      xs.foreach {
+        case (key, (v)) =>
+          formatStrFamily(key, acc)
+          go(v, acc)
+      }
     }
-    else if (json.isNumber) json.asNumber match {
-      case None => ()
-      case Some(x) =>
-        val n = x.toBigDecimal
-        n match {
-          case None => ()
-          case Some(v) if double(v) =>
-            formatFloatFamily(v.toDouble, acc)
-          case Some(v) if v.isValidLong =>
-            formatIntFamily(v.toLong, acc)
-          case Some(v) if v.signum == -1 =>
-            formatIntFamily(`0x3d`, v.toBigInt(), acc)
-          case Some(v) =>
-            formatIntFamily(`0xcf`, v.toBigInt(), acc)
-        }
-    }
-    else if (json.isString) json.asString match {
-      case None => ()
-      case Some(x) =>
-        formatStrFamily(x, acc)
-    }
-    else if (json.isArray) json.asArray match {
-      case None => ()
-      case Some(xs) =>
-        formatArrayFamilyHeader(xs.size, acc)
-        xs.foreach(go(_, acc))
-    }
-    else if (json.isObject) json.asObject match {
-      case None => ()
-      case Some(x) =>
-        val xs = x.toList
-        formatMapFamilyHeader(xs.size, acc)
-        xs.foreach {
-          case (key, (v)) =>
-            formatStrFamily(key, acc)
-            go(v, acc)
-        }
-    }
+  )
 }

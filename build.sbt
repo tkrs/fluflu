@@ -157,7 +157,11 @@ lazy val benchmark = (project in file("benchmark"))
   .settings(
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
-    scalaVersion := "2.12.1"
+    scalaVersion := "2.12.1",
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % scalatestVersion,
+      "org.scalacheck" %% "scalacheck" % scalacheckVersion
+    )
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(msgpack)
