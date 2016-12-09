@@ -92,7 +92,7 @@ object Main extends App {
   val rewriteBackoff: Backoff =
     ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
 
-  val messenger = fluflu.DefaultMessenger(
+  val messenger = DefaultMessenger(
     host = args(0),
     port = args(1).toInt,
     reconnectionTimeout = Duration.ofSeconds(10),
