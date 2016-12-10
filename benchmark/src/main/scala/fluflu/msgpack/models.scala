@@ -1,10 +1,6 @@
-package fluflu
+package fluflu.msgpack
 
-package object msgpack {
-
-}
-
-package msgpack {
+object models {
 
   case class Int10(
     a000000001: Int,

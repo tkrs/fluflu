@@ -12,7 +12,7 @@ class MessagePackerUnpackerChecker extends FunSuite with Checkers {
 
   // implicit override val generatorDrivenConfig = PropertyCheckConfig(minSize = 10, maxSize = 30)
 
-  implicit val arbBigInt: Arbitrary[BigInt] = Arbitrary(genBigInt)
+  implicit val arbBigInt: Arbitrary[BigInt] = Arbitrary(gen.genBigInt)
 
   def roundTrip[A: Encoder: Decoder: Arbitrary: Shrink]: Assertion =
     check(Prop.forAll({ a: A =>

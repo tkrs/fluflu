@@ -9,25 +9,23 @@ import org.openjdk.jmh.annotations._
 @BenchmarkMode(Array(Mode.Throughput))
 @OutputTimeUnit(TimeUnit.SECONDS)
 class MessagePackerBenchmark extends TestData {
+  import pack._
 
-  private[this] val packer = MessagePacker()
+  @Benchmark def encodeInt10: Either[Throwable, Array[Byte]] = packer.encode(`int max 10`)
 
-  @Benchmark def decodeInt10: Unit = packer.encode(`int max 10`)
+  @Benchmark def encodeLong10: Either[Throwable, Array[Byte]] = packer.encode(`long max 10`)
 
-  @Benchmark def decodeLong10: Unit = packer.encode(`long max 10`)
+  @Benchmark def encodeString100_10: Either[Throwable, Array[Byte]] = packer.encode(`string 100 10`)
 
-  @Benchmark def decodeString100_10: Unit = packer.encode(`string 100 10`)
+  @Benchmark def encodeInt30: Either[Throwable, Array[Byte]] = packer.encode(`int max 30`)
 
-  @Benchmark def decodeInt30: Unit = packer.encode(`int max 30`)
+  @Benchmark def encodeLong30: Either[Throwable, Array[Byte]] = packer.encode(`long max 30`)
 
-  @Benchmark def decodeLong30: Unit = packer.encode(`long max 30`)
+  @Benchmark def encodeString100_30: Either[Throwable, Array[Byte]] = packer.encode(`string 100 30`)
 
-  @Benchmark def decodeString100_30: Unit = packer.encode(`string 100 30`)
+  @Benchmark def encodeString1000_30: Either[Throwable, Array[Byte]] = packer.encode(`string 1000 30`)
 
-  @Benchmark def decodeString1000_30: Unit = packer.encode(`string 1000 30`)
+  @Benchmark def encodeString1000_30_multibyte: Either[Throwable, Array[Byte]] = packer.encode(`string 1000 30 multibyte`)
 
-  @Benchmark def decodeString1000_30_multibyte: Unit = packer.encode(`string 1000 30 multibyte`)
-
-  @Benchmark def decodeCirceAST: Unit = packer.encode(circeAST)
-
+  @Benchmark def encodeCirceAST: Either[Throwable, Array[Byte]] = packer.encode(circeAST)
 }
