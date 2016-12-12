@@ -4,7 +4,6 @@ package queue
 import java.nio.ByteBuffer
 import java.time.{ Clock, Instant }
 import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicReference
 
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
@@ -27,37 +26,39 @@ final case class Async(
   private[this] val scheduler = Executors.newScheduledThreadPool(1)
 
   private[this] val command: Runnable = new Runnable {
-    private[this] val buffer =
-      new AtomicReference[ByteBuffer](ByteBuffer.allocateDirect(initialBufferSize))
+    private[this] var buffer = ByteBuffer.allocateDirect(initialBufferSize)
+
+    final val updateByteBuffer: (Int, ByteBuffer) => ByteBuffer = { (len, b) =>
+      if (b.limit >= len) b else {
+        if (b.capacity() < len) {
+          b.clear()
+          ByteBuffer.allocateDirect(len)
+        } else {
+          b.limit(len)
+          b
+        }
+      }
+    }
+
+    final val write: Letter => Unit = { l =>
+      buffer = updateByteBuffer(l.message.length, buffer)
+      buffer.put(l.message).flip()
+      messenger.write(buffer, 0, Instant.now(clock)).fold(
+        e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
+        _ => ()
+      )
+      buffer.clear()
+    }
+
+    final val writeForEach: (() => Throwable \/ Letter) => Unit = { fn =>
+      letterQueue.remove(fn)
+      fn().fold(logger.error(s"Failed to encode a message to message-pack", _), write)
+    }
+
     override def run(): Unit = try {
-      letterQueue.forEach(asJavaConsumer { fn =>
-        fn().fold(
-          e => logger.error(s"Failed to encode a message to message-pack", e),
-          { letter =>
-            val buf = buffer.updateAndGet(asJavaUnaryOperator { b =>
-              if (b.limit >= letter.message.length) b
-              else {
-                if (b.capacity() < letter.message.length) {
-                  b.clear()
-                  ByteBuffer.allocateDirect(letter.message.length)
-                } else {
-                  b.limit(letter.message.length)
-                  b
-                }
-              }
-            })
-            buf.put(letter.message).flip()
-            messenger.write(buf, 0, Instant.now(clock)).fold(
-              e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
-              _ => ()
-            )
-            buf.clear()
-          }
-        )
-        letterQueue.remove(fn)
-      })
+      letterQueue.forEach(asJavaConsumer(writeForEach))
     } finally {
-      buffer.get.clear()
+      buffer.clear()
     }
   }
 
