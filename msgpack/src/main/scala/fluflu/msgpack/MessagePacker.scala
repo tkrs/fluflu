@@ -13,7 +13,9 @@ import scala.util.{ Either => \/ }
 
 object MessagePacker {
 
-  val encoder: CharsetEncoder = StandardCharsets.UTF_8.newEncoder()
+  private[this] val encoder: ThreadLocal[CharsetEncoder] = new ThreadLocal[CharsetEncoder] {
+    override def initialValue(): CharsetEncoder = StandardCharsets.UTF_8.newEncoder()
+  }
 
   def apply() = new MessagePacker()
 
@@ -108,7 +110,7 @@ object MessagePacker {
 
   def formatStrFamily(v: String, builder: mutable.ArrayBuilder[Byte]): Unit = {
     val cb = CharBuffer.wrap(v)
-    val buf = encoder.encode(cb)
+    val buf = encoder.get.encode(cb)
     val len = buf.remaining()
     formatStrFamilyHeader(len, builder)
     val arr = Array.ofDim[Byte](len)
