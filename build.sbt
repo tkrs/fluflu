@@ -23,7 +23,6 @@ lazy val baseSettings = Seq(
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
   scalacOptions ++= compilerOptions,
-  scalacOptions in (Compile, test) := compilerOptions,
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import"))
 )
 
@@ -76,8 +75,7 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core",
-    scalaVersion := "2.12.1"
+    name := "core"
   )
   .settings(allSettings: _*)
   .dependsOn(msgpack)
@@ -87,8 +85,6 @@ lazy val queue = project.in(file("queue"))
     description := "fluflu queue",
     moduleName := "fluflu-queue",
     name := "queue",
-    scalaVersion := "2.12.1",
-    crossScalaVersions := Seq("2.12.1"),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats" % catsVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
@@ -124,7 +120,8 @@ lazy val examples = project.in(file("examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    scalaVersion := "2.12.1"
+    scalaVersion := "2.12.1",
+    crossScalaVersions := Seq("2.12.1")
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
