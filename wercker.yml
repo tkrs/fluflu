@@ -3,11 +3,28 @@ box: hseeberger/scala-sbt
 build:
   steps:
     - script:
+        name: noop
+        code: |
+          :
+
+test:
+  steps:
+    - script:
         name: sbt test
         code: |
-          for v in "2.11.8" "2.12.0"; do
-            sbt ++${v} coverage clean test coverageReport
-          done
+          sbt coverage test coverageReport
+
+    - script:
+        name: push coverage report to codecov
+        code: |
+          bash <(curl -s https://codecov.io/bash)
+
+test_2118:
+  steps:
+    - script:
+        name: sbt test
+        code: |
+          sbt ++2.11.8 test
 
     - script:
         name: push coverage report to codecov
@@ -27,7 +44,21 @@ deploy:
         name: deploy to snapshot repository
         code: |
           if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
-            for v in "2.11.8" "2.12.0"; do
-              sbt ++${v} publishSigned
-            done
+            sbt publishSigned
+          fi
+
+deploy_2118:
+  steps:
+    - script:
+        name: setup gpg secring.asc
+        code: |
+          gpg_key_path=$HOME/.sbt/gpg
+          mkdir -p $gpg_key_path
+          echo $GPG_KEY | base64 --decode > $gpg_key_path/secring.asc
+
+    - script:
+        name: deploy to snapshot repository
+        code: |
+          if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+            sbt ++2.11.8 publishSigned
           fi
