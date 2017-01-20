@@ -2,7 +2,7 @@ package fluflu
 package queue
 
 import java.nio.ByteBuffer
-import java.time.{ Clock, Instant }
+import java.time.{ Clock, Duration, Instant }
 import java.util.concurrent._
 
 import cats.syntax.either._
@@ -15,11 +15,9 @@ import scala.compat.java8.FunctionConverters._
 final case class Async(
     messenger: Messenger,
     initialBufferSize: Int = 1024,
-    initialDelay: Long = 0,
-    delay: Long = 1,
-    delayTimeUnit: TimeUnit = TimeUnit.SECONDS,
-    terminationDelay: Long = 10,
-    terminationDelayTimeUnit: TimeUnit = TimeUnit.SECONDS
+    initialDelay: Duration = Duration.ofMillis(1),
+    delay: Duration = Duration.ofSeconds(1),
+    terminationDelay: Duration = Duration.ofSeconds(10)
 )(implicit clock: Clock) extends LazyLogging {
 
   private[this] val letterQueue: BlockingDeque[() => Throwable \/ Letter] = new LinkedBlockingDeque()
@@ -63,7 +61,7 @@ final case class Async(
   }
 
   private[this] val _: ScheduledFuture[_] =
-    scheduler.scheduleWithFixedDelay(command, initialDelay, delay, delayTimeUnit)
+    scheduler.scheduleWithFixedDelay(command, initialDelay.toNanos, delay.toNanos, TimeUnit.NANOSECONDS)
 
   def size: Int = letterQueue.size
 
@@ -73,7 +71,7 @@ final case class Async(
 
   def close(): Unit = {
     scheduler.shutdown()
-    scheduler.awaitTermination(terminationDelay, terminationDelayTimeUnit)
+    scheduler.awaitTermination(terminationDelay.toNanos, TimeUnit.NANOSECONDS)
     if (!scheduler.isTerminated) scheduler.shutdownNow()
     if (!letterQueue.isEmpty) logger.debug(s"message queue has remaining: ${letterQueue.size()}")
     command.run()

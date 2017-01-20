@@ -102,12 +102,10 @@ object Main extends App {
   )
   val asyncQueue: Async = Async(
     messenger = messenger,
-    initialBufferSize = 1024,
-    initialDelay = 50,
-    delay = 100,
-    delayTimeUnit = TimeUnit.MILLISECONDS,
-    terminationDelay = 10,
-    terminationDelayTimeUnit = TimeUnit.SECONDS
+    initialBufferSize = 2048,
+    initialDelay = Duration.ofMillis(50),
+    delay = Duration.ofMillis(100),
+    terminationDelay = Duration.ofSeconds(10)
   )
   val push: Event[CCC] => Future[Unit] = { a =>
     asyncQueue.push(a).fold(Future.failed, Future.successful)
