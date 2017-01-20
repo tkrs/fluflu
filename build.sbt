@@ -13,8 +13,8 @@ lazy val buildSettings = Seq(
   crossScalaVersions := Seq("2.11.8", "2.12.1")
 )
 
-val catsVersion = "0.8.1"
-val circeVersion = "0.6.1"
+val catsVersion = "0.9.0"
+val circeVersion = "0.7.0"
 val scalacheckVersion = "1.13.4"
 val scalatestVersion = "3.0.1"
 
