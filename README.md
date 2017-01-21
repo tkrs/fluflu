@@ -10,7 +10,7 @@ fluent logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.9"
+libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.10"
 ```
 
 ## Example
@@ -65,35 +65,31 @@ Encoder
 
 ```
 Benchmark                                                Mode  Cnt        Score       Error  Units
-MessagePackerBenchmark.encodeCirceAST                   thrpt  100    21276.120 ±   323.674  ops/s
-MessagePackerBenchmark.encodeInt10                      thrpt  100   134450.609 ±  4078.495  ops/s
-MessagePackerBenchmark.encodeInt30                      thrpt  100    52893.677 ±  3841.534  ops/s
-MessagePackerBenchmark.encodeLong10                     thrpt  100   144049.873 ±  4982.727  ops/s
-MessagePackerBenchmark.encodeLong30                     thrpt  100    55832.522 ±  1392.915  ops/s
-MessagePackerBenchmark.encodeString1000_30              thrpt  100     2895.452 ±   105.649  ops/s
-MessagePackerBenchmark.encodeString1000_30_multibyte    thrpt  100      767.023 ±     9.856  ops/s
-MessagePackerBenchmark.encodeString100_10               thrpt  100    64048.843 ±   362.516  ops/s
-MessagePackerBenchmark.encodeString100_30               thrpt  100    19806.988 ±   102.978  ops/s
+MessagePackerBenchmark.encodeCirceAST                   thrpt   30    22302.420 ±   218.314  ops/s
+MessagePackerBenchmark.encodeInt10                      thrpt   30   156721.194 ±  1688.422  ops/s
+MessagePackerBenchmark.encodeInt30                      thrpt   30    59962.061 ±  3885.709  ops/s
+MessagePackerBenchmark.encodeLong10                     thrpt   30   146390.636 ±  5752.345  ops/s
+MessagePackerBenchmark.encodeLong30                     thrpt   30    58957.480 ±  1388.892  ops/s
+MessagePackerBenchmark.encodeString1000_30              thrpt   30     3213.112 ±    31.397  ops/s
+MessagePackerBenchmark.encodeString1000_30_multibyte    thrpt   30      782.617 ±     8.658  ops/s
+MessagePackerBenchmark.encodeString100_10               thrpt   30    60195.681 ±   545.277  ops/s
+MessagePackerBenchmark.encodeString100_30               thrpt   30    19866.150 ±   141.902  ops/s
 ```
 
 Decoder
 
 ```
 Benchmark                                                Mode  Cnt        Score       Error  Units
-MessageUnpackerBenchmark.decodeCirceAST                 thrpt  100   609080.108 ±  4209.928  ops/s
-MessageUnpackerBenchmark.decodeInt10                    thrpt  100  1717002.663 ± 36772.146  ops/s
-MessageUnpackerBenchmark.decodeInt30                    thrpt  100   705608.670 ±  3973.877  ops/s
-MessageUnpackerBenchmark.decodeLong10                   thrpt  100   887895.077 ±  9118.823  ops/s
-MessageUnpackerBenchmark.decodeLong30                   thrpt  100   701917.870 ± 12142.367  ops/s
-MessageUnpackerBenchmark.decodeString1000_30            thrpt  100   567494.589 ±  5793.185  ops/s
-MessageUnpackerBenchmark.decodeString1000_30_multibyte  thrpt  100   556861.228 ± 18426.292  ops/s
-MessageUnpackerBenchmark.decodeString100_10             thrpt  100   579314.084 ±  8949.473  ops/s
-MessageUnpackerBenchmark.decodeString100_30             thrpt  100   556954.006 ± 17998.414  ops/s
+MessageUnpackerBenchmark.decodeCirceAST                 thrpt   30   622342.441 ± 12140.401  ops/s
+MessageUnpackerBenchmark.decodeInt10                    thrpt   30  1836780.120 ± 15702.416  ops/s
+MessageUnpackerBenchmark.decodeInt30                    thrpt   30   843618.908 ±  7494.512  ops/s
+MessageUnpackerBenchmark.decodeLong10                   thrpt   30   937996.728 ± 10616.039  ops/s
+MessageUnpackerBenchmark.decodeLong30                   thrpt   30   839720.811 ±  8092.234  ops/s
+MessageUnpackerBenchmark.decodeString1000_30            thrpt   30   561789.541 ± 13513.640  ops/s
+MessageUnpackerBenchmark.decodeString1000_30_multibyte  thrpt   30   573531.092 ±  9846.417  ops/s
+MessageUnpackerBenchmark.decodeString100_10             thrpt   30   592889.941 ± 12490.031  ops/s
+MessageUnpackerBenchmark.decodeString100_30             thrpt   30   570698.816 ± 16276.081  ops/s
 ```
-
-## TODO
-
-- TEST
 
 ## LICENSE
 
