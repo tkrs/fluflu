@@ -1,5 +1,5 @@
 # fluflu
-fluent logger for scala
+Yet another fluentd logger for scala
 
 [![wercker status](https://app.wercker.com/status/d754e7976e64af6e1065568b43b27ac7/m "wercker status")](https://app.wercker.com/project/bykey/d754e7976e64af6e1065568b43b27ac7)
 
