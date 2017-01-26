@@ -26,11 +26,6 @@ test_2118:
         code: |
           sbt ++2.11.8 test
 
-    - script:
-        name: push coverage report to codecov
-        code: |
-          bash <(curl -s https://codecov.io/bash)
-
 deploy:
   steps:
     - script:
