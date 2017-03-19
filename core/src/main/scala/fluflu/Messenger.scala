@@ -12,7 +12,7 @@ import scala.util.{ Either => \/ }
 trait Messenger {
   def host: String
   def port: Int
-  def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit
+  def write(letter: Letter): Throwable \/ Unit
   def close(): Unit
 }
 
@@ -29,7 +29,15 @@ final case class DefaultMessenger(
   private[this] val dest = new InetSocketAddress(host, port)
   private[this] val connection = Connection(dest, reconnectionTimeout, reconnectionBackoff)
 
-  @tailrec def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit = {
+  def write(l: Letter): Throwable \/ Unit = {
+    val buffer = Messages.getBuffer(l.message.length)
+    buffer.put(l.message).flip()
+    val r = write(buffer, 0, Instant.now(clock))
+    buffer.clear()
+    r
+  }
+
+  @tailrec private def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit = {
     connection.write(buffer) match {
       case Left(e) =>
         buffer.flip()
