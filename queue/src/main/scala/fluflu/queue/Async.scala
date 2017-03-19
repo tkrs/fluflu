@@ -1,7 +1,7 @@
 package fluflu
 package queue
 
-import java.time.{ Clock, Duration, Instant }
+import java.time.{ Clock, Duration }
 import java.util.concurrent._
 
 import cats.syntax.either._
@@ -20,22 +20,19 @@ final case class Async(
 
   private[this] val letterQueue: BlockingDeque[() => Throwable \/ Letter] = new LinkedBlockingDeque()
   private[this] val scheduler = Executors.newScheduledThreadPool(1)
-  private[this] val write: Letter => Unit = { l =>
-    val buffer = Messages.getBuffer(l.message.length)
-    buffer.put(l.message).flip()
-    messenger.write(buffer, 0, Instant.now(clock)).fold(
-      e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
-      _ => ()
-    )
-    buffer.clear()
-  }
-  private[this] val writeForEach: (() => Throwable \/ Letter) => Unit = { fn =>
+  private[this] val consume: (() => Throwable \/ Letter) => Unit = { fn =>
     letterQueue.remove(fn)
-    fn().fold(logger.error(s"Failed to encode a message to Message-Pack", _), write)
+    fn()
+      .leftMap(logger.error(s"Failed to encode a message to Message-Pack", _))
+      .flatMap(messenger.write).fold(
+        e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
+        _ => ()
+      )
   }
 
   private[this] val command: Runnable = new Runnable {
-    override def run(): Unit = letterQueue.parallelStream().forEach(asJavaConsumer(writeForEach))
+    override def run(): Unit =
+      letterQueue.parallelStream().forEach(asJavaConsumer(consume))
   }
 
   private[this] val _: ScheduledFuture[_] =
