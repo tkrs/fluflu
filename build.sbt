@@ -118,19 +118,7 @@ lazy val examples = project.in(file("examples"))
   .settings(noPublishSettings)
   .settings(
     fork := true,
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3",
-    javaOptions := Seq(
-      "-XX:+UseG1GC",
-      "-Xloggc:gc.log",
-      "-Xmx6g", "-Xms6g",
-      "-XX:MaxMetaspaceSize=2g",
-      "-XX:MetaspaceSize=500m",
-      "-XX:CompressedClassSpaceSize=200m",
-      "-XX:+PrintGCDetails",
-      "-XX:+PrintGCDateStamps",
-      "-XX:+HeapDumpOnOutOfMemoryError",
-      "-XX:MaxGCPauseMillis=256"
-    )
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
   )
   .dependsOn(queue)
 

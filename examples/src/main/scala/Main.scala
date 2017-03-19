@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 /**
- * sbt "examples/runMain Main 127.0.0.1 24224 10"
+ * sbt "examples/runMain Main 127.0.0.1 24224 10 100"
  */
 object Main extends App {
 
@@ -102,7 +102,6 @@ object Main extends App {
   )
   val asyncQueue: Async = Async(
     messenger = messenger,
-    initialBufferSize = 2048,
     initialDelay = Duration.ofMillis(50),
     delay = Duration.ofMillis(100),
     terminationDelay = Duration.ofSeconds(10)
@@ -113,9 +112,9 @@ object Main extends App {
 
   val idx = new AtomicInteger(0)
   val xs: Vector[Event[CCC]] =
-    Iterator.from(1).map(x => Event("example", "ccc", ccc.copy(i = idx.getAndIncrement()))).take(args(3).toInt).toVector
+    Iterator.from(1).map(_ => Event("example", "ccc", ccc.copy(i = idx.getAndIncrement()))).take(args(3).toInt).toVector
 
-  val wokers = new AtomicInteger(1)
+  val workers = new AtomicInteger(1)
 
   val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
   val worker = new Runnable {
@@ -124,14 +123,12 @@ object Main extends App {
       val start = System.nanoTime()
       val r = Await.result(xs traverse push attempt, Inf)
       val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
-      println(("worker", wokers.getAndIncrement(), r.isRight, elapsed))
+      println(("worker", workers.getAndIncrement(), r.isRight, elapsed))
     }
   }
 
   val pool: ExecutorService = Executors.newWorkStealingPool()
-  scheduler.scheduleWithFixedDelay(new Runnable {
-    override def run(): Unit = pool.execute(worker)
-  }, 0, 1, TimeUnit.SECONDS)
+  scheduler.scheduleWithFixedDelay(() => pool.execute(worker), 0, 1, TimeUnit.SECONDS)
 
   scheduler.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
   scheduler.shutdownNow()
