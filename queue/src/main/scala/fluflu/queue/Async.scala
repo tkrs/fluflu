@@ -1,7 +1,6 @@
 package fluflu
 package queue
 
-import java.nio.ByteBuffer
 import java.time.{ Clock, Duration, Instant }
 import java.util.concurrent._
 
@@ -14,7 +13,6 @@ import scala.compat.java8.FunctionConverters._
 
 final case class Async(
     messenger: Messenger,
-    initialBufferSize: Int = 1024,
     initialDelay: Duration = Duration.ofMillis(1),
     delay: Duration = Duration.ofSeconds(1),
     terminationDelay: Duration = Duration.ofSeconds(10)
@@ -22,42 +20,22 @@ final case class Async(
 
   private[this] val letterQueue: BlockingDeque[() => Throwable \/ Letter] = new LinkedBlockingDeque()
   private[this] val scheduler = Executors.newScheduledThreadPool(1)
+  private[this] val write: Letter => Unit = { l =>
+    val buffer = Messages.getBuffer(l.message.length)
+    buffer.put(l.message).flip()
+    messenger.write(buffer, 0, Instant.now(clock)).fold(
+      e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
+      _ => ()
+    )
+    buffer.clear()
+  }
+  private[this] val writeForEach: (() => Throwable \/ Letter) => Unit = { fn =>
+    letterQueue.remove(fn)
+    fn().fold(logger.error(s"Failed to encode a message to Message-Pack", _), write)
+  }
 
   private[this] val command: Runnable = new Runnable {
-    private[this] var buffer = ByteBuffer.allocateDirect(initialBufferSize)
-
-    final val updateByteBuffer: (Int, ByteBuffer) => ByteBuffer = { (len, b) =>
-      if (b.limit >= len) b else {
-        if (b.capacity() < len) {
-          b.clear()
-          ByteBuffer.allocateDirect(len)
-        } else {
-          b.limit(len)
-          b
-        }
-      }
-    }
-
-    final val write: Letter => Unit = { l =>
-      buffer = updateByteBuffer(l.message.length, buffer)
-      buffer.put(l.message).flip()
-      messenger.write(buffer, 0, Instant.now(clock)).fold(
-        e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
-        _ => ()
-      )
-      buffer.clear()
-    }
-
-    final val writeForEach: (() => Throwable \/ Letter) => Unit = { fn =>
-      letterQueue.remove(fn)
-      fn().fold(logger.error(s"Failed to encode a message to message-pack", _), write)
-    }
-
-    override def run(): Unit = try {
-      letterQueue.forEach(asJavaConsumer(writeForEach))
-    } finally {
-      buffer.clear()
-    }
+    override def run(): Unit = letterQueue.parallelStream().forEach(asJavaConsumer(writeForEach))
   }
 
   private[this] val _: ScheduledFuture[_] =
@@ -66,7 +44,7 @@ final case class Async(
   def size: Int = letterQueue.size
 
   def push[A: Encoder](e: Event[A]): Exception \/ Unit =
-    if (letterQueue offer (() => Message.pack(e).map(Letter))) \/.right(())
+    if (letterQueue offer (() => Messages.pack(e).map(Letter))) \/.right(())
     else \/.left(new Exception("A queue no space is currently available"))
 
   def close(): Unit = {

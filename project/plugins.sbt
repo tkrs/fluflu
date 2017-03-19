@@ -2,7 +2,7 @@ resolvers ++= Seq(
   Resolver.url("scoverage-bintray", url("https://dl.bintray.com/sksamuel/sbt-plugins/"))(Resolver.ivyStylePatterns)
 )
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
-addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.18")
+addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.22")
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.0")
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")
