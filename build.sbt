@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, sf, msgpack, tests)
-  .dependsOn(core, queue, sf, msgpack)
+  .aggregate(core, queue, msgpack, tests)
+  .dependsOn(core, queue, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
 
@@ -89,15 +89,6 @@ lazy val queue = project.in(file("queue"))
       "org.typelevel" %% "cats" % catsVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
     )
-  )
-  .settings(allSettings: _*)
-  .dependsOn(core, msgpack)
-
-lazy val sf = project.in(file("sf"))
-  .settings(
-    description := "fluflu scala future",
-    moduleName := "fluflu-sf",
-    name := "sf"
   )
   .settings(allSettings: _*)
   .dependsOn(core, msgpack)
