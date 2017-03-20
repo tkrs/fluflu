@@ -11,4 +11,14 @@ class MessagesSpec extends FunSpec {
       assert(result === expected)
     }
   }
+
+  describe("getBuffer") {
+    it("should return a ByteBuffer with increased capacity if it passed a size that exceeds capacity") {
+      val buf = Messages.getBuffer(10)
+      assert(buf.capacity() >= 10)
+
+      val buf2 = Messages.getBuffer(buf.capacity() + 1)
+      assert(buf.capacity() + 1 === buf2.capacity())
+    }
+  }
 }
