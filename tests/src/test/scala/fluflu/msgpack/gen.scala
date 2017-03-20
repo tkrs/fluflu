@@ -10,9 +10,8 @@ object gen {
 
   val genBigInt: Gen[BigInt] = Gen.oneOf(
     Gen.const(int64Min),
-    Gen.negNum[Long].map(l => BigInt(l)),
-    Gen.posNum[Long].map(l => BigInt(l)),
+    Gen.negNum[Long].map(BigInt.apply),
+    Gen.posNum[Long].map(BigInt.apply),
     Gen.const(uint64Max)
   )
-
 }
