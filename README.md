@@ -79,16 +79,16 @@ MessagePackerBenchmark.encodeString100_30               thrpt   30    19866.150 
 Decoder
 
 ```
-Benchmark                                                Mode  Cnt        Score       Error  Units
-MessageUnpackerBenchmark.decodeCirceAST                 thrpt   30   622342.441 ± 12140.401  ops/s
-MessageUnpackerBenchmark.decodeInt10                    thrpt   30  1836780.120 ± 15702.416  ops/s
-MessageUnpackerBenchmark.decodeInt30                    thrpt   30   843618.908 ±  7494.512  ops/s
-MessageUnpackerBenchmark.decodeLong10                   thrpt   30   937996.728 ± 10616.039  ops/s
-MessageUnpackerBenchmark.decodeLong30                   thrpt   30   839720.811 ±  8092.234  ops/s
-MessageUnpackerBenchmark.decodeString1000_30            thrpt   30   561789.541 ± 13513.640  ops/s
-MessageUnpackerBenchmark.decodeString1000_30_multibyte  thrpt   30   573531.092 ±  9846.417  ops/s
-MessageUnpackerBenchmark.decodeString100_10             thrpt   30   592889.941 ± 12490.031  ops/s
-MessageUnpackerBenchmark.decodeString100_30             thrpt   30   570698.816 ± 16276.081  ops/s
+Benchmark                                                Mode  Cnt       Score      Error  Units
+MessageUnpackerBenchmark.decodeCirceAST                 thrpt   10   56195.041 ±  889.966  ops/s
+MessageUnpackerBenchmark.decodeInt10                    thrpt   10  203983.660 ± 7464.717  ops/s
+MessageUnpackerBenchmark.decodeInt30                    thrpt   10   56725.173 ± 2688.908  ops/s
+MessageUnpackerBenchmark.decodeLong10                   thrpt   10   64396.997 ±  588.559  ops/s
+MessageUnpackerBenchmark.decodeLong30                   thrpt   10   20645.105 ± 1467.250  ops/s
+MessageUnpackerBenchmark.decodeString1000_30            thrpt   10   23706.552 ±  365.460  ops/s
+MessageUnpackerBenchmark.decodeString1000_30_multibyte  thrpt   10    4427.903 ±   36.471  ops/s
+MessageUnpackerBenchmark.decodeString100_10             thrpt   10  153727.843 ± 5463.203  ops/s
+MessageUnpackerBenchmark.decodeString100_30             thrpt   10   46904.645 ± 1960.118  ops/s
 ```
 
 ## LICENSE
