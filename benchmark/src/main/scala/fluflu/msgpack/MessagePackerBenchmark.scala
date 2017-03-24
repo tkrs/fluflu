@@ -7,7 +7,10 @@ import org.openjdk.jmh.annotations._
 
 @State(Scope.Thread)
 @BenchmarkMode(Array(Mode.Throughput))
+@Warmup(iterations = 5, time = 1)
+@Measurement(iterations = 5, time = 5)
 @OutputTimeUnit(TimeUnit.SECONDS)
+@Fork(2)
 class MessagePackerBenchmark extends TestData {
   import pack._
 
