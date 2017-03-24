@@ -56,7 +56,6 @@ object MessageUnpacker {
       (BigInt(buf.get(i + 7) & 0xFF) << 0)
 
   def utf8ToString(buf: ByteBuffer, offset: Int, length: Int): String = {
-    val limit = offset + length
     val arr = Array.ofDim[Byte](length)
     buf.position(offset)
     buf.get(arr)
