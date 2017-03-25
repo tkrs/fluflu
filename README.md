@@ -5,57 +5,15 @@ Yet another fluentd logger for scala
 
 [![codecov.io](http://codecov.io/github/tkrs/fluflu/coverage.svg?branch=master)](http://codecov.io/github/tkrs/fluflu?branch=master)
 
-## Usage
+## How to use it
 
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.5.10"
+libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "0.6.0"
 ```
 
-## Example
-```scala
-  case class CCC(
-    i: Int,
-    ttt: String,
-    uuu: String,
-    sss: Int, mmm: Map[String, String],
-    ggg: Seq[Double]
-  )
-
-  implicit val clock: Clock = Clock.systemUTC()
-
-  val rnd: Random = new Random(System.nanoTime())
-  val reconnectionBackoff: Backoff =
-    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
-  val rewriteBackoff: Backoff =
-    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
-
-  val messenger = fluflu.DefaultMessenger(
-    host = "127.0.0.1",
-    port = 24224,
-    reconnectionTimeout = Duration.ofSeconds(10),
-    rewriteTimeout = Duration.ofSeconds(10),
-    reconnectionBackoff = reconnectionBackoff,
-    rewriteBackoff = rewriteBackoff
-  )
-
-  val async: Async = Async(
-    messenger = messenger,
-    initialBufferSize = 2048,
-    initialDelay = Duration.ofMillis(50),
-    delay = Duration.ofMillis(500),
-    terminationDelay = Duration.ofSeconds(10)
-  )
-
-  val ccc: CCC = CCC(0, "foo", "", Int.MaxValue, Map("name" -> "fluflu"), Seq(1.2, Double.MaxValue, Double.MinValue))
-  async.push(ccc)
-
-  Thread.sleep(1000)
-
-  async.close()
-}
-```
+And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/examples/src/main/scala)
 
 ## LICENSE
 
