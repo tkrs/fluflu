@@ -5,22 +5,14 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.lang.Float.intBitsToFloat
 import java.lang.Double.longBitsToDouble
-import java.nio.charset.{ CharsetDecoder, CodingErrorAction }
 
 import cats.syntax.either._
-import io.circe.{ Decoder, DecodingFailure, Error, Json }
+import io.circe.{ Error, Decoder, Json, DecodingFailure }
 
 import scala.annotation.tailrec
 import scala.util.{ Either => \/ }
 
 object MessageUnpacker {
-
-  private[this] val decoders = new ThreadLocal[CharsetDecoder] {
-    override def initialValue(): CharsetDecoder =
-      UTF_8.newDecoder()
-        .onMalformedInput(CodingErrorAction.REPORT)
-        .onUnmappableCharacter(CodingErrorAction.REPORT)
-  }
 
   def apply(b: ByteBuffer) = new MessageUnpacker(b)
 
@@ -67,9 +59,9 @@ object MessageUnpacker {
     val arr = Array.ofDim[Byte](length)
     buf.position(offset)
     buf.get(arr)
-    decoders.get().decode(ByteBuffer.wrap(arr)).toString
-    // new String(arr, 0, length, UTF_8)
+    new String(arr, UTF_8)
   }
+
 }
 
 final class MessageUnpacker(src: ByteBuffer) {
@@ -77,13 +69,13 @@ final class MessageUnpacker(src: ByteBuffer) {
 
   private[this] var offset = src.position
 
-  private def readAt(i: Int): Int = {
+  private[this] def readAt(i: Int): Int = {
     val v = src.get(offset).toInt
     offset += i
     v
   }
 
-  private def decodeAt[A](i: Int, f: (ByteBuffer, Int) => A): A = {
+  private[this] def decodeAt[A](i: Int, f: (ByteBuffer, Int) => A): A = {
     val v = f(src, offset)
     offset += i
     v
