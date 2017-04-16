@@ -145,6 +145,7 @@ lazy val benchmark = (project in file("benchmark"))
   .settings(
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
+    name := "benchmark",
     scalaVersion := "2.12.1",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalatestVersion,

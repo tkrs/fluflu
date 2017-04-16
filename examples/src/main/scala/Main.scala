@@ -1,92 +1,85 @@
 import java.time.{ Clock, Duration }
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ ExecutorService, Executors, ScheduledExecutorService, TimeUnit }
+import java.util.concurrent.{ Executors, TimeUnit }
 
-import cats.instances.future._
-import cats.instances.vector._
-import cats.syntax.traverse._
-import cats.syntax.applicativeError._
+import com.typesafe.scalalogging.LazyLogging
 import fluflu._
 import fluflu.queue.Async
 import io.circe.generic.auto._
 
-import scala.concurrent.duration.Duration._
-import scala.concurrent.{ Await, Future }
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
+
+case class CCC(
+  i: Int,
+  aaa: String,
+  bbb: String,
+  ccc: String,
+  ddd: Int,
+  eee: Map[String, String],
+  ffff: Seq[Double],
+  ggg: Int,
+  hhh: String,
+  iii: Int,
+  jjj: String,
+  kkk: String,
+  lll: String,
+  mmm: String,
+  nnn: String,
+  ooo: String,
+  ppp: String,
+  qqq: Int,
+  rrr: Int,
+  sss: Int,
+  ttt: Int,
+  uuu: Int,
+  vvv: Int,
+  www: Int,
+  xxx: Int,
+  yyy: Int,
+  zzz: Int
+)
 
 /**
  * sbt "examples/runMain Main 127.0.0.1 24224 10 100"
  */
-object Main extends App {
+object Main extends App with LazyLogging {
 
-  case class CCC(
-    i: Int,
-    aaa: String,
-    bbb: String,
-    ccc: String,
-    ddd: Int,
-    eee: Map[String, String],
-    ffff: Seq[Double],
-    ggg: Int,
-    hhh: String,
-    iii: Int,
-    jjj: String,
-    kkk: String,
-    lll: String,
-    mmm: String,
-    nnn: String,
-    ooo: String,
-    ppp: String,
-    qqq: Int,
-    rrr: Int,
-    sss: Int,
-    ttt: Int,
-    uuu: Int,
-    vvv: Int,
-    www: Int,
-    xxx: Int,
-    yyy: Int,
-    zzz: Int
-  )
-
-  val rnd0 = new Random()
+  val rnd: Random = new Random(System.nanoTime())
 
   val ccc: CCC = CCC(
     0,
-    rnd0.nextString(1000),
-    rnd0.nextString(10),
-    rnd0.nextString(100),
-    rnd0.nextInt(Int.MaxValue),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextInt(Int.MaxValue),
     Map("name" -> "fluflu"),
     Seq(1.2, Double.MaxValue, Double.MinValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextString(30),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextString(30),
-    rnd0.nextString(30),
-    rnd0.nextString(30),
-    rnd0.nextString(30),
-    rnd0.nextString(30),
-    rnd0.nextString(30),
-    rnd0.nextString(30),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue),
-    rnd0.nextInt(Int.MaxValue)
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextString(10),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextString(10),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue),
+    rnd.nextInt(Int.MaxValue)
   )
 
   println(ccc)
 
   implicit val clock: Clock = Clock.systemUTC()
 
-  val rnd: Random = new Random(System.nanoTime())
   val reconnectionBackoff: Backoff =
     ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
   val rewriteBackoff: Backoff =
@@ -106,32 +99,26 @@ object Main extends App {
     delay = Duration.ofMillis(100),
     terminationDelay = Duration.ofSeconds(10)
   )
-  val push: Event[CCC] => Future[Unit] = { a =>
-    asyncQueue.push(a).fold(Future.failed, Future.successful)
+  val push: Event[CCC] => Unit = { a =>
+    asyncQueue.push(a)
   }
 
   val idx = new AtomicInteger(0)
-  val xs: Vector[Event[CCC]] =
-    Iterator.from(1).map(_ => Event("example", "ccc", ccc.copy(i = idx.getAndIncrement()))).take(args(3).toInt).toVector
+  val xs: Iterator[Event[CCC]] =
+    Iterator.from(1)
+      .map(i => Event("example", "ccc", ccc.copy(i = i)))
+      .take(args(3).toInt)
 
-  val workers = new AtomicInteger(1)
+  val runner = Executors.newSingleThreadExecutor()
 
-  val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
-  val worker = new Runnable {
-    override def run(): Unit = {
-      println(("worker", "queue has remaining", asyncQueue.size))
-      val start = System.nanoTime()
-      val r = Await.result(xs traverse push attempt, Inf)
-      val elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)
-      println(("worker", workers.getAndIncrement(), r.isRight, elapsed))
-    }
-  }
+  logger.info(s"Start")
+  val start = System.nanoTime()
+  runner.execute(() => xs foreach push)
 
-  val pool: ExecutorService = Executors.newWorkStealingPool()
-  scheduler.scheduleWithFixedDelay(() => pool.execute(worker), 0, 1, TimeUnit.SECONDS)
-
-  scheduler.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
-  scheduler.shutdownNow()
-  pool.shutdown()
+  runner.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
+  runner.shutdownNow()
   asyncQueue.close()
+
+  logger.info(s"A queue remaining: ${asyncQueue.remaining}")
+  logger.info(s"Elapsed time: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms")
 }
