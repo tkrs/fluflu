@@ -1,7 +1,7 @@
 package fluflu
 package queue
 
-import java.time.{ Clock, Duration }
+import java.time.Duration
 import java.util.concurrent._
 
 import cats.syntax.either._
@@ -16,7 +16,7 @@ final case class Async(
     initialDelay: Duration = Duration.ofMillis(1),
     delay: Duration = Duration.ofSeconds(1),
     terminationDelay: Duration = Duration.ofSeconds(10)
-)(implicit clock: Clock) extends LazyLogging {
+) extends LazyLogging {
 
   private[this] val letterQueue: BlockingDeque[() => Throwable \/ Letter] = new LinkedBlockingDeque()
   private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
