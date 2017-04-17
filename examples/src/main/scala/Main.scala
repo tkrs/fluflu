@@ -100,11 +100,11 @@ object Main extends App with LazyLogging {
     terminationDelay = Duration.ofSeconds(10)
   )
   val push: Event[CCC] => Unit = { a =>
-    asyncQueue.push(a)
+    asyncQueue.emit(a)
   }
 
   val idx = new AtomicInteger(0)
-  val xs: Iterator[Event[CCC]] =
+  def xs: Iterator[Event[CCC]] =
     Iterator.from(1)
       .map(i => Event("example", "ccc", ccc.copy(i = i)))
       .take(args(3).toInt)

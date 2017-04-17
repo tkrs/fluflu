@@ -9,7 +9,6 @@ import cats.syntax.either._
 import io.circe.{ Encoder, Json }
 
 import scala.collection.mutable
-import scala.util.{ Either => \/ }
 
 object MessagePacker {
 
@@ -154,11 +153,11 @@ object MessagePacker {
 final class MessagePacker {
   import MessagePacker._
 
-  def encode[A](a: A)(implicit A: Encoder[A]): Throwable \/ Array[Byte] = pack(A(a))
+  def encode[A](a: A)(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] = pack(A(a))
 
-  def pack(doc: Json): Throwable \/ Array[Byte] = {
+  def pack(doc: Json): Either[Throwable, Array[Byte]] = {
     val acc: mutable.ArrayBuilder[Byte] = mutable.ArrayBuilder.make[Byte]
-    \/.catchNonFatal {
+    Either.catchNonFatal {
       go(doc, acc)
       acc.result
     }

@@ -3,12 +3,12 @@ package queue
 
 import java.time.Duration
 import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicBoolean
 
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Encoder
 
-import scala.util.{ Either => \/ }
 import scala.compat.java8.FunctionConverters._
 
 final case class Async(
@@ -18,11 +18,11 @@ final case class Async(
     terminationDelay: Duration = Duration.ofSeconds(10)
 ) extends LazyLogging {
 
-  private[this] val letterQueue: BlockingDeque[() => Throwable \/ Letter] = new LinkedBlockingDeque()
+  private[this] val msgQueue: BlockingQueue[() => Either[Throwable, Letter]] = new LinkedBlockingQueue()
   private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
 
-  private[this] val consume: (() => Throwable \/ Letter) => Unit = { fn =>
-    letterQueue.remove(fn)
+  private[this] val consume: (() => Either[Throwable, Letter]) => Unit = { fn =>
+    msgQueue.remove(fn)
     fn()
       .leftMap(logger.error(s"Failed to encode a message to MessagePack", _))
       .flatMap(messenger.write).fold(
@@ -31,29 +31,40 @@ final case class Async(
       )
   }
 
-  private[this] val command: Runnable = new Runnable {
-    override def run(): Unit = {
-      val start = if (!letterQueue.isEmpty) System.nanoTime() else 0
-      letterQueue.stream.forEach(asJavaConsumer(consume))
-      if (start > 0) logger.debug(s"A command spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms")
-    }
+  def remaining: Int = msgQueue.size
+
+  private def emit(): Unit = synchronized {
+    logger.debug("Start emitting.")
+    val start = System.nanoTime()
+    msgQueue.stream.forEach(asJavaConsumer(consume))
+    logger.debug(s"A emitting spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
   }
 
-  private[this] val _: ScheduledFuture[_] =
-    scheduler.scheduleWithFixedDelay(command, initialDelay.toNanos, delay.toNanos, TimeUnit.NANOSECONDS)
-
-  def remaining: Int = letterQueue.size
-
-  def push[A: Encoder](e: Event[A]): Exception \/ Unit =
-    if (letterQueue offer (() => Messages.pack(e).map(Letter))) \/.right(())
-    else \/.left(new Exception("A queue no space is currently available"))
+  def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
+    if (msgQueue offer (() => Messages.pack(e).map(Letter))) Either.right(R.start())
+    else Either.left(new Exception("A queue no space is currently available"))
 
   def close(): Unit = {
     scheduler.shutdown()
     scheduler.awaitTermination(terminationDelay.toNanos, TimeUnit.NANOSECONDS)
     if (!scheduler.isTerminated) scheduler.shutdownNow()
-    if (!letterQueue.isEmpty) logger.debug(s"A message queue has remaining: ${letterQueue.size()}")
-    command.run()
+    if (!msgQueue.isEmpty) logger.debug(s"A message queue has remaining: ${msgQueue.size()}")
+    emit()
     messenger.close()
+  }
+
+  object R extends Runnable {
+    private[this] val running: AtomicBoolean = new AtomicBoolean(false)
+    def start(): Unit =
+      if (!running.get() && running.compareAndSet(false, true))
+        scheduler.execute(this)
+    override def run(): Unit = if (!msgQueue.isEmpty) {
+      emit()
+      running.set(false)
+      if (!scheduler.isShutdown)
+        scheduler.schedule(new Runnable() {
+          override def run(): Unit = scheduler.execute(this)
+        }, delay.toNanos, TimeUnit.NANOSECONDS)
+    }
   }
 }
