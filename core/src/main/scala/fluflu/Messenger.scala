@@ -7,12 +7,11 @@ import java.util.concurrent._
 
 import scala.annotation.tailrec
 import scala.concurrent.blocking
-import scala.util.{ Either => \/ }
 
 trait Messenger {
   def host: String
   def port: Int
-  def write(letter: Letter): Throwable \/ Unit
+  def write(letter: Letter): Either[Throwable, Unit]
   def close(): Unit
 }
 
@@ -29,7 +28,7 @@ final case class DefaultMessenger(
   private[this] val dest = new InetSocketAddress(host, port)
   private[this] val connection = Connection(dest, reconnectionTimeout, reconnectionBackoff)
 
-  def write(l: Letter): Throwable \/ Unit = {
+  def write(l: Letter): Either[Throwable, Unit] = {
     val buffer = Messages.getBuffer(l.message.length)
     buffer.put(l.message).flip()
     val r = write(buffer, 0, Instant.now(clock))
@@ -37,7 +36,7 @@ final case class DefaultMessenger(
     r
   }
 
-  @tailrec private def write(buffer: ByteBuffer, retries: Int, start: Instant): Throwable \/ Unit = {
+  @tailrec private def write(buffer: ByteBuffer, retries: Int, start: Instant): Either[Throwable, Unit] = {
     connection.write(buffer) match {
       case Left(e) =>
         buffer.flip()

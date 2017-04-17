@@ -16,7 +16,6 @@ import cats.syntax.flatMap._
 import scala.annotation.tailrec
 import scala.compat.java8.FunctionConverters._
 import scala.concurrent.blocking
-import scala.util.{ Either => \/ }
 
 final case class Connection(
     remote: InetSocketAddress,
@@ -25,7 +24,7 @@ final case class Connection(
 )(implicit clock: Clock) {
   import StandardSocketOptions._
 
-  private[this] val channel: AtomicReference[Throwable \/ Option[SocketChannel]] =
+  private[this] val channel: AtomicReference[Either[Throwable, Option[SocketChannel]]] =
     new AtomicReference(go(open, 0, Instant.now(clock)))
 
   private[this] def open = {
@@ -34,9 +33,9 @@ final case class Connection(
     ch
   }
 
-  @tailrec private[this] def go(x: SocketChannel, retries: Int, start: Instant): Throwable \/ Option[SocketChannel] = {
+  @tailrec private[this] def go(x: SocketChannel, retries: Int, start: Instant): Either[Throwable, Option[SocketChannel]] = {
     try {
-      if (x.connect(remote)) \/.right(x.some) else \/.left(new IOException("Failed to connect"))
+      if (x.connect(remote)) Either.right(x.some) else Either.left(new IOException("Failed to connect"))
     } catch {
       case e: IOException =>
         if (Instant.now(clock).minusNanos(reconnectionTimeout.toNanos).compareTo(start) <= 0) {
@@ -45,12 +44,12 @@ final case class Connection(
           go(open, retries + 1, start)
         } else {
           if (x.isOpen) x.close()
-          \/.left(e)
+          Either.left(e)
         }
     }
   }
 
-  def connect(): Throwable \/ Option[SocketChannel] =
+  def connect(): Either[Throwable, Option[SocketChannel]] =
     channel.updateAndGet(asJavaUnaryOperator {
       case t @ Right(Some(ch)) if ch.isConnected || ch.isConnectionPending => t
       case _ => go(open, 0, Instant.now(clock))
@@ -61,25 +60,25 @@ final case class Connection(
     _.fold(false)(ch => !(ch.isConnected || ch.isConnectionPending))
   )
 
-  def write(message: ByteBuffer): Throwable \/ Unit = {
-    val r = connect() >>= (ch => \/.catchNonFatal(ch.map(_.write(message))))
+  def write(message: ByteBuffer): Either[Throwable, Unit] = {
+    val r = connect() >>= (ch => Either.catchNonFatal(ch.map(_.write(message))))
     r.fold({
       case e: NotYetConnectedException =>
         channel.get >>= {
-          case Some(ch) => if (ch.finishConnect()) \/.right(()) else \/.left(e)
-          case None => \/.right(())
+          case Some(ch) => if (ch.finishConnect()) Either.right(()) else Either.left(e)
+          case None => Either.right(())
         }
       case e: IOException =>
-        close(); \/.left(e)
+        close(); Either.left(e)
       case e: Throwable =>
-        \/.left(e)
-    }, _ => \/.right(()))
+        Either.left(e)
+    }, _ => Either.right(()))
   }
 
   def close(): Unit =
     channel.updateAndGet(asJavaUnaryOperator {
-      case Right(ch) => \/.catchNonFatal { ch.foreach(_.close()); none }
-      case _ => \/.right(none)
+      case Right(ch) => Either.catchNonFatal { ch.foreach(_.close()); none }
+      case _ => Either.right(none)
     })
 }
 

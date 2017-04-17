@@ -10,7 +10,6 @@ import cats.syntax.either._
 import io.circe.{ Error, Decoder, Json, DecodingFailure }
 
 import scala.annotation.tailrec
-import scala.util.{ Either => \/ }
 
 object MessageUnpacker {
 
@@ -81,8 +80,8 @@ final class MessageUnpacker(src: ByteBuffer) {
     v
   }
 
-  def decode[A](implicit decoder: Decoder[A]): Error \/ A =
-    \/.catchOnly[Exception](unpack)
+  def decode[A](implicit decoder: Decoder[A]): Either[Error, A] =
+    Either.catchOnly[Exception](unpack)
       .leftMap(e => DecodingFailure(e.getMessage, List.empty))
       .flatMap(_.as[A])
 
