@@ -19,12 +19,12 @@ test:
         code: |
           bash <(curl -s https://codecov.io/bash)
 
-test_2118:
+test_211:
   steps:
     - script:
         name: sbt test
         code: |
-          sbt ++2.11.8 test
+          sbt ++2.11.11 test
 
 deploy:
   steps:
@@ -42,7 +42,7 @@ deploy:
             sbt publishSigned
           fi
 
-deploy_2118:
+deploy_211:
   steps:
     - script:
         name: setup gpg secring.asc
@@ -55,5 +55,5 @@ deploy_2118:
         name: deploy to snapshot repository
         code: |
           if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
-            sbt ++2.11.8 publishSigned
+            sbt ++2.11.11 publishSigned
           fi
