@@ -9,8 +9,8 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scala
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.11.8", "2.12.1")
+  scalaVersion := "2.12.2",
+  crossScalaVersions := Seq("2.11.11", "2.12.2")
 )
 
 val catsVersion = "0.9.0"
