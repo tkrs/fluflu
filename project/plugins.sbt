@@ -3,8 +3,8 @@ resolvers ++= Seq(
   Resolver.bintrayIvyRepo("sbt", "sbt-plugin-releases")
 )
 
-addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
-addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.24")
+addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC1")
+addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.25")
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.6.0")
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.0")
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "1.1")

@@ -14,9 +14,9 @@ lazy val buildSettings = Seq(
 )
 
 val catsVersion = "0.9.0"
-val circeVersion = "0.7.0"
-val scalacheckVersion = "1.13.4"
-val scalatestVersion = "3.0.1"
+val circeVersion = "0.8.0-RC1"
+val scalacheckVersion = "1.13.5"
+val scalatestVersion = "3.0.3"
 
 lazy val baseSettings = Seq(
   libraryDependencies ++= Seq(
@@ -112,13 +112,13 @@ lazy val examples = project.in(file("examples"))
     moduleName := "fluflu-examples",
     name := "examples",
     scalaVersion := "2.12.1",
-    crossScalaVersions := Seq("2.12.1")
+    crossScalaVersions := Seq("2.12.2")
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
   .settings(
     fork := true,
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.3"
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
   )
   .dependsOn(queue)
 
@@ -127,7 +127,7 @@ lazy val tests = project.in(file("tests"))
     description := "fluflu tests",
     moduleName := "fluflu-tests",
     name := "tests",
-    scalaVersion := "2.12.1"
+    scalaVersion := "2.12.7"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
@@ -146,7 +146,7 @@ lazy val benchmark = (project in file("benchmark"))
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
     name := "benchmark",
-    scalaVersion := "2.12.1",
+    scalaVersion := "2.12.2",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalatestVersion,
       "org.scalacheck" %% "scalacheck" % scalacheckVersion
