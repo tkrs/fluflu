@@ -20,7 +20,8 @@ val scalatestVersion = "3.0.3"
 
 lazy val baseSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
+    "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
   ),
   scalacOptions ++= compilerOptions,
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import"))
@@ -86,8 +87,7 @@ lazy val queue = project.in(file("queue"))
     moduleName := "fluflu-queue",
     name := "queue",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats" % catsVersion,
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+      "org.typelevel" %% "cats" % catsVersion
     )
   )
   .settings(allSettings: _*)

@@ -1,6 +1,6 @@
+import java.net.InetSocketAddress
 import java.time.{ Clock, Duration }
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{ Executors, TimeUnit }
+import java.util.concurrent._
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
@@ -42,7 +42,7 @@ case class CCC(
 /**
  * sbt "examples/runMain Main 127.0.0.1 24224 10 100"
  */
-object Main extends App with LazyLogging {
+object Main extends LazyLogging {
 
   val rnd: Random = new Random(System.nanoTime())
 
@@ -76,49 +76,74 @@ object Main extends App with LazyLogging {
     rnd.nextInt(Int.MaxValue)
   )
 
-  println(ccc)
+  // println(ccc)
 
   implicit val clock: Clock = Clock.systemUTC()
 
-  val reconnectionBackoff: Backoff =
-    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
-  val rewriteBackoff: Backoff =
-    ExponentialBackoff(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
+  val pool = Executors.newScheduledThreadPool(2)
+  val executor = Executors.newFixedThreadPool(4)
 
-  val messenger = DefaultMessenger(
-    host = args(0),
-    port = args(1).toInt,
-    reconnectionTimeout = Duration.ofSeconds(10),
-    rewriteTimeout = Duration.ofSeconds(10),
-    reconnectionBackoff = reconnectionBackoff,
-    rewriteBackoff = rewriteBackoff
-  )
-  val asyncQueue: Async = Async(
-    messenger = messenger,
-    initialDelay = Duration.ofMillis(50),
-    delay = Duration.ofMillis(100),
-    terminationDelay = Duration.ofSeconds(10)
-  )
-  val push: Event[CCC] => Unit = { a =>
-    asyncQueue.emit(a)
-  }
+  def main(args: Array[String]): Unit = {
+    implicit val connection = Connection(
+      remote = new InetSocketAddress(args(0), args(1).toInt),
+      timeout = Duration.ofSeconds(10),
+      Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd)
+    )
 
-  val idx = new AtomicInteger(0)
-  def xs: Iterator[Event[CCC]] =
+    implicit val messenger: Messenger = Messenger(
+      parallelism = 10,
+      timeout = Duration.ofSeconds(10),
+      backoff = Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(5), rnd),
+      terminationDelay = Duration.ofSeconds(10)
+    )
+
+    val asyncQueue: Async = Async(
+      delay = Duration.ofMillis(50),
+      terminationDelay = Duration.ofSeconds(10)
+    )
+
+    val sec = args(2).toLong
+    val len = args(3).toInt
+
+    val q: BlockingQueue[Event[CCC]] = new ArrayBlockingQueue(len)
+
     Iterator.from(1)
       .map(i => Event("example", "ccc", ccc.copy(i = i)))
-      .take(args(3).toInt)
+      .take(len)
+      .foreach(x => q.offer(x))
 
-  val runner = Executors.newSingleThreadExecutor()
+    val delay = TimeUnit.SECONDS.toNanos(sec) / len
 
-  logger.info(s"Start")
-  val start = System.nanoTime()
-  runner.execute(() => xs foreach push)
+    object R extends Runnable {
+      def start: ScheduledFuture[_] =
+        pool.schedule(this, delay, TimeUnit.NANOSECONDS)
 
-  runner.awaitTermination(args(2).toLong, TimeUnit.SECONDS)
-  runner.shutdownNow()
-  asyncQueue.close()
+      def run(): Unit = executor.execute(() => {
+        val e = q.poll()
+        if (e != null) {
+          asyncQueue.emit(e)
+          if (!q.isEmpty()) start
+        }
+      })
+    }
 
-  logger.info(s"A queue remaining: ${asyncQueue.remaining}")
-  logger.info(s"Elapsed time: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms")
+    logger.info("Start")
+    R.start
+    R.start
+    R.start
+
+    val start = System.nanoTime()
+    if (!pool.awaitTermination(TimeUnit.SECONDS.toNanos(sec) + delay, TimeUnit.NANOSECONDS))
+      pool.shutdownNow()
+
+    executor.shutdown()
+    executor.shutdownNow()
+
+    logger.info(s"Queue remaining: ${asyncQueue.remaining}")
+    logger.info(s"Test data remaining: ${q.size}")
+
+    logger.info(s"Elapsed: ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms")
+
+    asyncQueue.close()
+  }
 }
