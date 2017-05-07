@@ -9,62 +9,75 @@ import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Encoder
 
-import scala.compat.java8.FunctionConverters._
+trait Async {
+  def emit[A: Encoder](e: Event[A]): Either[Exception, Unit]
+  def remaining: Int
+  def close(): Unit
+}
 
-final case class Async(
-    messenger: Messenger,
-    initialDelay: Duration = Duration.ofMillis(1),
+object Async {
+
+  def apply(
     delay: Duration = Duration.ofSeconds(1),
     terminationDelay: Duration = Duration.ofSeconds(10)
-) extends LazyLogging {
+  )(implicit messenger: Messenger): Async =
+    new BQ(delay, terminationDelay)
 
-  private[this] val msgQueue: BlockingQueue[() => Either[Throwable, Letter]] = new LinkedBlockingQueue()
-  private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
+  final class BQ(
+      delay: Duration,
+      terminationDelay: Duration
+  )(implicit messenger: Messenger) extends Async with LazyLogging {
 
-  private[this] val consume: (() => Either[Throwable, Letter]) => Unit = { fn =>
-    msgQueue.remove(fn)
-    fn()
-      .leftMap(logger.error(s"Failed to encode a message to MessagePack", _))
-      .flatMap(messenger.write).fold(
-        e => logger.error(s"Failed to send a message to remote: ${messenger.host}:${messenger.port}", e),
-        _ => ()
-      )
-  }
+    type F = () => Either[Throwable, Letter]
 
-  def remaining: Int = msgQueue.size
+    private[this] val msgQueue: ConcurrentLinkedQueue[F] =
+      new ConcurrentLinkedQueue()
 
-  private def emit(): Unit = synchronized {
-    logger.debug("Start emitting.")
-    val start = System.nanoTime()
-    msgQueue.stream.forEach(asJavaConsumer(consume))
-    logger.debug(s"A emitting spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
-  }
+    private[this] val write: F => Unit = { fn =>
+      fn().flatMap(messenger.write).fold(logger.error(s"Failed to send a message", _), _ => ())
+    }
 
-  def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
-    if (msgQueue offer (() => Messages.pack(e).map(Letter))) Either.right(R.start())
-    else Either.left(new Exception("A queue no space is currently available"))
+    def remaining: Int = msgQueue.size
 
-  def close(): Unit = {
-    scheduler.shutdown()
-    scheduler.awaitTermination(terminationDelay.toNanos, TimeUnit.NANOSECONDS)
-    if (!scheduler.isTerminated) scheduler.shutdownNow()
-    if (!msgQueue.isEmpty) logger.debug(s"A message queue has remaining: ${msgQueue.size()}")
-    emit()
-    messenger.close()
-  }
+    private def consume(): Unit = synchronized {
+      logger.debug("Start emitting.")
+      val start = System.nanoTime()
+      Iterator.continually(msgQueue.poll()).takeWhile(_ != null).foreach(write)
+      logger.debug(s"A emitting spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
+    }
 
-  object R extends Runnable {
-    private[this] val running: AtomicBoolean = new AtomicBoolean(false)
-    def start(): Unit =
-      if (!running.get() && running.compareAndSet(false, true))
-        scheduler.execute(this)
-    override def run(): Unit = if (!msgQueue.isEmpty) {
-      emit()
-      running.set(false)
-      if (!scheduler.isShutdown)
-        scheduler.schedule(new Runnable() {
-          override def run(): Unit = scheduler.execute(this)
-        }, delay.toNanos, TimeUnit.NANOSECONDS)
+    def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
+      if (msgQueue offer (() => Messages.pack(e).map(Letter))) Either.right(R.start())
+      else Either.left(new Exception("A queue no space is currently available"))
+
+    def close(): Unit = {
+      R.close()
+      if (!msgQueue.isEmpty) logger.debug(s"A message queue has remaining: ${msgQueue.size()}")
+      consume()
+      messenger.close()
+    }
+
+    object R extends Runnable {
+
+      private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
+
+      private[this] val running: AtomicBoolean = new AtomicBoolean(false)
+
+      def start(): Unit = {
+        if (running.compareAndSet(false, true))
+          scheduler.schedule(this, delay.toNanos, TimeUnit.NANOSECONDS)
+      }
+
+      override def run(): Unit = if (!msgQueue.isEmpty) {
+        consume()
+        running.set(false)
+        if (!scheduler.isShutdown) start
+      }
+
+      def close(): Unit = {
+        awaitTermination(scheduler, terminationDelay)
+        messenger.close()
+      }
     }
   }
 }
