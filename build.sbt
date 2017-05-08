@@ -72,15 +72,16 @@ lazy val noPublishSettings = Seq(
 )
 
 lazy val core = project.in(file("core"))
+  .settings(allSettings: _*)
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
     name := "core"
   )
-  .settings(allSettings: _*)
   .dependsOn(msgpack)
 
 lazy val queue = project.in(file("queue"))
+  .settings(allSettings: _*)
   .settings(
     description := "fluflu queue",
     moduleName := "fluflu-queue",
@@ -90,10 +91,10 @@ lazy val queue = project.in(file("queue"))
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
     )
   )
-  .settings(allSettings: _*)
   .dependsOn(core, msgpack)
 
 lazy val msgpack = project.in(file("msgpack"))
+  .settings(allSettings: _*)
   .settings(
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
@@ -104,39 +105,34 @@ lazy val msgpack = project.in(file("msgpack"))
       "io.circe" %% "circe-parser" % circeVersion
     )
   )
-  .settings(allSettings: _*)
 
 lazy val examples = project.in(file("examples"))
+  .settings(allSettings: _*)
+  .settings(noPublishSettings)
   .settings(
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
     scalaVersion := "2.12.2",
-    crossScalaVersions := Seq("2.12.2")
-  )
-  .settings(allSettings: _*)
-  .settings(noPublishSettings)
-  .settings(
+    crossScalaVersions := Seq("2.12.2"),
     fork := true,
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
   )
   .dependsOn(queue)
 
 lazy val tests = project.in(file("tests"))
+  .settings(allSettings: _*)
+  .settings(noPublishSettings)
   .settings(
     description := "fluflu tests",
     moduleName := "fluflu-tests",
-    name := "tests"
-  )
-  .settings(allSettings: _*)
-  .settings(noPublishSettings)
-  .settings(fork in test := true)
-  .settings(
+    name := "tests",
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalatestVersion,
       "org.scalacheck" %% "scalacheck" % scalacheckVersion
     )
   )
+  .settings(fork in test := true)
   .settings(fork := true)
   .dependsOn(core, msgpack)
 
