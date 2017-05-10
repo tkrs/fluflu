@@ -111,7 +111,7 @@ lazy val examples = project.in(file("examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    scalaVersion := "2.12.1",
+    scalaVersion := "2.12.2",
     crossScalaVersions := Seq("2.12.2")
   )
   .settings(allSettings: _*)
@@ -126,8 +126,7 @@ lazy val tests = project.in(file("tests"))
   .settings(
     description := "fluflu tests",
     moduleName := "fluflu-tests",
-    name := "tests",
-    scalaVersion := "2.12.7"
+    name := "tests"
   )
   .settings(allSettings: _*)
   .settings(noPublishSettings)
@@ -147,6 +146,7 @@ lazy val benchmark = (project in file("benchmark"))
     moduleName := "fluflu-benchmark",
     name := "benchmark",
     scalaVersion := "2.12.2",
+    crossScalaVersions := Seq("2.12.2"),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalatestVersion,
       "org.scalacheck" %% "scalacheck" % scalacheckVersion
