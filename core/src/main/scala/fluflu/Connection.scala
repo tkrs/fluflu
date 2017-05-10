@@ -10,13 +10,14 @@ import java.util.concurrent.atomic.AtomicReference
 
 import cats.syntax.option._
 import cats.syntax.either._
+import monix.eval.Task
 
 import scala.annotation.tailrec
 import scala.compat.java8.FunctionConverters._
 import scala.util.control.NonFatal
 
 trait Connection {
-  def write(message: ByteBuffer): Either[Throwable, Unit]
+  def write(message: ByteBuffer): Task[Unit]
   def isClosed: Boolean
   def close(): Unit
 }
@@ -64,20 +65,24 @@ object Connection {
       }
     }
 
-    def connect(): Either[Throwable, Option[SocketChannel]] =
-      channel.updateAndGet(asJavaUnaryOperator {
-        case t @ Right(None) => t
-        case t @ Right(Some(ch)) if ch.isConnected => t
+    def connect(): Task[Option[SocketChannel]] = {
+      val c = channel.get() match {
+        case t @ Right(None) =>
+          t
+        case t @ Right(Some(ch)) if ch.isConnected =>
+          t
         case _ =>
           go(open, 0, Sleeper(backoff, timeout, clock))
-      })
+      }
+      Task.fromTry(c.toTry)
+    }
 
     def isClosed: Boolean = channel.get.fold(
       _ => true,
       _.fold(false)(!_.isConnected)
     )
 
-    def write(message: ByteBuffer): Either[Throwable, Unit] = Either.catchNonFatal {
+    def write(message: ByteBuffer): Task[Unit] =
       connect().map(_.map { ch =>
         try ch.write(message) catch {
           case ie: IOException =>
@@ -85,7 +90,6 @@ object Connection {
             throw ie
         }
       })
-    }
 
     def close(): Unit =
       channel.updateAndGet(asJavaUnaryOperator {

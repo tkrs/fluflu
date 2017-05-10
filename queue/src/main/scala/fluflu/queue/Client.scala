@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Encoder
+import monix.eval.{ Callback, Task }
+import monix.execution.Scheduler
 
 trait Client {
   def emit[A: Encoder](e: Event[A]): Either[Exception, Unit]
@@ -17,16 +19,18 @@ trait Client {
 
 object Client {
 
+  val ChunkSize = 1000
+
   def apply(
     delay: Duration = Duration.ofSeconds(1),
     terminationDelay: Duration = Duration.ofSeconds(10)
-  )(implicit messenger: Messenger): Client =
+  )(implicit messenger: Messenger, consumeScheduler: Scheduler): Client =
     new ClientImpl(delay, terminationDelay)
 
   final class ClientImpl(
       delay: Duration,
       terminationDelay: Duration
-  )(implicit messenger: Messenger) extends Client with LazyLogging {
+  )(implicit messenger: Messenger, taskScheduler: Scheduler) extends Client with LazyLogging {
 
     type Elm = () => Either[Throwable, Letter]
 
@@ -59,15 +63,20 @@ object Client {
         if (running.compareAndSet(false, true))
           scheduler.schedule(this, delay.toNanos, TimeUnit.NANOSECONDS)
 
-      private[this] val write: Elm => Unit = fn =>
-        fn()
-          .flatMap(messenger.write)
-          .fold(logger.error(s"Failed to send a message", _), _ => ())
+      private[this] val write: Elm => Task[Unit] = fn =>
+        fn() match {
+          case Left(e) => Task.raiseError(e)
+          case Right(l) => messenger.write(l)
+        }
 
       private def consume(): Unit = synchronized {
         logger.trace("Start emitting.")
         val start = System.nanoTime()
-        Iterator.continually(msgQueue.poll()).takeWhile(_ != null).foreach(write)
+        val tasks = Iterator.continually(msgQueue.poll()).takeWhile(_ != null).map(write).take(ChunkSize)
+        Task.gatherUnordered(tasks).runAsync(new Callback[List[Unit]] {
+          override def onError(ex: Throwable): Unit = logger.error(s"A exception occurs while: ${ex.getMessage}", ex)
+          override def onSuccess(value: List[Unit]): Unit = ()
+        })
         logger.trace(s"A emitting spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
       }
 
