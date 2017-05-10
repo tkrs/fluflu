@@ -1,54 +1,52 @@
 package fluflu
 
-import java.net.InetSocketAddress
 import java.nio.ByteBuffer
-import java.time.{ Clock, Duration, Instant }
-import java.util.concurrent._
+import java.time.{ Clock, Duration }
+
+import cats.syntax.either._
 
 import scala.annotation.tailrec
-import scala.concurrent.blocking
 
 trait Messenger {
-  def host: String
-  def port: Int
   def write(letter: Letter): Either[Throwable, Unit]
   def close(): Unit
 }
 
-final case class DefaultMessenger(
-    host: String,
-    port: Int,
-    reconnectionTimeout: Duration,
-    rewriteTimeout: Duration,
-    reconnectionBackoff: Backoff,
-    rewriteBackoff: Backoff
-)(implicit clock: Clock) extends Messenger {
-  import TimeUnit._
+object Messenger {
 
-  private[this] val dest = new InetSocketAddress(host, port)
-  private[this] val connection = Connection(dest, reconnectionTimeout, reconnectionBackoff)
+  def apply(timeout: Duration, backoff: Backoff)(
+    implicit
+    connection: Connection,
+    clock: Clock
+  ): Messenger =
+    new MessengerImpl(timeout, backoff)
 
-  def write(l: Letter): Either[Throwable, Unit] = {
-    val buffer = Messages.getBuffer(l.message.length)
-    buffer.put(l.message).flip()
-    val r = write(buffer, 0, Instant.now(clock))
-    buffer.clear()
-    r
-  }
+  final class MessengerImpl(
+      timeout: Duration,
+      backoff: Backoff
+  )(implicit connection: Connection, clock: Clock) extends Messenger {
 
-  @tailrec private def write(buffer: ByteBuffer, retries: Int, start: Instant): Either[Throwable, Unit] = {
-    connection.write(buffer) match {
-      case Left(e) =>
-        buffer.flip()
-        if (Instant.now(clock).minusNanos(rewriteTimeout.toNanos).compareTo(start) <= 0) {
-          blocking(NANOSECONDS.sleep(rewriteBackoff.nextDelay(retries).toNanos))
-          write(buffer, retries + 1, start)
-        } else {
-          Left(e)
-        }
-      case r => r
+    def write(l: Letter): Either[Throwable, Unit] = {
+      val buffer = Messages.getBuffer(l.message.length)
+      buffer.put(l.message).flip()
+      val r = write(buffer, 0, Sleeper(backoff, timeout, clock))
+      buffer.clear()
+      r
     }
-  }
 
-  def close(): Unit = connection.close()
+    @tailrec private def write(buffer: ByteBuffer, retries: Int, sleeper: Sleeper): Either[Throwable, Unit] =
+      connection.write(buffer) match {
+        case Left(e) =>
+          buffer.flip()
+          if (sleeper.giveUp) e.asLeft else {
+            sleeper.sleep(retries)
+            write(buffer, retries + 1, sleeper)
+          }
+        case r =>
+          if (!buffer.hasRemaining) r
+          else write(buffer, retries, sleeper)
+      }
+
+    def close(): Unit = connection.close()
+  }
 }
