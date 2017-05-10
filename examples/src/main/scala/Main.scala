@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import fluflu._
 import fluflu.queue.Client
 import io.circe.generic.auto._
+import monix.execution.Scheduler
 
 import scala.util.Random
 
@@ -90,6 +91,9 @@ object Main extends LazyLogging {
       timeout = Duration.ofSeconds(10),
       backoff = Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
     )
+
+    implicit val consumeScheduler: Scheduler =
+      Scheduler.computation(parallelism = 1, name = "fluflu-example")
 
     val client: Client = Client(
       delay = Duration.ofMillis(50),
