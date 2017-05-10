@@ -14,7 +14,7 @@ lazy val buildSettings = Seq(
 )
 
 val catsVersion = "0.9.0"
-val circeVersion = "0.8.0-RC1"
+val circeVersion = "0.8.0"
 val scalacheckVersion = "1.13.5"
 val scalatestVersion = "3.0.3"
 
