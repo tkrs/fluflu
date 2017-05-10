@@ -66,11 +66,11 @@ object Connection {
     }
 
     def connect(): Task[Option[SocketChannel]] = {
-      val c = channel.get() match {
+      val c = channel.updateAndGet(asJavaUnaryOperator {
         case t @ Right(None) => t
         case t @ Right(Some(ch)) if ch.isConnected => t
         case _ => go(open, 0, Sleeper(backoff, timeout, clock))
-      }
+      })
       Task.fromTry(c.toTry)
     }
 
