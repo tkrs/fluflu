@@ -50,7 +50,7 @@ object Client {
 
     object Producer {
       def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
-        if (msgQueue offer (() => Messages.pack(e).map(Letter))) ().asRight
+        if (msgQueue offer (() => e.pack.map(Letter))) ().asRight
         else new Exception("A queue no space is currently available").asLeft
     }
 
