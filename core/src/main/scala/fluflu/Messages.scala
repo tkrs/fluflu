@@ -2,21 +2,11 @@ package fluflu
 
 import java.nio.ByteBuffer
 
-import io.circe.{ Encoder, Json }
-import io.circe.syntax._
+import io.circe.Encoder
 
 object Messages {
 
-  private[this] val packer = msgpack.MessagePacker()
-
-  def pack[A](e: Event[A])(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] = e match {
-    case Event(prefix, label, record, time) =>
-      packer pack (Json arr (
-        Json fromString s"$prefix.$label",
-        Json fromLong time,
-        record.asJson
-      ))
-  }
+  def pack[A: Encoder](e: Event[A]): Either[Throwable, Array[Byte]] = e.pack
 
   private[this] val buffers = new ThreadLocal[ByteBuffer] {
     override def initialValue(): ByteBuffer = ByteBuffer.allocateDirect(1024)
