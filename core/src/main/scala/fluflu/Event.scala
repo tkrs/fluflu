@@ -7,14 +7,23 @@ import fluflu.msgpack.MessagePacker
 import io.circe.{ Encoder, Json }
 import io.circe.syntax._
 
-final case class Event[A](
-  prefix: String,
-  label: String,
-  record: A,
-  time: Instant = Instant.now()
-)
+sealed trait Event[A]
 
 object Event {
+
+  final case class Event[A](
+    prefix: String,
+    label: String,
+    record: A,
+    time: Instant = Instant.now()
+  ) extends fluflu.Event[A]
+
+  final case class EventTime[A](
+    prefix: String,
+    label: String,
+    record: A,
+    time: Instant = Instant.now()
+  ) extends fluflu.Event[A]
 
   private[this] val packer = MessagePacker()
 
@@ -27,15 +36,22 @@ object Event {
     arr
   }
 
-  implicit final class EventOps[A](private val e: Event[A]) extends AnyVal {
+  implicit final class EventOps[A](private val e: fluflu.Event[A]) extends AnyVal {
     def pack(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] = e match {
       case Event(prefix, label, record, time) =>
+        packer pack (Json arr (
+          Json fromString s"$prefix.$label",
+          Json fromLong time.getEpochSecond,
+          record.asJson
+        ))
+      case EventTime(prefix, label, record, time) =>
         for {
           p <- packer.pack(Json.fromString(s"$prefix.$label"))
           s <- formatUInt32(time.getEpochSecond).asRight
           n <- formatUInt32(time.getNano.toLong).asRight
           r <- packer.pack(record.asJson)
         } yield Array(0x93.toByte) ++ p ++ Array(0xd7.toByte, 0x00.toByte) ++ s ++ n ++ r
+
     }
   }
 }
