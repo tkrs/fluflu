@@ -1,6 +1,7 @@
 import java.net.InetSocketAddress
 import java.time.{ Clock, Duration }
 import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
@@ -11,7 +12,7 @@ import monix.execution.Scheduler
 import scala.util.Random
 
 case class CCC(
-  i: Int,
+  i: Long,
   aaa: String,
   bbb: String,
   ccc: String,
@@ -48,8 +49,8 @@ object Main extends LazyLogging {
 
   val rnd: Random = new Random(System.nanoTime())
 
-  val ccc: CCC = CCC(
-    0,
+  def ccc(index: Long): CCC = CCC(
+    index,
     rnd.nextString(10),
     rnd.nextString(10),
     rnd.nextString(10),
@@ -102,19 +103,13 @@ object Main extends LazyLogging {
 
     object R extends Runnable {
       val sec = args(2).toLong
-      val len = args(3).toInt
+      val len = args(3).toLong
       val delay = SECONDS.toNanos(sec) / len
 
       val pool = Executors.newSingleThreadScheduledExecutor()
       val executor = Executors.newFixedThreadPool(4)
 
-      val q: BlockingQueue[Event[CCC]] = new ArrayBlockingQueue(len)
-
-      def init(): Unit =
-        Iterator.from(1)
-          .map(i => Event("example", "ccc", ccc.copy(i = i)))
-          .take(len)
-          .foreach(q.offer)
+      def init(): Unit = ()
 
       def start: ScheduledFuture[_] = {
         logger.info("Start consuming thread.")
@@ -124,11 +119,13 @@ object Main extends LazyLogging {
       private def _start(delay: Long): ScheduledFuture[_] =
         pool.schedule(this, delay, NANOSECONDS)
 
+      val counter = new AtomicLong(0)
+
       def run(): Unit = {
-        val e = q.poll()
-        if (e != null) {
+        if (counter.get < len.toLong) {
+          val e = Event("example", "ccc", ccc(counter.getAndIncrement()))
           client.emit(e)
-          if (!q.isEmpty) _start(delay)
+          _start(delay)
         }
       }
 
@@ -139,7 +136,8 @@ object Main extends LazyLogging {
         executor.shutdown()
         executor.shutdownNow()
 
-        if (!q.isEmpty) logger.info(s"This example app has remaining data: ${q.size}.")
+        logger.info(s"Emitted count: ${counter.get}")
+        // if (!q.isEmpty) logger.info(s"This example app has remaining data: ${q.size}.")
       }
     }
 
