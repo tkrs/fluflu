@@ -11,6 +11,13 @@ sealed trait Event[A]
 
 object Event {
 
+  def apply[A](
+    prefix: String,
+    label: String,
+    record: A,
+    time: Instant = Instant.now()
+  ): Event[A] = this.Event(prefix, label, record, time)
+
   final case class Event[A](
     prefix: String,
     label: String,
