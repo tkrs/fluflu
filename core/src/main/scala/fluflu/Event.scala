@@ -16,7 +16,7 @@ object Event {
     label: String,
     record: A,
     time: Instant = Instant.now()
-  ): Event[A] = this.Event(prefix, label, record, time)
+  ): fluflu.Event[A] = Event(prefix, label, record, time)
 
   final case class Event[A](
     prefix: String,
