@@ -20,7 +20,7 @@ val scalatestVersion = "3.0.3"
 
 lazy val baseSettings = Seq(
   libraryDependencies ++= Seq(
-    "io.monix" %% "monix" % "2.3.0",
+    "io.monix" %% "monix-eval" % "2.3.0",
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
