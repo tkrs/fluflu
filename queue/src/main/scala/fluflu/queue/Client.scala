@@ -74,7 +74,8 @@ object Client {
         val start = System.nanoTime()
         val tasks = Iterator.continually(msgQueue.poll()).takeWhile(_ != null).map(write).take(ChunkSize)
         Task.gatherUnordered(tasks).runAsync(new Callback[List[Unit]] {
-          override def onError(ex: Throwable): Unit = logger.error(s"A exception occurs while: ${ex.getMessage}", ex)
+          override def onError(ex: Throwable): Unit =
+            logger.error(s"An exception occurred during consuming messages. cause: ${ex.getMessage}", ex)
           override def onSuccess(value: List[Unit]): Unit = ()
         })
         logger.trace(s"A emitting spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")

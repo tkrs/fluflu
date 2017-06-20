@@ -94,7 +94,8 @@ object Main extends LazyLogging {
     )
 
     implicit val consumeScheduler: Scheduler =
-      Scheduler.computation(parallelism = 1, name = "fluflu-example")
+      Scheduler.singleThread(name = "fluflu-example")
+    // Scheduler.computation(parallelism = 1, name = "fluflu-example")
 
     val client: Client = Client(
       delay = Duration.ofMillis(50),
