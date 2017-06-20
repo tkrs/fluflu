@@ -12,6 +12,8 @@ matrix:
   include:
     - scala: 2.12.2
       jdk: oraclejdk8
+    - scala: 2.11.11
+      jdk: oraclejdk8
 
 cache:
   directories:
@@ -24,26 +26,22 @@ install:
   - pip install --user codecov
 
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport
-
-branches:
-  only:
-  - master
-  script:
-    - |
+  - |
+    if [[ "$TRAVIS_SCALA_VERSION" = 2.12.* ]]; then
+      sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport coverageOff && codecov
+    else
+      sbt ++$TRAVIS_SCALA_VERSION clean test
+    fi
+  - |
+    if [[ "$TRAVIS_BRANCH" = "master" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
       gpg_key_path=$HOME/.gnupg
       mkdir -p $gpg_key_path
       echo $GPG_KEY | base64 --decode > $gpg_key_path/secring.gpg
-    - |
-      if [[ "$TRAVIS_BRANCH" = "master" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
-        sbt publishSigned
-      fi
+      sbt ++$TRAVIS_SCALA_VERSION publishSigned
+    fi
 
 after_script:
   # See http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html
   # Tricks to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" | xargs rm
   - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
-
-after_success:
-  - codecov
