@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import cats.syntax.option._
 import cats.syntax.either._
+import com.typesafe.scalalogging.LazyLogging
 import monix.eval.Task
 
 import scala.annotation.tailrec
@@ -23,6 +24,7 @@ trait Connection {
 }
 
 object Connection {
+
   def apply(
     remote: InetSocketAddress,
     timeout: Duration,
@@ -34,7 +36,7 @@ object Connection {
       remote: InetSocketAddress,
       timeout: Duration,
       backoff: Backoff
-  )(implicit clock: Clock) extends Connection {
+  )(implicit clock: Clock) extends Connection with LazyLogging {
     import StandardSocketOptions._
 
     private[this] val channel: AtomicReference[Either[Throwable, Option[SocketChannel]]] =
@@ -48,6 +50,7 @@ object Connection {
     }
 
     @tailrec private def go(x: SocketChannel, retries: Int, sleeper: Sleeper): Either[Throwable, Option[SocketChannel]] = {
+      logger.debug(s"Start connecting to $remote. retries: $retries")
       try
         if (x.connect(remote)) x.some.asRight
         else new IOException("Failed to connect").asLeft
@@ -81,14 +84,19 @@ object Connection {
 
     def write(message: ByteBuffer): Task[Unit] =
       connect().map(_.map { ch =>
-        try ch.write(message) catch {
+        logger.trace(s"Start writing message: $message")
+        try {
+          val toWrite = ch.write(message)
+          logger.trace(s"Number of bytes written: $toWrite")
+        } catch {
           case ie: IOException =>
             ch.close()
             throw ie
         }
       })
 
-    def close(): Unit =
+    def close(): Unit = {
+      logger.debug("Start closing connection.")
       channel.updateAndGet(asJavaUnaryOperator {
         case Left(e) => none.asRight
         case Right(ch) =>
@@ -98,5 +106,6 @@ object Connection {
             case NonFatal(e) => none.asRight
           }
       })
+    }
   }
 }

@@ -60,25 +60,31 @@ object Client {
       private[this] val running: AtomicBoolean = new AtomicBoolean(false)
 
       def start(): Unit =
-        if (running.compareAndSet(false, true))
+        if (running.compareAndSet(false, true)) {
+          logger.trace(s"Reschedule consuming to start after [${delay.toNanos} nanoseconds]")
           scheduler.schedule(this, delay.toNanos, TimeUnit.NANOSECONDS)
-
-      private[this] val write: Elm => Task[Unit] = fn =>
-        fn() match {
-          case Left(e) => Task.raiseError(e)
-          case Right(l) => messenger.write(l)
         }
 
-      private def consume(): Unit = synchronized {
-        logger.trace("Start emitting.")
+      private[this] val write: Elm => Task[Unit] = fn =>
+        fn().fold(
+          e => Task.pure(logger.warn(s"Message decoding failed: ${e.getMessage}. Thus, it skips writing.")), // TODO: enhance message.
+          l => messenger.write(l)
+        )
+
+      private def consume(): Unit = {
+        logger.trace(s"Start emitting. remaining: $remaining")
         val start = System.nanoTime()
-        val tasks = Iterator.continually(msgQueue.poll()).takeWhile(_ != null).map(write).take(ChunkSize)
+        val tasks =
+          Iterator.continually(msgQueue.poll())
+            .takeWhile { v => logger.trace(s"Polled value: $v"); v != null }
+            .map(write)
+            .take(ChunkSize)
         Task.gatherUnordered(tasks).runAsync(new Callback[List[Unit]] {
           override def onError(ex: Throwable): Unit =
             logger.error(s"An exception occurred during consuming messages. cause: ${ex.getMessage}", ex)
           override def onSuccess(value: List[Unit]): Unit = ()
         })
-        logger.trace(s"A emitting spend ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
+        logger.trace(s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")
       }
 
       override def run(): Unit =
