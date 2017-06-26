@@ -45,7 +45,6 @@ object Client {
     def close(): Unit = {
       if (!msgQueue.isEmpty) logger.debug(s"A message queue has remaining: ${msgQueue.size()}")
       Consumer.close()
-      messenger.close()
     }
 
     object Producer {
