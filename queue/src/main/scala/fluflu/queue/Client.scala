@@ -34,11 +34,16 @@ object Client {
 
     type Elm = () => Either[Throwable, Letter]
 
+    private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
+
     private[this] val msgQueue: ConcurrentLinkedQueue[Elm] =
       new ConcurrentLinkedQueue()
 
     def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
-      Producer.emit(e).map(_ => Consumer.start())
+      if (!scheduler.isShutdown)
+        Producer.emit(e).map(_ => Consumer.start())
+      else
+        new Exception("A Client scheduler was already shutdown").asLeft
 
     def remaining: Int = msgQueue.size
 
@@ -55,7 +60,6 @@ object Client {
 
     object Consumer extends Runnable {
 
-      private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
       private[this] val running: AtomicBoolean = new AtomicBoolean(false)
 
       def start(): Unit =
