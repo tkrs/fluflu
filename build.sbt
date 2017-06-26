@@ -17,10 +17,11 @@ val catsVersion = "0.9.0"
 val circeVersion = "0.8.0"
 val scalacheckVersion = "1.13.5"
 val scalatestVersion = "3.0.3"
+val monixVersion = "2.3.0"
 
 lazy val baseSettings = Seq(
   libraryDependencies ++= Seq(
-    "io.monix" %% "monix-eval" % "2.3.0",
+    "io.monix" %% "monix-eval" % monixVersion,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
@@ -78,7 +79,10 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core"
+    name := "core",
+    libraryDependencies ++= Seq(
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+    )
   )
   .dependsOn(msgpack)
 
@@ -118,7 +122,10 @@ lazy val examples = project.in(file("examples"))
     scalaVersion := "2.12.2",
     crossScalaVersions := Seq("2.12.2"),
     fork := true,
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
+    libraryDependencies ++= Seq(
+      "io.monix" %% "monix-reactive" % monixVersion,
+      "ch.qos.logback" % "logback-classic" % "1.2.3"
+    )
   )
   .dependsOn(queue)
 
