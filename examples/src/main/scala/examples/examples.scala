@@ -81,11 +81,10 @@ abstract class Base extends LazyLogging {
 
   implicit val clock: Clock = Clock.systemUTC()
 
+  val host = sys.env.getOrElse("FLUENTD_HOST", "localhost")
+  val port = sys.env.getOrElse("FLUENTD_PORT", "24224").toInt
   implicit val connection: Connection = Connection(
-    remote = new InetSocketAddress(
-      sys.env.getOrElse("FLUENTD_HOST", "localhost"),
-      sys.env.getOrElse("FLUENTD_PORT", "24224").toInt
-    ),
+    remote = new InetSocketAddress(host, port),
     timeout = Duration.ofSeconds(10),
     Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd)
   )

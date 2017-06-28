@@ -95,7 +95,7 @@ object Client {
         else {
           consume()
           running.set(false)
-          if (!scheduler.isShutdown || !msgQueue.isEmpty) start()
+          if (!(scheduler.isShutdown || msgQueue.isEmpty)) start()
         }
 
       def close(): Unit = {
