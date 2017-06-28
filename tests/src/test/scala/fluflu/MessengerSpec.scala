@@ -2,19 +2,19 @@ package fluflu
 
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.time.{ Clock, Duration }
+import java.time.{ Clock, Duration, Instant, ZoneId }
 import java.util.concurrent.{ ArrayBlockingQueue, BlockingQueue }
 
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.scalatest.{ FunSpec, Matchers }
 
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.Await
 import scala.concurrent.duration.{ Duration => SDuration }
 
 class MessengerSpec extends FunSpec with Matchers {
 
-  implicit val clock: Clock = Clock.systemUTC()
+  implicit val clock: Clock = Clock.fixed(Instant.now, ZoneId.systemDefault())
 
   describe("write") {
     it("should write successfully") {
