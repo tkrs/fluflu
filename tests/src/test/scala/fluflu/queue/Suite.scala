@@ -3,7 +3,7 @@ package fluflu.queue
 import java.nio.ByteBuffer
 import java.time.{ Clock, Duration }
 
-import fluflu.{ Backoff, Connection, Letter, Messenger }
+import fluflu.{ Backoff, Connection, Messenger }
 import monix.eval.Task
 import org.scalatest.{ FunSpec, Matchers }
 
