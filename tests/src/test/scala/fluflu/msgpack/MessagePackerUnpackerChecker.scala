@@ -3,6 +3,7 @@ package msgpack
 
 import java.nio.ByteBuffer
 
+import cats.syntax.either._
 import io.circe.{ Decoder, Encoder }
 import org.scalacheck.{ Arbitrary, Prop, Shrink }
 import org.scalatest.{ Assertion, FunSuite }
@@ -17,9 +18,9 @@ class MessagePackerUnpackerChecker extends FunSuite with Checkers {
   def roundTrip[A: Encoder: Decoder: Arbitrary: Shrink]: Assertion =
     check(Prop.forAll({ a: A =>
       val packer = MessagePacker()
-      val Right(x) = packer.encode(a)
+      val x = packer.encode(a).toTry.get
       val unpacker = MessageUnpacker(ByteBuffer.wrap(x))
-      val Right(b) = unpacker.decode[A]
+      val b = unpacker.decode[A].toTry.get
       a === b
     }))
 

@@ -143,7 +143,7 @@ lazy val tests = project.in(file("tests"))
   )
   .settings(fork in test := true)
   .settings(fork := true)
-  .dependsOn(core, msgpack)
+  .dependsOn(core, queue, msgpack)
 
 lazy val benchmark = (project in file("benchmark"))
   .settings(
