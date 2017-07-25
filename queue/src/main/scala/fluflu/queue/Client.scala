@@ -23,14 +23,12 @@ object Client {
 
   def apply(
     delay: Duration = Duration.ofSeconds(1),
-    terminationDelay: Duration = Duration.ofSeconds(10)
-  )(implicit messenger: Messenger, consumeScheduler: Scheduler): Client =
+    terminationDelay: Duration = Duration.ofSeconds(10))(implicit messenger: Messenger, consumeScheduler: Scheduler): Client =
     new ClientImpl(delay, terminationDelay)
 
   final class ClientImpl(
-      delay: Duration,
-      terminationDelay: Duration
-  )(implicit messenger: Messenger, taskScheduler: Scheduler) extends Client with LazyLogging {
+    delay: Duration,
+    terminationDelay: Duration)(implicit messenger: Messenger, taskScheduler: Scheduler) extends Client with LazyLogging {
 
     type Elm = () => Either[Throwable, Letter]
 
@@ -71,8 +69,7 @@ object Client {
       private[this] val write: Elm => Task[Unit] = fn =>
         fn().fold(
           e => Task.pure(logger.warn(s"Message decoding failed: ${e.getMessage}. Thus, it skips writing.")), // TODO: enhance message.
-          l => messenger.write(l)
-        )
+          l => messenger.write(l))
 
       private def consume(): Unit = {
         logger.trace(s"Start emitting. remaining: $remaining")

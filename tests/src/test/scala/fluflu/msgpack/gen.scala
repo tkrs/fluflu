@@ -12,6 +12,5 @@ object gen {
     Gen.const(int64Min),
     Gen.negNum[Long].map(BigInt.apply),
     Gen.posNum[Long].map(BigInt.apply),
-    Gen.const(uint64Max)
-  )
+    Gen.const(uint64Max))
 }
