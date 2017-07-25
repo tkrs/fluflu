@@ -18,8 +18,7 @@ object Backoff {
   def exponential(
     initialDelay: Duration,
     maximumDelay: Duration,
-    random: Random
-  ): Backoff = new Backoff {
+    random: Random): Backoff = new Backoff {
 
     override def nextDelay(retries: Int): Duration = {
       val next = Duration.ofNanos((random.nextDouble * (initialDelay.toNanos << retries)).toLong)

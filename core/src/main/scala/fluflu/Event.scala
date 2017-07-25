@@ -15,22 +15,19 @@ object Event {
     prefix: String,
     label: String,
     record: A,
-    time: Instant = Instant.now()
-  ): fluflu.Event[A] = Event(prefix, label, record, time)
+    time: Instant = Instant.now()): fluflu.Event[A] = Event(prefix, label, record, time)
 
   final case class Event[A](
     prefix: String,
     label: String,
     record: A,
-    time: Instant = Instant.now()
-  ) extends fluflu.Event[A]
+    time: Instant = Instant.now()) extends fluflu.Event[A]
 
   final case class EventTime[A](
     prefix: String,
     label: String,
     record: A,
-    time: Instant = Instant.now()
-  ) extends fluflu.Event[A]
+    time: Instant = Instant.now()) extends fluflu.Event[A]
 
   private[this] val packer = MessagePacker()
 
@@ -49,8 +46,7 @@ object Event {
         packer pack (Json arr (
           Json fromString s"$prefix.$label",
           Json fromLong time.getEpochSecond,
-          record.asJson
-        ))
+          record.asJson))
       case EventTime(prefix, label, record, time) =>
         for {
           p <- packer.pack(Json.fromString(s"$prefix.$label"))

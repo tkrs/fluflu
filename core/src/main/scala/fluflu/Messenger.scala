@@ -18,14 +18,12 @@ object Messenger {
   def apply(timeout: Duration, backoff: Backoff)(
     implicit
     connection: Connection,
-    clock: Clock
-  ): Messenger =
+    clock: Clock): Messenger =
     new MessengerImpl(timeout, backoff)
 
   final class MessengerImpl(
-      timeout: Duration,
-      backoff: Backoff
-  )(implicit connection: Connection, clock: Clock) extends Messenger {
+    timeout: Duration,
+    backoff: Backoff)(implicit connection: Connection, clock: Clock) extends Messenger {
 
     def write(l: Letter): Task[Unit] = {
       val buffer = ByteBuffer.wrap(l.message)

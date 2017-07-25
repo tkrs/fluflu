@@ -28,15 +28,13 @@ object Connection {
   def apply(
     remote: InetSocketAddress,
     timeout: Duration,
-    backoff: Backoff
-  )(implicit clock: Clock = Clock.systemUTC()): Connection =
+    backoff: Backoff)(implicit clock: Clock = Clock.systemUTC()): Connection =
     new ConnectionImpl(remote, timeout, backoff)
 
   final class ConnectionImpl(
-      remote: InetSocketAddress,
-      timeout: Duration,
-      backoff: Backoff
-  )(implicit clock: Clock) extends Connection with LazyLogging {
+    remote: InetSocketAddress,
+    timeout: Duration,
+    backoff: Backoff)(implicit clock: Clock) extends Connection with LazyLogging {
     import StandardSocketOptions._
 
     private[this] val channel: AtomicReference[Either[Throwable, Option[SocketChannel]]] =
@@ -79,8 +77,7 @@ object Connection {
 
     def isClosed: Boolean = channel.get.fold(
       _ => true,
-      _.fold(false)(!_.isConnected)
-    )
+      _.fold(false)(!_.isConnected))
 
     def write(message: ByteBuffer): Task[Unit] =
       connect().map(_.map { ch =>

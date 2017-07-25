@@ -195,6 +195,5 @@ final class MessagePacker {
           formatStrFamily(key, acc)
           go(v, acc)
       }
-    }
-  )
+    })
 }
