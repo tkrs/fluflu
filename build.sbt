@@ -9,8 +9,8 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scala
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.12.2",
-  crossScalaVersions := Seq("2.11.11", "2.12.2")
+  scalaVersion := "2.12.3",
+  crossScalaVersions := Seq("2.11.11", "2.12.3")
 )
 
 val catsVersion = "0.9.0"
@@ -119,8 +119,8 @@ lazy val examples = project.in(file("examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    scalaVersion := "2.12.2",
-    crossScalaVersions := Seq("2.12.2"),
+    scalaVersion := "2.12.3",
+    crossScalaVersions := Seq("2.12.3"),
     fork := true,
     libraryDependencies ++= Seq(
       "io.monix" %% "monix-reactive" % monixVersion,
@@ -150,8 +150,8 @@ lazy val benchmark = (project in file("benchmark"))
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
     name := "benchmark",
-    scalaVersion := "2.12.2",
-    crossScalaVersions := Seq("2.12.2"),
+    scalaVersion := "2.12.3",
+    crossScalaVersions := Seq("2.12.3"),
     libraryDependencies ++= Seq(
       "org.scalatest" %% "scalatest" % scalatestVersion,
       "org.scalacheck" %% "scalacheck" % scalacheckVersion
