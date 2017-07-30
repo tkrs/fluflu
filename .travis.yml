@@ -37,7 +37,7 @@ script:
       gpg_key_path=$HOME/.gnupg
       mkdir -p $gpg_key_path
       echo $GPG_KEY | base64 --decode > $gpg_key_path/secring.gpg
-      sbt ++$TRAVIS_SCALA_VERSION publish
+      sbt ++$TRAVIS_SCALA_VERSION publishSigned
     fi
 
 after_script:
