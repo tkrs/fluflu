@@ -12,8 +12,7 @@ object models {
     a000000007: Int,
     a000000008: Int,
     a000000009: Int,
-    a000000010: Int
-  )
+    a000000010: Int)
 
   case class Long10(
     a000000001: Long,
@@ -25,8 +24,7 @@ object models {
     a000000007: Long,
     a000000008: Long,
     a000000009: Long,
-    a000000010: Long
-  )
+    a000000010: Long)
 
   case class Double10(
     a000000001: Double,
@@ -38,8 +36,7 @@ object models {
     a000000007: Double,
     a000000008: Double,
     a000000009: Double,
-    a000000010: Double
-  )
+    a000000010: Double)
 
   case class String10(
     a000000001: String,
@@ -51,8 +48,7 @@ object models {
     a000000007: String,
     a000000008: String,
     a000000009: String,
-    a000000010: String
-  )
+    a000000010: String)
 
   case class BigInt10(
     a000000001: BigInt,
@@ -64,8 +60,7 @@ object models {
     a000000007: BigInt,
     a000000008: BigInt,
     a000000009: BigInt,
-    a000000010: BigInt
-  )
+    a000000010: BigInt)
 
   case class Int30(
     a000000001: Int,
@@ -97,8 +92,7 @@ object models {
     a000000027: Int,
     a000000028: Int,
     a000000029: Int,
-    a000000030: Int
-  )
+    a000000030: Int)
 
   case class Long30(
     a000000001: Long,
@@ -130,8 +124,7 @@ object models {
     a000000027: Long,
     a000000028: Long,
     a000000029: Long,
-    a000000030: Long
-  )
+    a000000030: Long)
 
   case class String30(
     a000000001: String,
@@ -163,6 +156,5 @@ object models {
     a000000027: String,
     a000000028: String,
     a000000029: String,
-    a000000030: String
-  )
+    a000000030: String)
 }
