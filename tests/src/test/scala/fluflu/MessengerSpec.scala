@@ -2,15 +2,15 @@ package fluflu
 
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.time.{ Clock, Duration, Instant, ZoneId }
-import java.util.concurrent.{ ArrayBlockingQueue, BlockingQueue }
+import java.time.{Clock, Duration, Instant, ZoneId}
+import java.util.concurrent.{ArrayBlockingQueue, BlockingQueue}
 
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.scalatest.{ FunSpec, Matchers }
+import org.scalatest.{FunSpec, Matchers}
 
 import scala.concurrent.Await
-import scala.concurrent.duration.{ Duration => SDuration }
+import scala.concurrent.duration.{Duration => SDuration}
 
 class MessengerSpec extends FunSpec with Matchers {
 

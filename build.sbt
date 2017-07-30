@@ -4,13 +4,15 @@ lazy val root = (project in file("."))
   .aggregate(core, queue, msgpack, tests)
   .dependsOn(core, queue, msgpack)
 
-lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings ++ scalariformSettings
+lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
   scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.11.11", "2.12.3")
+  crossScalaVersions := Seq("2.11.11", "2.12.3"),
+  scalafmtOnCompile in Compile := true,
+  scalafmtTestOnCompile in Compile := true
 )
 
 val catsVersion = "0.9.0"

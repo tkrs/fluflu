@@ -1,11 +1,11 @@
 package fluflu
 
 import java.io.IOException
-import java.lang.{ Boolean => JBool }
-import java.net.{ InetSocketAddress, StandardSocketOptions }
+import java.lang.{Boolean => JBool}
+import java.net.{InetSocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
-import java.time.{ Clock, Duration }
+import java.time.{Clock, Duration}
 import java.util.concurrent.atomic.AtomicReference
 
 import cats.syntax.option._
@@ -25,16 +25,12 @@ trait Connection {
 
 object Connection {
 
-  def apply(
-    remote: InetSocketAddress,
-    timeout: Duration,
-    backoff: Backoff)(implicit clock: Clock = Clock.systemUTC()): Connection =
+  def apply(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(implicit clock: Clock = Clock.systemUTC()): Connection =
     new ConnectionImpl(remote, timeout, backoff)
 
-  final class ConnectionImpl(
-    remote: InetSocketAddress,
-    timeout: Duration,
-    backoff: Backoff)(implicit clock: Clock) extends Connection with LazyLogging {
+  final class ConnectionImpl(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(implicit clock: Clock)
+      extends Connection
+      with LazyLogging {
     import StandardSocketOptions._
 
     private[this] val channel: AtomicReference[Either[Throwable, Option[SocketChannel]]] =
@@ -49,9 +45,8 @@ object Connection {
 
     @tailrec private def go(x: SocketChannel, retries: Int, sleeper: Sleeper): Either[Throwable, Option[SocketChannel]] = {
       logger.debug(s"Start connecting to $remote. retries: $retries")
-      try
-        if (x.connect(remote)) x.some.asRight
-        else new IOException("Failed to connect").asLeft
+      try if (x.connect(remote)) x.some.asRight
+      else new IOException("Failed to connect").asLeft
       catch {
         case e: IOException =>
           if (sleeper.giveUp) {
@@ -75,9 +70,8 @@ object Connection {
       Task.fromTry(c.toTry)
     }
 
-    def isClosed: Boolean = channel.get.fold(
-      _ => true,
-      _.fold(false)(!_.isConnected))
+    def isClosed: Boolean =
+      channel.get.fold(_ => true, _.fold(false)(!_.isConnected))
 
     def write(message: ByteBuffer): Task[Unit] =
       connect().map(_.map { ch =>
