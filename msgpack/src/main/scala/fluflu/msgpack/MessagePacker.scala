@@ -3,18 +3,20 @@ package msgpack
 
 import java.lang.Double.doubleToLongBits
 import java.nio.CharBuffer
-import java.nio.charset.{ CharsetEncoder, StandardCharsets }
+import java.nio.charset.{CharsetEncoder, StandardCharsets}
 
 import cats.syntax.either._
-import io.circe.{ Encoder, Json }
+import io.circe.{Encoder, Json}
 
 import scala.collection.mutable
 
 object MessagePacker {
 
-  private[this] val encoder: ThreadLocal[CharsetEncoder] = new ThreadLocal[CharsetEncoder] {
-    override def initialValue(): CharsetEncoder = StandardCharsets.UTF_8.newEncoder()
-  }
+  private[this] val encoder: ThreadLocal[CharsetEncoder] =
+    new ThreadLocal[CharsetEncoder] {
+      override def initialValue(): CharsetEncoder =
+        StandardCharsets.UTF_8.newEncoder()
+    }
 
   def apply() = new MessagePacker()
 
@@ -77,7 +79,8 @@ object MessagePacker {
     else if (128 <= l) formatByte(`0xcc`, l.toByte, builder)
     else if (0 <= l) formatByte(l.toByte, builder)
     else if (l >= -32L) formatByte((0xe0 | (l + 32)).toByte, builder)
-    else if (l >= Byte.MinValue.toLong) formatByte(`0xd0`, l.toInt.toByte, builder)
+    else if (l >= Byte.MinValue.toLong)
+      formatByte(`0xd0`, l.toInt.toByte, builder)
     else if (l >= Short.MinValue.toLong) formatShort(`0xd1`, l.toInt, builder)
     else if (l >= Int.MinValue.toLong) formatInt(`0xd2`, l.toInt, builder)
     else formatLong(`0xd3`, l, builder)
@@ -119,7 +122,8 @@ object MessagePacker {
     cb.clear()
   }
 
-  def formatByte(v: Byte, builder: mutable.ArrayBuilder[Byte]): Unit = builder += v
+  def formatByte(v: Byte, builder: mutable.ArrayBuilder[Byte]): Unit =
+    builder += v
 
   def formatByte(t: Byte, v: Byte, builder: mutable.ArrayBuilder[Byte]): Unit = {
     builder += t
@@ -153,7 +157,8 @@ object MessagePacker {
 final class MessagePacker {
   import MessagePacker._
 
-  def encode[A](a: A)(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] = pack(A(a))
+  def encode[A](a: A)(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] =
+    pack(A(a))
 
   def pack(doc: Json): Either[Throwable, Array[Byte]] = {
     val acc: mutable.ArrayBuilder[Byte] = mutable.ArrayBuilder.make[Byte]
@@ -165,35 +170,37 @@ final class MessagePacker {
 
   def double(x: BigDecimal): Boolean = x.scale != 0
 
-  def go(json: Json, acc: mutable.ArrayBuilder[Byte]): Unit = json.fold[Unit](
-    formatNil(acc),
-    x => formatBoolFamily(x, acc),
-    x => {
-      val n = x.toBigDecimal
-      n match {
-        case None => ()
-        case Some(v) if double(v) =>
-          formatFloatFamily(v.toDouble, acc)
-        case Some(v) if v.isValidLong =>
-          formatIntFamily(v.toLong, acc)
-        case Some(v) if v.signum == -1 =>
-          formatIntFamily(`0x3d`, v.toBigInt(), acc)
-        case Some(v) =>
-          formatIntFamily(`0xcf`, v.toBigInt(), acc)
+  def go(json: Json, acc: mutable.ArrayBuilder[Byte]): Unit =
+    json.fold[Unit](
+      formatNil(acc),
+      x => formatBoolFamily(x, acc),
+      x => {
+        val n = x.toBigDecimal
+        n match {
+          case None => ()
+          case Some(v) if double(v) =>
+            formatFloatFamily(v.toDouble, acc)
+          case Some(v) if v.isValidLong =>
+            formatIntFamily(v.toLong, acc)
+          case Some(v) if v.signum == -1 =>
+            formatIntFamily(`0x3d`, v.toBigInt(), acc)
+          case Some(v) =>
+            formatIntFamily(`0xcf`, v.toBigInt(), acc)
+        }
+      },
+      x => formatStrFamily(x, acc),
+      xs => {
+        formatArrayFamilyHeader(xs.size, acc)
+        xs.foreach(go(_, acc))
+      },
+      x => {
+        val xs = x.toList
+        formatMapFamilyHeader(xs.size, acc)
+        xs.foreach {
+          case (key, (v)) =>
+            formatStrFamily(key, acc)
+            go(v, acc)
+        }
       }
-    },
-    x => formatStrFamily(x, acc),
-    xs => {
-      formatArrayFamilyHeader(xs.size, acc)
-      xs.foreach(go(_, acc))
-    },
-    x => {
-      val xs = x.toList
-      formatMapFamilyHeader(xs.size, acc)
-      xs.foreach {
-        case (key, (v)) =>
-          formatStrFamily(key, acc)
-          go(v, acc)
-      }
-    })
+    )
 }

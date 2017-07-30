@@ -1,5 +1,5 @@
 import java.time.Duration
-import java.util.concurrent.{ ExecutorService, TimeUnit }
+import java.util.concurrent.{ExecutorService, TimeUnit}
 
 package object fluflu {
 

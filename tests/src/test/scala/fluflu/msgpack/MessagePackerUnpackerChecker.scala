@@ -4,9 +4,9 @@ package msgpack
 import java.nio.ByteBuffer
 
 import cats.syntax.either._
-import io.circe.{ Decoder, Encoder }
-import org.scalacheck.{ Arbitrary, Prop, Shrink }
-import org.scalatest.{ Assertion, FunSuite }
+import io.circe.{Decoder, Encoder}
+import org.scalacheck.{Arbitrary, Prop, Shrink}
+import org.scalatest.{Assertion, FunSuite}
 import org.scalatest.prop.Checkers
 
 class MessagePackerUnpackerChecker extends FunSuite with Checkers {

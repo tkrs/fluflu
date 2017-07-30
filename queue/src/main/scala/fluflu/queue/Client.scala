@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Encoder
-import monix.eval.{ Callback, Task }
+import monix.eval.{Callback, Task}
 import monix.execution.Scheduler
 
 trait Client {
@@ -21,14 +21,13 @@ object Client {
 
   val ChunkSize = 1000
 
-  def apply(
-    delay: Duration = Duration.ofSeconds(1),
-    terminationDelay: Duration = Duration.ofSeconds(10))(implicit messenger: Messenger, consumeScheduler: Scheduler): Client =
+  def apply(delay: Duration = Duration.ofSeconds(1), terminationDelay: Duration = Duration.ofSeconds(10))(implicit messenger: Messenger,
+                                                                                                          consumeScheduler: Scheduler): Client =
     new ClientImpl(delay, terminationDelay)
 
-  final class ClientImpl(
-    delay: Duration,
-    terminationDelay: Duration)(implicit messenger: Messenger, taskScheduler: Scheduler) extends Client with LazyLogging {
+  final class ClientImpl(delay: Duration, terminationDelay: Duration)(implicit messenger: Messenger, taskScheduler: Scheduler)
+      extends Client
+      with LazyLogging {
 
     type Elm = () => Either[Throwable, Letter]
 
@@ -46,7 +45,8 @@ object Client {
     def remaining: Int = msgQueue.size
 
     def close(): Unit = {
-      if (!msgQueue.isEmpty) logger.debug(s"A message queue has remaining: ${msgQueue.size()}")
+      if (!msgQueue.isEmpty)
+        logger.debug(s"A message queue has remaining: ${msgQueue.size()}")
       Consumer.close()
     }
 
@@ -67,23 +67,27 @@ object Client {
         }
 
       private[this] val write: Elm => Task[Unit] = fn =>
-        fn().fold(
-          e => Task.pure(logger.warn(s"Message decoding failed: ${e.getMessage}. Thus, it skips writing.")), // TODO: enhance message.
-          l => messenger.write(l))
+        fn().fold(e => Task.pure(logger.warn(s"Message decoding failed: ${e.getMessage}. Thus, it skips writing.")), // TODO: enhance message.
+                  l => messenger.write(l))
 
       private def consume(): Unit = {
         logger.trace(s"Start emitting. remaining: $remaining")
         val start = System.nanoTime()
         val tasks =
-          Iterator.continually(msgQueue.poll())
-            .takeWhile { v => logger.trace(s"Polled value: $v"); v != null }
+          Iterator
+            .continually(msgQueue.poll())
+            .takeWhile { v =>
+              logger.trace(s"Polled value: $v"); v != null
+            }
             .map(write)
             .take(ChunkSize)
-        Task.gatherUnordered(tasks).runAsync(new Callback[List[Unit]] {
-          override def onError(ex: Throwable): Unit =
-            logger.error(s"An exception occurred during consuming messages. cause: ${ex.getMessage}", ex)
-          override def onSuccess(value: List[Unit]): Unit = ()
-        })
+        Task
+          .gatherUnordered(tasks)
+          .runAsync(new Callback[List[Unit]] {
+            override def onError(ex: Throwable): Unit =
+              logger.error(s"An exception occurred during consuming messages. cause: ${ex.getMessage}", ex)
+            override def onSuccess(value: List[Unit]): Unit = ()
+          })
         logger.trace(s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")
       }
 

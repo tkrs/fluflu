@@ -1,8 +1,8 @@
 package fluflu
 
-import java.time.{ Clock, Duration, Instant, ZoneId }
+import java.time.{Clock, Duration, Instant, ZoneId}
 
-import org.scalatest.{ FunSpec, Matchers }
+import org.scalatest.{FunSpec, Matchers}
 
 class SleeperSpec extends FunSpec with Matchers {
 

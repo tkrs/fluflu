@@ -14,7 +14,8 @@ object Messages {
 
   def getBuffer(len: Int): ByteBuffer = {
     val buffer = buffers.get()
-    if (buffer.limit >= len) buffer else {
+    if (buffer.limit >= len) buffer
+    else {
       if (buffer.capacity() < len) {
         buffer.clear()
         val newBuffer = ByteBuffer.allocateDirect(len)

@@ -7,7 +7,7 @@ import java.lang.Float.intBitsToFloat
 import java.lang.Double.longBitsToDouble
 
 import cats.syntax.either._
-import io.circe.{ Error, Decoder, Json, DecodingFailure }
+import io.circe.{Error, Decoder, Json, DecodingFailure}
 
 import scala.annotation.tailrec
 
@@ -81,7 +81,8 @@ final class MessageUnpacker(src: ByteBuffer) {
   }
 
   def decode[A](implicit decoder: Decoder[A]): Either[Error, A] =
-    Either.catchOnly[Exception](unpack)
+    Either
+      .catchOnly[Exception](unpack)
       .leftMap(e => DecodingFailure(e.getMessage, List.empty))
       .flatMap(_.as[A])
 
@@ -89,8 +90,10 @@ final class MessageUnpacker(src: ByteBuffer) {
     case 0xc0 => Json.Null
     case 0xc3 => Json.fromBoolean(true)
     case 0xc2 => Json.fromBoolean(false)
-    case 0xca => Json.fromDoubleOrNull(intBitsToFloat(decodeAt(4, bytesToInt)).toDouble)
-    case 0xcb => Json.fromDoubleOrNull(longBitsToDouble(decodeAt(8, bytesToLong)))
+    case 0xca =>
+      Json.fromDoubleOrNull(intBitsToFloat(decodeAt(4, bytesToInt)).toDouble)
+    case 0xcb =>
+      Json.fromDoubleOrNull(longBitsToDouble(decodeAt(8, bytesToLong)))
     case 0xd0 => Json.fromInt(readAt(1))
     case 0xcc => Json.fromInt(readAt(1) & 0xff)
     case 0xd1 => Json.fromInt(decodeAt(2, bytesToShort))
@@ -116,7 +119,8 @@ final class MessageUnpacker(src: ByteBuffer) {
 
   private def unpackList(limit: Int): Json = {
     @tailrec def loop(i: Int, acc: Array[Json]): Array[Json] =
-      if (i == limit) acc else {
+      if (i == limit) acc
+      else {
         acc(i) = unpack
         loop(i + 1, acc)
       }
@@ -126,7 +130,8 @@ final class MessageUnpacker(src: ByteBuffer) {
   private def unpackMap(size: Int): Json = {
     val key: Json => String = _.asString match {
       case Some(s) => s
-      case None => throw new Exception(s"Failed to decode key by the offset: $offset")
+      case None =>
+        throw new Exception(s"Failed to decode key by the offset: $offset")
     }
     def loop(i: Int, acc: Seq[(String, Json)]): Seq[(String, Json)] =
       if (i == 0) acc else loop(i - 1, acc :+ (key(unpack) -> unpack))

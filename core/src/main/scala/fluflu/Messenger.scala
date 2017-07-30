@@ -2,7 +2,7 @@ package fluflu
 
 import java.io.IOException
 import java.nio.ByteBuffer
-import java.time.{ Clock, Duration, Instant }
+import java.time.{Clock, Duration, Instant}
 
 import monix.eval.Task
 
@@ -15,15 +15,10 @@ trait Messenger {
 
 object Messenger {
 
-  def apply(timeout: Duration, backoff: Backoff)(
-    implicit
-    connection: Connection,
-    clock: Clock): Messenger =
+  def apply(timeout: Duration, backoff: Backoff)(implicit connection: Connection, clock: Clock): Messenger =
     new MessengerImpl(timeout, backoff)
 
-  final class MessengerImpl(
-    timeout: Duration,
-    backoff: Backoff)(implicit connection: Connection, clock: Clock) extends Messenger {
+  final class MessengerImpl(timeout: Duration, backoff: Backoff)(implicit connection: Connection, clock: Clock) extends Messenger {
 
     def write(l: Letter): Task[Unit] = {
       val buffer = ByteBuffer.wrap(l.message)
@@ -34,11 +29,13 @@ object Messenger {
       Instant.now(clock).minusNanos(timeout.toNanos).compareTo(start) > 0
 
     private def write(buffer: ByteBuffer, retries: Int, start: Instant): Task[Unit] =
-      connection.write(buffer)
+      connection
+        .write(buffer)
         .flatMap { _ =>
           if (!buffer.hasRemaining) Task.unit
           else write(buffer, retries, start)
-        }.onErrorRecoverWith {
+        }
+        .onErrorRecoverWith {
           case e: IOException =>
             buffer.flip()
             if (giveup(start))
