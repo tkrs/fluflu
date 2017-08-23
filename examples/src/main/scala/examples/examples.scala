@@ -15,7 +15,9 @@ import monix.reactive.{Consumer, Observable}
 
 import scala.util.Random
 
-case class CCC(
+final case class Num(n: Long)
+
+final case class CCC(
     i: Long,
     aaa: String,
     bbb: String,
@@ -123,8 +125,7 @@ object Scheduling extends Base {
 
       override def run(): Unit = {
         if (counter.get < len.toLong) {
-          // val e = Event("example", "schedule", ccc(counter.getAndIncrement()))
-          val e = Event("example", "schedule", counter.getAndIncrement())
+          val e = Event("example", "schedule", Num(counter.getAndIncrement()))
           client.emit(e)
           _start(delay)
         }
@@ -148,6 +149,7 @@ object Scheduling extends Base {
 
     val start = System.nanoTime()
 
+    R.start
     R.start
     R.await()
 
@@ -173,9 +175,10 @@ object Counter extends Base {
 
     val counter = new AtomicLong(0)
 
-    val observable = Observable.repeatEval(Event("example", "counter", counter.getAndIncrement()))
+    val observable =
+      Observable.repeatEval(Event("example", "counter", Num(counter.getAndIncrement())))
 
-    val consumer = Consumer.foreachParallelAsync[Event[Long]](4)(event =>
+    val consumer = Consumer.foreachParallelAsync[Event[Num]](4)(event =>
       Task(client.emit(event) match {
         case Left(e) => logger.error(s"Exception occurred: ${e.getMessage}")
         case _       => ()

@@ -44,9 +44,10 @@ object Event {
     def pack(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] =
       e match {
         case Event(prefix, label, record, time) =>
-          packer pack (Json arr (Json fromString s"$prefix.$label",
-          Json fromLong time.getEpochSecond,
-          record.asJson))
+          packer.pack(
+            Json.arr(Json.fromString(s"$prefix.$label"),
+                     Json.fromLong(time.getEpochSecond),
+                     record.asJson))
         case EventTime(prefix, label, record, time) =>
           for {
             p <- packer.pack(Json.fromString(s"$prefix.$label"))

@@ -18,13 +18,15 @@ class MessagePackerBenchmark extends TestData {
 
   @Benchmark def encodeLong10: Either[Throwable, Array[Byte]] = packer.encode(`long max 10`)
 
-  @Benchmark def encodeString100_10: Either[Throwable, Array[Byte]] = packer.encode(`string 100 10`)
+  @Benchmark def encodeString100_10: Either[Throwable, Array[Byte]] =
+    packer.encode(`string 100 10`)
 
   @Benchmark def encodeInt30: Either[Throwable, Array[Byte]] = packer.encode(`int max 30`)
 
   @Benchmark def encodeLong30: Either[Throwable, Array[Byte]] = packer.encode(`long max 30`)
 
-  @Benchmark def encodeString100_30: Either[Throwable, Array[Byte]] = packer.encode(`string 100 30`)
+  @Benchmark def encodeString100_30: Either[Throwable, Array[Byte]] =
+    packer.encode(`string 100 30`)
 
   @Benchmark def encodeString1000_30: Either[Throwable, Array[Byte]] =
     packer.encode(`string 1000 30`)
