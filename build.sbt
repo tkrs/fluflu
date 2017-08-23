@@ -15,13 +15,17 @@ lazy val buildSettings = Seq(
   scalafmtTestOnCompile in Compile := true
 )
 
-val catsVersion = "0.9.0"
-val circeVersion = "0.8.0"
+val catsVersion = "1.0.0-MF"
+val circeVersion = "0.9.0-M1"
 val scalacheckVersion = "1.13.5"
 val scalatestVersion = "3.0.3"
 val monixVersion = "2.3.0"
 
 lazy val baseSettings = Seq(
+  resolvers ++= Seq(
+    Resolver.sonatypeRepo("releases"),
+    Resolver.sonatypeRepo("snapshots")
+  ),
   libraryDependencies ++= Seq(
     "io.monix" %% "monix-eval" % monixVersion,
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
@@ -77,7 +81,7 @@ lazy val noPublishSettings = Seq(
 )
 
 lazy val core = project.in(file("core"))
-  .settings(allSettings: _*)
+  .settings(allSettings)
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
@@ -89,20 +93,20 @@ lazy val core = project.in(file("core"))
   .dependsOn(msgpack)
 
 lazy val queue = project.in(file("queue"))
-  .settings(allSettings: _*)
+  .settings(allSettings)
   .settings(
     description := "fluflu queue",
     moduleName := "fluflu-queue",
     name := "queue",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats" % catsVersion,
+      "org.typelevel" %% "cats-core" % catsVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
     )
   )
   .dependsOn(core, msgpack)
 
 lazy val msgpack = project.in(file("msgpack"))
-  .settings(allSettings: _*)
+  .settings(allSettings)
   .settings(
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
@@ -115,7 +119,7 @@ lazy val msgpack = project.in(file("msgpack"))
   )
 
 lazy val examples = project.in(file("examples"))
-  .settings(allSettings: _*)
+  .settings(allSettings)
   .settings(noPublishSettings)
   .settings(
     description := "fluflu examples",
@@ -132,7 +136,7 @@ lazy val examples = project.in(file("examples"))
   .dependsOn(queue)
 
 lazy val tests = project.in(file("tests"))
-  .settings(allSettings: _*)
+  .settings(allSettings)
   .settings(noPublishSettings)
   .settings(
     description := "fluflu tests",
@@ -148,6 +152,8 @@ lazy val tests = project.in(file("tests"))
   .dependsOn(core, queue, msgpack)
 
 lazy val benchmark = (project in file("benchmark"))
+  .settings(allSettings)
+  .settings(noPublishSettings)
   .settings(
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
