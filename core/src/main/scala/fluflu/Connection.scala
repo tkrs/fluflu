@@ -67,9 +67,9 @@ object Connection {
 
     def connect(): Task[Option[SocketChannel]] = {
       val c = channel.updateAndGet(asJavaUnaryOperator {
-        case t @ Right(None) => t
+        case t @ Right(None)                       => t
         case t @ Right(Some(ch)) if ch.isConnected => t
-        case _ => go(open, 0, Sleeper(backoff, timeout, clock))
+        case _                                     => go(open, 0, Sleeper(backoff, timeout, clock))
       })
       Task.fromTry(c.toTry)
     }
@@ -78,15 +78,16 @@ object Connection {
       channel.get.fold(_ => true, _.fold(false)(!_.isConnected))
 
     def write(message: ByteBuffer): Task[Unit] =
-      connect().map(_.map { ch =>
+      connect().flatMap(_.fold(Task.unit) { ch =>
         logger.trace(s"Start writing message: $message")
         try {
           val toWrite = ch.write(message)
           logger.trace(s"Number of bytes written: $toWrite")
+          Task.unit
         } catch {
           case ie: IOException =>
             ch.close()
-            throw ie
+            Task.raiseError(ie)
         }
       })
 

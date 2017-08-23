@@ -19,15 +19,12 @@ trait Client {
 
 object Client {
 
-  val ChunkSize = 1000
-
   def apply(delay: Duration = Duration.ofSeconds(1),
-            terminationDelay: Duration = Duration.ofSeconds(10))(
-      implicit messenger: Messenger,
-      consumeScheduler: Scheduler): Client =
-    new ClientImpl(delay, terminationDelay)
-
-  final class ClientImpl(delay: Duration, terminationDelay: Duration)(
+            terminationDelay: Duration = Duration.ofSeconds(10),
+            maximumPulls: Int = 1000)(implicit messenger: Messenger,
+                                      consumeScheduler: Scheduler): Client =
+    new ClientImpl(delay, terminationDelay, maximumPulls)
+  final class ClientImpl(delay: Duration, terminationDelay: Duration, maximumPulls: Int)(
       implicit messenger: Messenger,
       taskScheduler: Scheduler)
       extends Client
@@ -87,7 +84,7 @@ object Client {
               logger.trace(s"Polled value: $v"); v != null
             }
             .map(write)
-            .take(ChunkSize)
+            .take(maximumPulls)
         Task
           .gatherUnordered(tasks)
           .runAsync(new Callback[List[Unit]] {

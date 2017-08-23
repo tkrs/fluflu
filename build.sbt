@@ -12,7 +12,8 @@ lazy val buildSettings = Seq(
   scalaVersion := "2.12.3",
   crossScalaVersions := Seq("2.11.11", "2.12.3"),
   scalafmtOnCompile in Compile := true,
-  scalafmtTestOnCompile in Compile := true
+  scalafmtTestOnCompile in Compile := true,
+  scalafmtVersion := "1.0.0-RC2"
 )
 
 val catsVersion = "1.0.0-MF"
