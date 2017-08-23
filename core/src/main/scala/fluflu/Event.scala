@@ -11,12 +11,23 @@ sealed trait Event[A]
 
 object Event {
 
-  def apply[A](prefix: String, label: String, record: A, time: Instant = Instant.now()): fluflu.Event[A] =
+  def apply[A](prefix: String,
+               label: String,
+               record: A,
+               time: Instant = Instant.now()): fluflu.Event[A] =
     Event(prefix, label, record, time)
 
-  final case class Event[A](prefix: String, label: String, record: A, time: Instant = Instant.now()) extends fluflu.Event[A]
+  final case class Event[A](prefix: String,
+                            label: String,
+                            record: A,
+                            time: Instant = Instant.now())
+      extends fluflu.Event[A]
 
-  final case class EventTime[A](prefix: String, label: String, record: A, time: Instant = Instant.now()) extends fluflu.Event[A]
+  final case class EventTime[A](prefix: String,
+                                label: String,
+                                record: A,
+                                time: Instant = Instant.now())
+      extends fluflu.Event[A]
 
   private[this] val packer = MessagePacker()
 

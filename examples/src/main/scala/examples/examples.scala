@@ -1,7 +1,7 @@
 package examples
 
 import java.net.InetSocketAddress
-import java.time.{ Clock, Duration }
+import java.time.{Clock, Duration}
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicLong
 
@@ -11,38 +11,38 @@ import fluflu.queue.Client
 import io.circe.generic.auto._
 import monix.eval.Task
 import monix.execution.Scheduler
-import monix.reactive.{ Consumer, Observable }
+import monix.reactive.{Consumer, Observable}
 
 import scala.util.Random
 
 case class CCC(
-  i: Long,
-  aaa: String,
-  bbb: String,
-  ccc: String,
-  ddd: Int,
-  eee: Map[String, String],
-  ffff: Seq[Double],
-  ggg: Int,
-  hhh: String,
-  iii: Int,
-  jjj: String,
-  kkk: String,
-  lll: String,
-  mmm: String,
-  nnn: String,
-  ooo: String,
-  ppp: String,
-  qqq: Int,
-  rrr: Int,
-  sss: Int,
-  ttt: Int,
-  uuu: Int,
-  vvv: Int,
-  www: Int,
-  xxx: Int,
-  yyy: Int,
-  zzz: Int
+    i: Long,
+    aaa: String,
+    bbb: String,
+    ccc: String,
+    ddd: Int,
+    eee: Map[String, String],
+    ffff: Seq[Double],
+    ggg: Int,
+    hhh: String,
+    iii: Int,
+    jjj: String,
+    kkk: String,
+    lll: String,
+    mmm: String,
+    nnn: String,
+    ooo: String,
+    ppp: String,
+    qqq: Int,
+    rrr: Int,
+    sss: Int,
+    ttt: Int,
+    uuu: Int,
+    vvv: Int,
+    www: Int,
+    xxx: Int,
+    yyy: Int,
+    zzz: Int
 )
 
 abstract class Base extends LazyLogging {
@@ -107,8 +107,8 @@ abstract class Base extends LazyLogging {
 }
 
 /**
- * sbt "examples/runMain examples.Scheduling 10 100"
- */
+  * sbt "examples/runMain examples.Scheduling 10 100"
+  */
 object Scheduling extends Base {
   import TimeUnit._
 
@@ -161,8 +161,8 @@ object Scheduling extends Base {
 }
 
 /**
- * sbt "examples/runMain examples.Counter 5000"
- */
+  * sbt "examples/runMain examples.Counter 5000"
+  */
 object Counter extends Base {
   import scala.concurrent.Await
   import scala.concurrent.duration._
@@ -178,15 +178,16 @@ object Counter extends Base {
     val consumer = Consumer.foreachParallelAsync[Event[Long]](4)(event =>
       Task(client.emit(event) match {
         case Left(e) => logger.error(s"Exception occurred: ${e.getMessage}")
-        case _ => ()
+        case _       => ()
       }))
 
     val task = observable.consumeWith(consumer)
 
     logger.info("Start emitting.")
-    try Await.result(task.runAsync, args(0).toLong.millis) catch {
+    try Await.result(task.runAsync, args(0).toLong.millis)
+    catch {
       case e: TimeoutException => ()
-      case e: Throwable => e.printStackTrace()
+      case e: Throwable        => e.printStackTrace()
     } finally {
       client.close()
     }
