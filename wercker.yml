@@ -1,0 +1,7 @@
+box: hseeberger/scala-sbt
+build:
+  steps:
+    - script:
+        name: run compile
+        code: |
+          sbt compile
