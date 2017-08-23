@@ -25,10 +25,12 @@ trait Connection {
 
 object Connection {
 
-  def apply(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(implicit clock: Clock = Clock.systemUTC()): Connection =
+  def apply(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
+      implicit clock: Clock = Clock.systemUTC()): Connection =
     new ConnectionImpl(remote, timeout, backoff)
 
-  final class ConnectionImpl(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(implicit clock: Clock)
+  final class ConnectionImpl(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
+      implicit clock: Clock)
       extends Connection
       with LazyLogging {
     import StandardSocketOptions._
@@ -43,7 +45,9 @@ object Connection {
       ch
     }
 
-    @tailrec private def go(x: SocketChannel, retries: Int, sleeper: Sleeper): Either[Throwable, Option[SocketChannel]] = {
+    @tailrec private def go(x: SocketChannel,
+                            retries: Int,
+                            sleeper: Sleeper): Either[Throwable, Option[SocketChannel]] = {
       logger.debug(s"Start connecting to $remote. retries: $retries")
       try if (x.connect(remote)) x.some.asRight
       else new IOException("Failed to connect").asLeft

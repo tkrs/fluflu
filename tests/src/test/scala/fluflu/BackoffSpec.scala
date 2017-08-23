@@ -12,7 +12,8 @@ class BackoffSpec extends FunSpec {
   describe("exponential") {
     describe("nextDelay") {
       it("should return delay duration") {
-        val backoff = Backoff.exponential(Duration.ofNanos(100), Duration.ofNanos(100), new MyRandom())
+        val backoff =
+          Backoff.exponential(Duration.ofNanos(100), Duration.ofNanos(100), new MyRandom())
         assert(backoff.nextDelay(0).getNano === 10)
         assert(backoff.nextDelay(1).getNano === 20)
         assert(backoff.nextDelay(2).getNano === 40)

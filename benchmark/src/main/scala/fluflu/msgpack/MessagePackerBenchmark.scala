@@ -26,9 +26,11 @@ class MessagePackerBenchmark extends TestData {
 
   @Benchmark def encodeString100_30: Either[Throwable, Array[Byte]] = packer.encode(`string 100 30`)
 
-  @Benchmark def encodeString1000_30: Either[Throwable, Array[Byte]] = packer.encode(`string 1000 30`)
+  @Benchmark def encodeString1000_30: Either[Throwable, Array[Byte]] =
+    packer.encode(`string 1000 30`)
 
-  @Benchmark def encodeString1000_30_multibyte: Either[Throwable, Array[Byte]] = packer.encode(`string 1000 30 multibyte`)
+  @Benchmark def encodeString1000_30_multibyte: Either[Throwable, Array[Byte]] =
+    packer.encode(`string 1000 30 multibyte`)
 
   @Benchmark def encodeCirceAST: Either[Throwable, Array[Byte]] = packer.encode(circeAST)
 }
