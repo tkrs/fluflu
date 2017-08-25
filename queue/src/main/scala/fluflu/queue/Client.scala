@@ -106,11 +106,13 @@ object Client {
           if (!(scheduler.isShutdown || msgQueue.isEmpty)) start()
         }
 
-      def close(): Unit = {
-        awaitTermination(scheduler, terminationDelay)
-        consume()
-        messenger.close()
-      }
+      def close(): Unit =
+        try {
+          awaitTermination(scheduler, terminationDelay)
+          consume()
+        } finally {
+          messenger.close()
+        }
     }
   }
 }

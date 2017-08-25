@@ -111,7 +111,7 @@ object MessagePacker {
   }
 
   def formatStrFamily(v: String, builder: mutable.ArrayBuilder[Byte]): Unit = {
-    val cb = CharBuffer.wrap(v)
+    val cb  = CharBuffer.wrap(v)
     val buf = encoder.get.encode(cb)
     val len = buf.remaining()
     formatStrFamilyHeader(len, builder)
