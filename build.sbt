@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, msgpack, tests)
-  .dependsOn(core, queue, msgpack)
+  .aggregate(core, queue, monix, msgpack, tests)
+  .dependsOn(core, queue, monix, msgpack)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
