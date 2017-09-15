@@ -8,8 +8,6 @@ import org.scalatest.BeforeAndAfterEach
 
 class ClientSpec extends Suite with BeforeAndAfterEach {
 
-  import monix.execution.Scheduler.Implicits.global
-
   var client: Client = _
 
   override protected def beforeEach(): Unit = {

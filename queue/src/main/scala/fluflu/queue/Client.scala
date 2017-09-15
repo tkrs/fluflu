@@ -8,8 +8,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.Encoder
-import monix.eval.{Callback, Task}
-import monix.execution.Scheduler
 
 trait Client {
   def emit[A: Encoder](e: Event[A]): Either[Exception, Unit]
@@ -21,20 +19,16 @@ object Client {
 
   def apply(delay: Duration = Duration.ofSeconds(1),
             terminationDelay: Duration = Duration.ofSeconds(10),
-            maximumPulls: Int = 1000)(implicit messenger: Messenger,
-                                      consumeScheduler: Scheduler): Client =
+            maximumPulls: Int = 1000)(implicit messenger: Messenger): Client =
     new ClientImpl(delay, terminationDelay, maximumPulls)
   final class ClientImpl(delay: Duration, terminationDelay: Duration, maximumPulls: Int)(
-      implicit messenger: Messenger,
-      taskScheduler: Scheduler)
+      implicit messenger: Messenger)
       extends Client
       with LazyLogging {
 
-    type Elm = () => Either[Throwable, Letter]
-
     private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
 
-    private[this] val msgQueue: ConcurrentLinkedQueue[Elm] =
+    private[this] val msgQueue: ConcurrentLinkedQueue[Messenger#Elm] =
       new ConcurrentLinkedQueue()
 
     def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
@@ -67,13 +61,6 @@ object Client {
           scheduler.schedule(this, delay.toNanos, TimeUnit.NANOSECONDS)
         }
 
-      private[this] val write: Elm => Task[Unit] = fn =>
-        fn().fold(
-          e =>
-            Task.pure(logger.warn(
-              s"Message decoding failed: ${e.getMessage}. Thus, it skips writing.")), // TODO: enhance message.
-          l => messenger.write(l))
-
       private def consume(): Unit = {
         logger.trace(s"Start emitting. remaining: $remaining")
         val start = System.nanoTime()
@@ -83,17 +70,8 @@ object Client {
             .takeWhile { v =>
               logger.trace(s"Polled value: $v"); v != null
             }
-            .map(write)
             .take(maximumPulls)
-        Task
-          .gatherUnordered(tasks)
-          .runAsync(new Callback[List[Unit]] {
-            override def onError(ex: Throwable): Unit =
-              logger.error(
-                s"An exception occurred during consuming messages. cause: ${ex.getMessage}",
-                ex)
-            override def onSuccess(value: List[Unit]): Unit = ()
-          })
+        messenger.emit(tasks)
         logger.trace(
           s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")
       }

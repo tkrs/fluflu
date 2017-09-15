@@ -17,10 +17,10 @@ class MessagePackerUnpackerChecker extends FunSuite with Checkers {
 
   def roundTrip[A: Encoder: Decoder: Arbitrary: Shrink]: Assertion =
     check(Prop.forAll({ a: A =>
-      val packer = MessagePacker()
-      val x = packer.encode(a).toTry.get
+      val packer   = MessagePacker()
+      val x        = packer.encode(a).toTry.get
       val unpacker = MessageUnpacker(ByteBuffer.wrap(x))
-      val b = unpacker.decode[A].toTry.get
+      val b        = unpacker.decode[A].toTry.get
       a === b
     }))
 

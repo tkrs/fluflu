@@ -9,9 +9,9 @@ import com.typesafe.scalalogging.LazyLogging
 import fluflu._
 import fluflu.queue.Client
 import io.circe.generic.auto._
-import monix.eval.Task
-import monix.execution.Scheduler
-import monix.reactive.{Consumer, Observable}
+import _root_.monix.eval.Task
+import _root_.monix.execution.Scheduler
+import _root_.monix.reactive.{Consumer, Observable}
 
 import scala.util.Random
 
@@ -93,13 +93,13 @@ abstract class Base extends LazyLogging {
 
   val client: Client = {
 
-    implicit val messenger: Messenger = Messenger(
+    implicit val consumeScheduler: Scheduler =
+      Scheduler.singleThread(name = "fluflu-example")
+
+    implicit val messenger: Messenger = new monix.MessengerTask(
       timeout = Duration.ofSeconds(10),
       backoff = Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
     )
-
-    implicit val consumeScheduler: Scheduler =
-      Scheduler.singleThread(name = "fluflu-example")
 
     Client(
       delay = Duration.ofNanos(500),
@@ -117,9 +117,9 @@ object Scheduling extends Base {
   def main(args: Array[String]): Unit = {
 
     object R extends Runnable {
-      private[this] val sec = args(0).toLong
-      private[this] val len = args(1).toLong
-      private[this] val delay = SECONDS.toNanos(sec) / len
+      private[this] val sec     = args(0).toLong
+      private[this] val len     = args(1).toLong
+      private[this] val delay   = SECONDS.toNanos(sec) / len
       private[this] val counter = new AtomicLong(0)
       private[this] val emitter = Executors.newSingleThreadScheduledExecutor()
 

@@ -99,7 +99,7 @@ class MessageUnpackerSpec extends WordSpec {
 
   "array" should {
     "decode flat array" in {
-      val a = Array(0x93, 0xc3, 0xc2, 0x01).map(_.toByte) // [true, false, 1]
+      val a       = Array(0x93, 0xc3, 0xc2, 0x01).map(_.toByte) // [true, false, 1]
       val decoded = instance(a).decode[Json]
       assert(
         decoded === Either.right(
@@ -111,7 +111,7 @@ class MessageUnpackerSpec extends WordSpec {
         0x03).map(_.toByte)
       // [true, {"a":"abc"}, false, [1, 2, 3]]
       val decoded = instance(a).decode[Json]
-      val json = io.circe.parser.parse("""[true, {"a":"abc"}, false, [1, 2, 3]]""")
+      val json    = io.circe.parser.parse("""[true, {"a":"abc"}, false, [1, 2, 3]]""")
       assert(decoded === json)
     }
   }
