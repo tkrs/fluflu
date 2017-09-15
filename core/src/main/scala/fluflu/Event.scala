@@ -17,10 +17,7 @@ object Event {
                time: Instant = Instant.now()): fluflu.Event[A] =
     Event(prefix, label, record, time)
 
-  final case class Event[A](prefix: String,
-                            label: String,
-                            record: A,
-                            time: Instant = Instant.now())
+  final case class Event[A](prefix: String, label: String, record: A, time: Instant = Instant.now())
       extends fluflu.Event[A]
 
   final case class EventTime[A](prefix: String,
@@ -51,8 +48,8 @@ object Event {
         case EventTime(prefix, label, record, time) =>
           for {
             p <- packer.pack(Json.fromString(s"$prefix.$label"))
-            s <- formatUInt32(time.getEpochSecond).asRight
-            n <- formatUInt32(time.getNano.toLong).asRight
+            s = formatUInt32(time.getEpochSecond)
+            n = formatUInt32(time.getNano.toLong)
             r <- packer.pack(record.asJson)
           } yield Array(0x93.toByte) ++ p ++ Array(0xd7.toByte, 0x00.toByte) ++ s ++ n ++ r
 

@@ -103,6 +103,20 @@ lazy val queue = project.in(file("queue"))
   )
   .dependsOn(core, msgpack)
 
+lazy val monix = project.in(file("monix"))
+  .settings(allSettings)
+  .settings(
+    description := "fluflu monix",
+    moduleName := "fluflu-monix",
+    name := "monix",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-core" % catsVersion,
+      "io.monix" %% "monix-eval" % monixVersion,
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+    )
+  )
+  .dependsOn(core, msgpack)
+
 lazy val msgpack = project.in(file("msgpack"))
   .settings(allSettings)
   .settings(
@@ -131,7 +145,7 @@ lazy val examples = project.in(file("examples"))
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     )
   )
-  .dependsOn(queue)
+  .dependsOn(queue, monix)
 
 lazy val tests = project.in(file("tests"))
   .settings(allSettings)
@@ -147,7 +161,7 @@ lazy val tests = project.in(file("tests"))
   )
   .settings(fork in test := true)
   .settings(fork := true)
-  .dependsOn(core, queue, msgpack)
+  .dependsOn(core, monix, queue, msgpack)
 
 lazy val benchmark = (project in file("benchmark"))
   .settings(allSettings)

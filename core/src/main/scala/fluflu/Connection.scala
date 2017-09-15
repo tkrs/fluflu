@@ -11,14 +11,14 @@ import java.util.concurrent.atomic.AtomicReference
 import cats.syntax.option._
 import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
-import monix.eval.Task
 
 import scala.annotation.tailrec
 import scala.compat.java8.FunctionConverters._
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 trait Connection {
-  def write(message: ByteBuffer): Task[Unit]
+  def write(message: ByteBuffer): Try[Unit]
   def isClosed: Boolean
   def close(): Unit
 }
@@ -65,29 +65,29 @@ object Connection {
       }
     }
 
-    def connect(): Task[Option[SocketChannel]] = {
+    def connect(): Try[Option[SocketChannel]] = {
       val c = channel.updateAndGet(asJavaUnaryOperator {
         case t @ Right(None)                       => t
         case t @ Right(Some(ch)) if ch.isConnected => t
         case _                                     => go(open, 0, Sleeper(backoff, timeout, clock))
       })
-      Task.fromTry(c.toTry)
+      c.toTry
     }
 
     def isClosed: Boolean =
       channel.get.fold(_ => true, _.fold(false)(!_.isConnected))
 
-    def write(message: ByteBuffer): Task[Unit] =
-      connect().flatMap(_.fold(Task.unit) { ch =>
+    def write(message: ByteBuffer): Try[Unit] =
+      connect().flatMap(_.fold(Try(())) { ch =>
         logger.trace(s"Start writing message: $message")
         try {
           val toWrite = ch.write(message)
           logger.trace(s"Number of bytes written: $toWrite")
-          Task.unit
+          Success(())
         } catch {
           case ie: IOException =>
             ch.close()
-            Task.raiseError(ie)
+            Failure(ie)
         }
       })
 

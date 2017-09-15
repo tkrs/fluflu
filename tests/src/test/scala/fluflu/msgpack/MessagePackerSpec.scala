@@ -15,13 +15,13 @@ class MessagePackerSpec extends WordSpec {
 
   val instance = MessagePacker()
 
-  val fmt: Byte => String = "0x%02x" format _
+  val fmt: Byte => String    = "0x%02x" format _
   val p: Array[Byte] => Unit = a => println(a.map(fmt).mkString(" "))
 
   "positive fixint" should {
     "be packed" in {
       val expected = Array(0x7f).map(_.toByte)
-      val a = instance.pack(Json.fromInt(127)).toTry.get
+      val a        = instance.pack(Json.fromInt(127)).toTry.get
       assert(a === expected)
     }
   }
@@ -29,7 +29,7 @@ class MessagePackerSpec extends WordSpec {
   "uint 8" should {
     "be packed" in {
       val expected = Array(0xcc, 0xff).map(_.toByte)
-      val a = instance.pack(Json.fromInt(255)).toTry.get
+      val a        = instance.pack(Json.fromInt(255)).toTry.get
       assert(a === expected)
     }
   }
@@ -37,7 +37,7 @@ class MessagePackerSpec extends WordSpec {
   "uint 16" should {
     "be packed" in {
       val expected = Array(0xcd, 0x02, 0x00).map(_.toByte)
-      val a = instance.pack(Json.fromInt(512)).toTry.get
+      val a        = instance.pack(Json.fromInt(512)).toTry.get
       assert(a === expected)
     }
   }
@@ -45,7 +45,7 @@ class MessagePackerSpec extends WordSpec {
   "uint 32" should {
     "be packed" in {
       val expected = Array(0xce, 0x00, 0x01, 0x00, 0x00).map(_.toByte)
-      val a = instance.pack(Json.fromLong(65536)).toTry.get
+      val a        = instance.pack(Json.fromLong(65536)).toTry.get
       assert(a === expected)
     }
   }
@@ -53,13 +53,13 @@ class MessagePackerSpec extends WordSpec {
   "uint 64" should {
     "be packed" in {
       val expected = Array(0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00).map(_.toByte)
-      val a = instance.pack(Json.fromLong(4294967296L)).toTry.get
+      val a        = instance.pack(Json.fromLong(4294967296L)).toTry.get
       assert(a === expected)
     }
 
     "be packed by BigInt" in {
       val expected = Array(0xcf, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe).map(_.toByte)
-      val a = instance.pack(Json.fromBigInt(BigInt(Long.MaxValue) * 2)).toTry.get
+      val a        = instance.pack(Json.fromBigInt(BigInt(Long.MaxValue) * 2)).toTry.get
       assert(a === expected)
     }
   }
@@ -67,7 +67,7 @@ class MessagePackerSpec extends WordSpec {
   "negative fixint" should {
     "be packed" in {
       val expected = Array(0xff).map(_.toByte)
-      val a = instance.pack(Json.fromInt(-1)).toTry.get
+      val a        = instance.pack(Json.fromInt(-1)).toTry.get
       assert(a === expected)
     }
   }
@@ -75,7 +75,7 @@ class MessagePackerSpec extends WordSpec {
   "negative int 8" should {
     "be packed" in {
       val expected = Array(0xd0, 0xdf).map(_.toByte)
-      val a = instance.pack(Json.fromInt(-33)).toTry.get
+      val a        = instance.pack(Json.fromInt(-33)).toTry.get
       assert(a === expected)
     }
   }
@@ -83,7 +83,7 @@ class MessagePackerSpec extends WordSpec {
   "negative int 16" should {
     "be packed" in {
       val expected = Array(0xd1, 0x80, 0x00).map(_.toByte)
-      val a = instance.pack(Json.fromInt(-32768)).toTry.get
+      val a        = instance.pack(Json.fromInt(-32768)).toTry.get
       assert(a === expected)
     }
   }
@@ -91,7 +91,7 @@ class MessagePackerSpec extends WordSpec {
   "negative int 32" should {
     "be packed" in {
       val expected = Array(0xd2, 0x80, 0x00, 0x00, 0x01).map(_.toByte)
-      val a = instance.pack(Json.fromLong(-2147483647)).toTry.get
+      val a        = instance.pack(Json.fromLong(-2147483647)).toTry.get
       assert(a === expected)
     }
   }
@@ -99,7 +99,7 @@ class MessagePackerSpec extends WordSpec {
   "negative int 64" should {
     "be packed" in {
       val expected = Array(0xd3, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00).map(_.toByte)
-      val a = instance.pack(Json.fromLong(-9223372036854775808L)).toTry.get
+      val a        = instance.pack(Json.fromLong(-9223372036854775808L)).toTry.get
       assert(a === expected)
     }
   }
@@ -107,7 +107,7 @@ class MessagePackerSpec extends WordSpec {
   "str 8" should {
     "be packed" in {
       val expected = Array(0xa3, 0x61, 0x62, 0x63).map(_.toByte)
-      val a = instance.pack(Json.fromString("abc")).toTry.get
+      val a        = instance.pack(Json.fromString("abc")).toTry.get
       assert(a === expected)
     }
   }
@@ -151,7 +151,7 @@ class MessagePackerSpec extends WordSpec {
 
   "fixarray" should {
     "be packed" in {
-      val js = """["", null, "あいうえお"]"""
+      val js  = """["", null, "あいうえお"]"""
       val emp = parse(js).getOrElse(Json.Null)
       val expected =
         Array(0x93, 0xa0, 0xc0, 0xaf, 0xe3, 0x81, 0x82, 0xe3, 0x81, 0x84, 0xe3, 0x81, 0x86, 0xe3,
@@ -163,7 +163,7 @@ class MessagePackerSpec extends WordSpec {
 
   "fixmap" should {
     "be packed" in {
-      val js = """{"name": "Taro"}"""
+      val js  = """{"name": "Taro"}"""
       val emp = parse(js).getOrElse(Json.Null)
       val expected =
         Array(0x81, 0xa4, 0x6e, 0x61, 0x6d, 0x65, 0xa4, 0x54, 0x61, 0x72, 0x6f).map(_.toByte)
