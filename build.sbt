@@ -74,8 +74,8 @@ lazy val credentialSettings = Seq(
 )
 
 lazy val noPublishSettings = Seq(
-  publish := (),
-  publishLocal := (),
+  publish := (()),
+  publishLocal := (()),
   publishArtifact := false
 )
 
