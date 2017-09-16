@@ -29,8 +29,7 @@ final class MessengerTask(timeout: Duration, backoff: Backoff)(implicit connecti
         .onErrorRecoverWith {
           case e: IOException =>
             buffer.flip()
-            if (giveup(start))
-              Task.raiseError(e)
+            if (giveup(start)) Task.raiseError(e)
             else
               go(buffer, retries + 1, start)
                 .delayExecution(backoff.nextDelay(retries).toNanos.nanos)
@@ -50,7 +49,7 @@ final class MessengerTask(timeout: Duration, backoff: Backoff)(implicit connecti
       .gatherUnordered(tasks)
       .runAsync(new Callback[List[Unit]] {
         override def onError(ex: Throwable): Unit =
-          logger.error(s"An exception occurred during consuming messages. cause: ${ex.getMessage}",
+          logger.error(s"An exception occurred during consuming messages. Cause: ${ex.getMessage}",
                        ex)
         override def onSuccess(value: List[Unit]): Unit = ()
       })
@@ -59,5 +58,5 @@ final class MessengerTask(timeout: Duration, backoff: Backoff)(implicit connecti
   private def giveup(start: Instant): Boolean =
     Instant.now(clock).minusNanos(timeout.toNanos).compareTo(start) > 0
 
-  def close(): Unit = connection.close()
+  def close(): Unit = connection.close().get
 }

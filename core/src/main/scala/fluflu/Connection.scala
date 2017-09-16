@@ -6,21 +6,16 @@ import java.net.{InetSocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
-import java.util.concurrent.atomic.AtomicReference
 
-import cats.syntax.option._
-import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec
-import scala.compat.java8.FunctionConverters._
 import scala.util.{Failure, Success, Try}
-import scala.util.control.NonFatal
 
 trait Connection {
   def write(message: ByteBuffer): Try[Unit]
   def isClosed: Boolean
-  def close(): Unit
+  def close(): Try[Unit]
 }
 
 object Connection {
@@ -35,73 +30,65 @@ object Connection {
       with LazyLogging {
     import StandardSocketOptions._
 
-    private[this] val channel: AtomicReference[Either[Throwable, Option[SocketChannel]]] =
-      new AtomicReference(go(open, 0, Sleeper(backoff, timeout, clock)))
+    @volatile private[this] var closed: Boolean = false
 
-    private[this] def open = {
+    @volatile private[this] var channel: SocketChannel =
+      doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)).get
+
+    private[this] def channelOpen = {
       val ch = SocketChannel.open()
       ch.setOption[JBool](TCP_NODELAY, true)
       ch.setOption[JBool](SO_KEEPALIVE, true)
       ch
     }
 
-    @tailrec private def go(x: SocketChannel,
-                            retries: Int,
-                            sleeper: Sleeper): Either[Throwable, Option[SocketChannel]] = {
+    @tailrec private def doConnect(ch: SocketChannel,
+                                   retries: Int,
+                                   sleeper: Sleeper): Try[SocketChannel] = {
       logger.debug(s"Start connecting to $remote. retries: $retries")
-      try if (x.connect(remote)) x.some.asRight
-      else new IOException("Failed to connect").asLeft
+      try if (ch.connect(remote)) Success(ch)
+      else Failure(new IOException(s"Failed to connect: $remote"))
       catch {
         case e: IOException =>
           if (sleeper.giveUp) {
-            if (x.isOpen) x.close()
-            close()
-            e.asLeft
+            closed = true
+            if (ch.isOpen) ch.close()
+            Failure(e)
           } else {
             sleeper.sleep(retries)
-            x.close()
-            go(open, retries + 1, sleeper)
+            ch.close()
+            doConnect(channelOpen, retries + 1, sleeper)
           }
       }
     }
 
-    def connect(): Try[Option[SocketChannel]] = {
-      val c = channel.updateAndGet(asJavaUnaryOperator {
-        case t @ Right(None)                       => t
-        case t @ Right(Some(ch)) if ch.isConnected => t
-        case _                                     => go(open, 0, Sleeper(backoff, timeout, clock))
-      })
-      c.toTry
-    }
+    @throws[Exception]("If the connection was already closed")
+    @throws[IOException]
+    def connect(): Try[SocketChannel] =
+      if (closed) Failure(new Exception("Already closed"))
+      else if (channel.isConnected) Success(channel)
+      else doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock))
 
     def isClosed: Boolean =
-      channel.get.fold(_ => true, _.fold(false)(!_.isConnected))
+      closed || channel.isConnected
 
     def write(message: ByteBuffer): Try[Unit] =
-      connect().flatMap(_.fold(Try(())) { ch =>
-        logger.trace(s"Start writing message: $message")
-        try {
-          val toWrite = ch.write(message)
-          logger.trace(s"Number of bytes written: $toWrite")
-          Success(())
-        } catch {
-          case ie: IOException =>
-            ch.close()
-            Failure(ie)
-        }
-      })
+      for {
+        ch <- connect()
+        _ <- Try {
+              logger.trace(s"Start writing message: $message")
+              @tailrec def go(acc: Int): Int =
+                if (!message.hasRemaining) acc
+                else go(acc + ch.write(message))
+              val toWrite = go(0)
+              logger.trace(s"Number of bytes written: $toWrite")
+            }
+      } yield ()
 
-    def close(): Unit = {
+    def close(): Try[Unit] = {
+      closed = true
       logger.debug("Start closing connection.")
-      channel.updateAndGet(asJavaUnaryOperator {
-        case Left(e) => none.asRight
-        case Right(ch) =>
-          try {
-            ch.foreach(_.close()); none.asRight
-          } catch {
-            case NonFatal(e) => none.asRight
-          }
-      })
+      Try(channel.close())
     }
   }
 }

@@ -26,7 +26,7 @@ class MessengerTaskSpec extends FunSpec with Matchers {
         queue.add(Success(()))
 
         override def isClosed: Boolean                     = false
-        override def close(): Unit                         = ()
+        override def close(): Try[Unit]                    = Success(())
         override def write(message: ByteBuffer): Try[Unit] = queue.take()
       }
 
