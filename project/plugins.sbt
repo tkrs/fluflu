@@ -1,8 +1,3 @@
-resolvers ++= Seq(
-  Resolver.bintrayIvyRepo("ktosopl", "sbt-plugins"),
-  Resolver.bintrayIvyRepo("sbt", "sbt-plugin-releases")
-)
-
 addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC12")
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.2.27")
 addSbtPlugin("com.lucidchart" % "sbt-scalafmt" % "1.12")
