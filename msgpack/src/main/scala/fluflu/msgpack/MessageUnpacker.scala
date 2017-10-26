@@ -68,19 +68,19 @@ final class MessageUnpacker(src: ByteBuffer) {
 
   private[this] var offset = src.position
 
-  private[this] def readAt(i: Int): Int = {
+  private def readAt(i: Int): Int = {
     val v = src.get(offset).toInt
     offset += i
     v
   }
 
-  private[this] def decodeAt[A](i: Int, f: (ByteBuffer, Int) => A): A = {
+  private def decodeAt[A](i: Int, f: (ByteBuffer, Int) => A): A = {
     val v = f(src, offset)
     offset += i
     v
   }
 
-  def decode[A](implicit decoder: Decoder[A]): Either[Error, A] =
+  def decode[A: Decoder]: Either[Error, A] =
     Either
       .catchOnly[Exception](unpack)
       .leftMap(e => DecodingFailure(e.getMessage, List.empty))
@@ -118,13 +118,9 @@ final class MessageUnpacker(src: ByteBuffer) {
   }
 
   private def unpackList(limit: Int): Json = {
-    @tailrec def loop(i: Int, acc: Array[Json]): Array[Json] =
-      if (i == limit) acc
-      else {
-        acc(i) = unpack
-        loop(i + 1, acc)
-      }
-    Json.fromValues(loop(0, Array.ofDim[Json](limit)))
+    @tailrec def loop(i: Int, acc: Vector[Json]): Vector[Json] =
+      if (i == limit) acc else loop(i + 1, acc :+ unpack)
+    Json.fromValues(loop(0, Vector.empty))
   }
 
   private def unpackMap(size: Int): Json = {
@@ -133,12 +129,11 @@ final class MessageUnpacker(src: ByteBuffer) {
       case None =>
         throw new Exception(s"Failed to decode key by the offset: $offset")
     }
-    def loop(i: Int, acc: Seq[(String, Json)]): Seq[(String, Json)] =
+    def loop(i: Int, acc: Vector[(String, Json)]): Vector[(String, Json)] =
       if (i == 0) acc else loop(i - 1, acc :+ (key(unpack) -> unpack))
-    Json.fromFields(loop(size, Seq.empty))
+    Json.fromFields(loop(size, Vector.empty))
   }
 
   private def unpackString(size: Int): Json =
     Json.fromString(decodeAt(size, utf8ToString(_, _, size)))
-
 }
