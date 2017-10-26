@@ -9,14 +9,41 @@ import io.circe.syntax._
 class TestData {
   import models._
 
-  val packer = MessagePacker()
+  val packer   = MessagePacker()
   val unpacker = MessageUnpacker(_)
 
-  val string100: String = "a" * 100
-  val string1000: String = "z" * 1000
+  val string100: String       = "a" * 100
+  val string1000: String      = "z" * 1000
   val string1000multi: String = "\uD842\uDF9F" * 1000
 
+  final case class Fix[F[_]](v: F[Fix[F]])
+  final case class ProfF[A](name: String, year: Int, students: List[A])
+
+  type Prof = Fix[ProfF]
+
   object pack {
+    val fixType: Prof =
+      Fix(
+        ProfF(
+          "Hilbert",
+          1885,
+          List(
+            Fix(ProfF("Ackermann", 1925, Nil)),
+            Fix(ProfF("Curry", 1930, Nil)),
+            Fix(
+              ProfF("Weyl",
+                    1908,
+                    List(
+                      Fix(
+                        ProfF("Mac Lane",
+                              1934,
+                              List(
+                                Fix(ProfF("Howard", 1956, Nil)),
+                                Fix(ProfF("Awodey", 1997, Nil))
+                              ))))))
+          )
+        ))
+
     val `int max 10` = Int10(Int.MaxValue,
                              Int.MaxValue,
                              Int.MaxValue,
@@ -215,6 +242,8 @@ class TestData {
   }
 
   object unpack {
+    val fixType = ByteBuffer.wrap(packer.encode(pack.fixType).toTry.get)
+
     val `int max 10`: ByteBuffer = ByteBuffer.wrap(
       packer
         .encode(
