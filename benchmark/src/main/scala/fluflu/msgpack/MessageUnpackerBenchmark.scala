@@ -9,7 +9,7 @@ import org.openjdk.jmh.annotations._
 @State(Scope.Thread)
 @BenchmarkMode(Array(Mode.Throughput))
 @Warmup(iterations = 5, time = 1)
-@Measurement(iterations = 5, time = 5)
+@Measurement(iterations = 10, time = 3)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(2)
 class MessageUnpackerBenchmark extends TestData {
@@ -47,4 +47,6 @@ class MessageUnpackerBenchmark extends TestData {
   @Benchmark
   def decodeCirceAST: Either[Error, Json] = unpacker(circeAST.duplicate()).decode[Json]
 
+  @Benchmark
+  def decodeNested: Either[Error, Prof] = unpacker(fixType.duplicate()).decode[Prof]
 }
