@@ -35,7 +35,7 @@ object Connection {
     @volatile private[this] var channel: SocketChannel =
       doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)).get
 
-    private[this] def channelOpen = {
+    private def channelOpen = {
       val ch = SocketChannel.open()
       ch.setOption[JBool](TCP_NODELAY, true)
       ch.setOption[JBool](SO_KEEPALIVE, true)

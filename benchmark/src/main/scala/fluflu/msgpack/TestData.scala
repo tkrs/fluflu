@@ -2,6 +2,7 @@ package fluflu.msgpack
 
 import java.nio.ByteBuffer
 
+import fluflu.msgpack.circe.{MessagePacker, MessageUnpacker}
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -15,9 +16,6 @@ class TestData {
   val string100: String       = "a" * 100
   val string1000: String      = "z" * 1000
   val string1000multi: String = "\uD842\uDF9F" * 1000
-
-  final case class Fix[F[_]](v: F[Fix[F]])
-  final case class ProfF[A](name: String, year: Int, students: List[A])
 
   type Prof = Fix[ProfF]
 

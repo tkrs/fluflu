@@ -4,7 +4,6 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.time.{Clock, Duration, Instant}
 
-import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
 import fluflu.{Backoff, Connection, Messenger}
 import _root_.monix.eval.{Callback, Task}
@@ -36,12 +35,12 @@ final class MessengerTask(timeout: Duration, backoff: Backoff)(implicit connecti
         }
 
     val tasks = elms.map { elm =>
-      elm().map(l => ByteBuffer.wrap(l.message)) match {
+      elm() match {
         case Left(e) =>
           logger.warn(e.getMessage)
           Task.unit
-        case Right(b) =>
-          go(b, 0, Instant.now(clock))
+        case Right(arr) =>
+          go(ByteBuffer.wrap(arr), 0, Instant.now(clock))
       }
     }
 

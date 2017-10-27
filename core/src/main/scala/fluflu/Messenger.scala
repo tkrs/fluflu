@@ -2,7 +2,7 @@ package fluflu
 
 trait Messenger {
 
-  type Elm = () => Either[Throwable, Letter]
+  type Elm = () => Either[Throwable, Array[Byte]]
 
   def emit(elms: Iterator[Elm]): Unit
 

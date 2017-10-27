@@ -1,8 +1,7 @@
-package fluflu
-package msgpack
+package fluflu.msgpack.circe
 
-import cats.syntax.either._
 import cats.Eq
+import cats.syntax.either._
 import io.circe.Json
 import io.circe.parser._
 import org.scalatest._

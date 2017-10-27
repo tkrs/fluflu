@@ -2,10 +2,9 @@ package fluflu
 
 import java.time.Instant
 
-import cats.syntax.either._
-import fluflu.msgpack.MessagePacker
-import io.circe.{Encoder, Json}
-import io.circe.syntax._
+import fluflu.msgpack.Packer
+
+import scala.collection.mutable
 
 sealed trait Event[A]
 
@@ -26,33 +25,38 @@ object Event {
                                 time: Instant = Instant.now())
       extends fluflu.Event[A]
 
-  private[this] val packer = MessagePacker()
+  implicit def eventPacker[A](implicit A: Packer[A]): Packer[fluflu.Event[A]] =
+    new Packer[fluflu.Event[A]] {
+      override def apply(a: fluflu.Event[A]): Either[Throwable, Array[Byte]] =
+        try a match {
+          case Event(prefix, label, record, time) =>
+            val acc = mutable.ArrayBuilder.make[Byte]
+            acc += 0x93.toByte
+            Packer.formatStrFamily(s"$prefix.$label", acc)
+            Packer.formatIntFamily(time.getEpochSecond, acc)
+            A(record) match {
+              case Right(arr) =>
+                acc ++= arr
+                Right(acc.result())
+              case l => l
+            }
 
-  private def formatUInt32(v: Long): Array[Byte] = {
-    val arr = Array.ofDim[Byte](4)
-    arr(0) = (v >>> 24).toByte
-    arr(1) = (v >>> 16).toByte
-    arr(2) = (v >>> 8).toByte
-    arr(3) = (v >>> 0).toByte
-    arr
-  }
-
-  implicit final class EventOps[A](private val e: fluflu.Event[A]) extends AnyVal {
-    def pack(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] =
-      e match {
-        case Event(prefix, label, record, time) =>
-          packer.pack(
-            Json.arr(Json.fromString(s"$prefix.$label"),
-                     Json.fromLong(time.getEpochSecond),
-                     record.asJson))
-        case EventTime(prefix, label, record, time) =>
-          for {
-            p <- packer.pack(Json.fromString(s"$prefix.$label"))
-            s = formatUInt32(time.getEpochSecond)
-            n = formatUInt32(time.getNano.toLong)
-            r <- packer.pack(record.asJson)
-          } yield Array(0x93.toByte) ++ p ++ Array(0xd7.toByte, 0x00.toByte) ++ s ++ n ++ r
-
-      }
-  }
+          case EventTime(prefix, label, record, time) =>
+            val acc = mutable.ArrayBuilder.make[Byte]
+            acc += 0x93.toByte
+            Packer.formatStrFamily(s"$prefix.$label", acc)
+            acc += 0xd7.toByte
+            acc += 0x00.toByte
+            Packer.formatUInt32(time.getEpochSecond, acc)
+            Packer.formatUInt32(time.getNano.toLong, acc)
+            A(record) match {
+              case Right(arr) =>
+                acc ++= arr
+                Right(acc.result())
+              case l => l
+            }
+        } catch {
+          case e: Throwable => Left(e)
+        }
+    }
 }

@@ -1,5 +1,4 @@
-package fluflu
-package msgpack
+package fluflu.msgpack.circe
 
 import org.scalacheck.Gen
 

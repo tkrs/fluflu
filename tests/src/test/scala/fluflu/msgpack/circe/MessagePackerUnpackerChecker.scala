@@ -1,13 +1,12 @@
-package fluflu
-package msgpack
+package fluflu.msgpack.circe
 
 import java.nio.ByteBuffer
 
 import cats.syntax.either._
 import io.circe.{Decoder, Encoder}
 import org.scalacheck.{Arbitrary, Prop, Shrink}
-import org.scalatest.{Assertion, FunSuite}
 import org.scalatest.prop.Checkers
+import org.scalatest.{Assertion, FunSuite}
 
 class MessagePackerUnpackerChecker extends FunSuite with Checkers {
 

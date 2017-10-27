@@ -6,7 +6,7 @@ import java.time.{Clock, Duration, Instant, ZoneId}
 import java.util.concurrent.{ArrayBlockingQueue, BlockingQueue}
 
 import _root_.monix.execution.Scheduler
-import fluflu.{Backoff, Connection, Letter, Messenger}
+import fluflu.{Backoff, Connection, Messenger}
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.util.{Failure, Success, Try}
@@ -33,7 +33,7 @@ class MessengerTaskSpec extends FunSpec with Matchers {
       val messenger: Messenger =
         new MessengerTask(Duration.ofMillis(200), Backoff.fix(Duration.ofMillis(10)))
 
-      messenger.emit(Iterator(() => Right(Letter(Array(1, 2, 3).map(_.toByte)))))
+      messenger.emit(Iterator(() => Right(Array(1, 2, 3).map(_.toByte))))
     }
   }
 }

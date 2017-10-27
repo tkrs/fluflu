@@ -4,6 +4,7 @@ import java.time.Duration
 
 import cats.syntax.either._
 import fluflu.Event
+import fluflu.msgpack.Packer
 import org.scalatest.BeforeAndAfterEach
 
 class ClientSpec extends Suite with BeforeAndAfterEach {
@@ -16,6 +17,10 @@ class ClientSpec extends Suite with BeforeAndAfterEach {
 
   override protected def afterEach(): Unit = {
     client.close()
+  }
+
+  implicit val packer: Packer[Int] = new Packer[Int] {
+    override def apply(a: Int): Either[Throwable, Array[Byte]] = Right(Array.empty)
   }
 
   describe("Client") {

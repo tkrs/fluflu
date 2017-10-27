@@ -5,12 +5,11 @@ import java.time.Duration
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
 
-import cats.syntax.either._
 import com.typesafe.scalalogging.LazyLogging
-import io.circe.Encoder
+import fluflu.msgpack.Packer
 
 trait Client {
-  def emit[A: Encoder](e: Event[A]): Either[Exception, Unit]
+  def emit[A: Packer](e: Event[A]): Either[Exception, Unit]
   def remaining: Int
   def close(): Unit
 }
@@ -31,11 +30,13 @@ object Client {
     private[this] val msgQueue: ConcurrentLinkedQueue[Messenger#Elm] =
       new ConcurrentLinkedQueue()
 
-    def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
+    def emit[A: Packer](e: Event[A]): Either[Exception, Unit] =
       if (!scheduler.isShutdown)
-        Producer.emit(e).map(_ => Consumer.start())
-      else
-        new Exception("A Client scheduler was already shutdown").asLeft
+        Producer.emit(e) match {
+          case Right(_) => Right(Consumer.start())
+          case l        => l
+        } else
+        Left(new Exception("A Client scheduler was already shutdown"))
 
     def remaining: Int = msgQueue.size
 
@@ -46,9 +47,9 @@ object Client {
     }
 
     object Producer {
-      def emit[A: Encoder](e: Event[A]): Either[Exception, Unit] =
-        if (msgQueue offer (() => e.pack.map(Letter))) ().asRight
-        else new Exception("A queue no space is currently available").asLeft
+      def emit[A](e: Event[A])(implicit EA: Packer[Event[A]]): Either[Exception, Unit] =
+        if (msgQueue offer (() => EA(e))) Right(())
+        else Left(new Exception("A queue no space is currently available"))
     }
 
     object Consumer extends Runnable {

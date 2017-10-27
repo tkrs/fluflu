@@ -2,6 +2,9 @@ package fluflu.msgpack
 
 object models {
 
+  final case class Fix[F[_]](v: F[Fix[F]])
+  final case class ProfF[A](name: String, year: Int, students: List[A])
+
   case class Int10(a000000001: Int,
                    a000000002: Int,
                    a000000003: Int,
