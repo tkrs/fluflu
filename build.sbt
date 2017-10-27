@@ -1,8 +1,8 @@
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, monix, msgpack, tests)
-  .dependsOn(core, queue, monix, msgpack)
+  .aggregate(core, queue, monix, msgpack, `msgpack-circe`, tests)
+  .dependsOn(core, queue, monix, msgpack, `msgpack-circe`)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
@@ -26,6 +26,7 @@ lazy val baseSettings = Seq(
   ),
   libraryDependencies ++= Seq(
     "io.monix" %% "monix-eval" % monixVersion,
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
     "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   ),
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
@@ -74,8 +75,8 @@ lazy val credentialSettings = Seq(
 )
 
 lazy val noPublishSettings = Seq(
-  publish := (()),
-  publishLocal := (()),
+  publish := ((): Unit),
+  publishLocal := ((): Unit),
   publishArtifact := false
 )
 
@@ -84,10 +85,7 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core",
-    libraryDependencies ++= Seq(
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
-    )
+    name := "core"
   )
   .dependsOn(msgpack)
 
@@ -96,11 +94,7 @@ lazy val queue = project.in(file("queue"))
   .settings(
     description := "fluflu queue",
     moduleName := "fluflu-queue",
-    name := "queue",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % catsVersion,
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
-    )
+    name := "queue"
   )
   .dependsOn(core, msgpack)
 
@@ -111,9 +105,7 @@ lazy val monix = project.in(file("monix"))
     moduleName := "fluflu-monix",
     name := "monix",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % catsVersion,
-      "io.monix" %% "monix-eval" % monixVersion,
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0"
+      "io.monix" %% "monix-eval" % monixVersion
     )
   )
   .dependsOn(core, msgpack)
@@ -124,12 +116,21 @@ lazy val msgpack = project.in(file("msgpack"))
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
     name := "msgpack",
+  )
+
+lazy val `msgpack-circe` = project.in(file("msgpack-circe"))
+  .settings(allSettings)
+  .settings(
+    description := "fluflu msgpack-circe",
+    moduleName := "fluflu-msgpack-circe",
+    name := "msgpack-circe",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "io.circe" %% "circe-parser" % circeVersion
     )
   )
+  .dependsOn(msgpack)
 
 lazy val examples = project.in(file("examples"))
   .settings(allSettings)
@@ -146,7 +147,7 @@ lazy val examples = project.in(file("examples"))
       "ch.qos.logback" % "logback-classic" % "1.2.3"
     )
   )
-  .dependsOn(queue, monix)
+  .dependsOn(queue, monix, `msgpack-circe`)
 
 lazy val tests = project.in(file("tests"))
   .settings(allSettings)
@@ -156,13 +157,14 @@ lazy val tests = project.in(file("tests"))
     moduleName := "fluflu-tests",
     name := "tests",
     libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-core" % catsVersion,
       "org.scalatest" %% "scalatest" % scalatestVersion,
       "org.scalacheck" %% "scalacheck" % scalacheckVersion
     )
   )
   .settings(fork in test := true)
   .settings(fork := true)
-  .dependsOn(core, monix, queue, msgpack)
+  .dependsOn(core, monix, queue, `msgpack-circe`)
 
 lazy val benchmark = (project in file("benchmark"))
   .settings(allSettings)
@@ -174,12 +176,13 @@ lazy val benchmark = (project in file("benchmark"))
     scalaVersion := "2.12.3",
     crossScalaVersions := Seq("2.12.3"),
     libraryDependencies ++= Seq(
+      "org.typelevel" %% "cats-core" % catsVersion,
       "org.scalatest" %% "scalatest" % scalatestVersion,
       "org.scalacheck" %% "scalacheck" % scalacheckVersion
     )
   )
   .enablePlugins(JmhPlugin)
-  .dependsOn(msgpack)
+  .dependsOn(`msgpack-circe`)
 
 lazy val compilerOptions = Seq(
   "-deprecation",

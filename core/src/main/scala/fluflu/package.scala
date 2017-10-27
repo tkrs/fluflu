@@ -18,8 +18,3 @@ package object fluflu {
     }
   }
 }
-
-package fluflu {
-
-  final case class Letter(message: Array[Byte]) extends AnyVal
-}

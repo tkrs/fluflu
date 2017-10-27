@@ -5,12 +5,13 @@ import java.lang.Double.doubleToLongBits
 import java.nio.CharBuffer
 import java.nio.charset.{CharsetEncoder, StandardCharsets}
 
-import cats.syntax.either._
-import io.circe.{Encoder, Json}
-
 import scala.collection.mutable
 
-object MessagePacker {
+trait Packer[A] {
+  def apply(a: A): Either[Throwable, Array[Byte]]
+}
+
+object Packer {
 
   private[this] val encoder: ThreadLocal[CharsetEncoder] =
     new ThreadLocal[CharsetEncoder] {
@@ -18,7 +19,12 @@ object MessagePacker {
         StandardCharsets.UTF_8.newEncoder()
     }
 
-  def apply() = new MessagePacker()
+  def formatUInt32(v: Long, builder: mutable.ArrayBuilder[Byte]): Unit = {
+    builder += (v >>> 24).toByte
+    builder += (v >>> 16).toByte
+    builder += (v >>> 8).toByte
+    builder += (v >>> 0).toByte
+  }
 
   def formatArrayFamilyHeader(size: Int, builder: mutable.ArrayBuilder[Byte]): Unit = {
     if (size < 16)
@@ -152,55 +158,4 @@ object MessagePacker {
     builder += (v >>> 8).toByte
     builder += (v >>> 0).toByte
   }
-}
-
-final class MessagePacker {
-  import MessagePacker._
-
-  def encode[A](a: A)(implicit A: Encoder[A]): Either[Throwable, Array[Byte]] =
-    pack(A(a))
-
-  def pack(doc: Json): Either[Throwable, Array[Byte]] = {
-    val acc: mutable.ArrayBuilder[Byte] = mutable.ArrayBuilder.make[Byte]
-    Either.catchNonFatal {
-      go(doc, acc)
-      acc.result
-    }
-  }
-
-  def double(x: BigDecimal): Boolean = x.scale != 0
-
-  def go(json: Json, acc: mutable.ArrayBuilder[Byte]): Unit =
-    json.fold[Unit](
-      formatNil(acc),
-      x => formatBoolFamily(x, acc),
-      x => {
-        val n = x.toBigDecimal
-        n match {
-          case None => ()
-          case Some(v) if double(v) =>
-            formatFloatFamily(v.toDouble, acc)
-          case Some(v) if v.isValidLong =>
-            formatIntFamily(v.toLong, acc)
-          case Some(v) if v.signum == -1 =>
-            formatIntFamily(`0x3d`, v.toBigInt(), acc)
-          case Some(v) =>
-            formatIntFamily(`0xcf`, v.toBigInt(), acc)
-        }
-      },
-      x => formatStrFamily(x, acc),
-      xs => {
-        formatArrayFamilyHeader(xs.size, acc)
-        xs.foreach(go(_, acc))
-      },
-      x => {
-        val xs = x.toList
-        formatMapFamilyHeader(xs.size, acc)
-        xs.foreach {
-          case (key, (v)) =>
-            formatStrFamily(key, acc)
-            go(v, acc)
-        }
-      }
-    )
 }

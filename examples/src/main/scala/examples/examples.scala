@@ -8,10 +8,12 @@ import java.util.concurrent.atomic.AtomicLong
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
 import fluflu.queue.Client
+import fluflu.msgpack.circe._
 import io.circe.generic.auto._
 import _root_.monix.eval.Task
 import _root_.monix.execution.Scheduler
 import _root_.monix.reactive.{Consumer, Observable}
+import fluflu.Event.EventTime
 
 import scala.util.Random
 
@@ -83,8 +85,8 @@ abstract class Base extends LazyLogging {
 
   implicit val clock: Clock = Clock.systemUTC()
 
-  val host = sys.env.getOrElse("FLUENTD_HOST", "localhost")
-  val port = sys.env.getOrElse("FLUENTD_PORT", "24224").toInt
+  val host = sys.props.getOrElse("fluentd.host", "localhost")
+  val port = sys.props.getOrElse("fluentd.port", "24224").toInt
   implicit val connection: Connection = Connection(
     remote = new InetSocketAddress(host, port),
     timeout = Duration.ofSeconds(10),
@@ -125,7 +127,7 @@ object Scheduling extends Base {
 
       override def run(): Unit = {
         if (counter.get < len.toLong) {
-          val e = Event("example", "schedule", Num(counter.getAndIncrement()))
+          val e = EventTime("example", "schedule", Num(counter.getAndIncrement()))
           client.emit(e)
           _start(delay)
         }
