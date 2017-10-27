@@ -9,8 +9,8 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.11.11", "2.12.3")
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.11.11", "2.12.4")
 )
 
 val catsVersion = "1.0.0-MF"
@@ -139,7 +139,6 @@ lazy val examples = project.in(file("examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    scalaVersion := "2.12.3",
     crossScalaVersions := Seq("2.12.3"),
     fork := true,
     libraryDependencies ++= Seq(
@@ -173,8 +172,7 @@ lazy val benchmark = (project in file("benchmark"))
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
     name := "benchmark",
-    scalaVersion := "2.12.3",
-    crossScalaVersions := Seq("2.12.3"),
+    crossScalaVersions := Seq("2.12.4"),
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % catsVersion,
       "org.scalatest" %% "scalatest" % scalatestVersion,
