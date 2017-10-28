@@ -11,8 +11,11 @@ lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 lazy val buildSettings = Seq(
   name := "fluflu",
   organization := "com.github.tkrs",
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.11", "2.12.4")
+  scalaVersion := Ver.`scala2.12`,
+  crossScalaVersions := Seq(
+    Ver.`scala2.11`,
+    Ver.`scala2.12`,
+  ),
 )
 
 lazy val baseSettings = Seq(
@@ -26,7 +29,7 @@ lazy val baseSettings = Seq(
   ),
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
-  scalacOptions in (Compile, console) += "-Yrepl-class-based"
+  scalacOptions in (Compile, console) += "-Yrepl-class-based",
 )
 
 lazy val publishSettings = Seq(
@@ -47,7 +50,7 @@ lazy val publishSettings = Seq(
   scmInfo := Some(
     ScmInfo(
       url("https://github.com/tkrs/fluflu"),
-      "scm:git:git@github.com:tkrs/fluflu.git"
+      "scm:git:git@github.com:tkrs/fluflu.git",
     )
   ),
   pomExtra :=
@@ -59,7 +62,7 @@ lazy val publishSettings = Seq(
       </developer>
     </developers>,
   pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray),
-  pgpSecretRing := sys.env.get("PGP_SECRET_RING").fold(pgpSecretRing.value)(file)
+  pgpSecretRing := sys.env.get("PGP_SECRET_RING").fold(pgpSecretRing.value)(file),
 ) ++ credentialSettings
 
 lazy val credentialSettings = Seq(
@@ -72,7 +75,7 @@ lazy val credentialSettings = Seq(
 lazy val noPublishSettings = Seq(
   publish := ((): Unit),
   publishLocal := ((): Unit),
-  publishArtifact := false
+  publishArtifact := false,
 )
 
 lazy val core = project.in(file("core"))
@@ -80,7 +83,7 @@ lazy val core = project.in(file("core"))
   .settings(
     description := "fluflu core",
     moduleName := "fluflu-core",
-    name := "core"
+    name := "core",
   )
   .dependsOn(msgpack)
 
@@ -89,7 +92,7 @@ lazy val queue = project.in(file("queue"))
   .settings(
     description := "fluflu queue",
     moduleName := "fluflu-queue",
-    name := "queue"
+    name := "queue",
   )
   .dependsOn(core, msgpack)
 
@@ -100,7 +103,7 @@ lazy val monix = project.in(file("monix"))
     moduleName := "fluflu-monix",
     name := "monix",
     libraryDependencies ++= Seq(
-      Pkg.monixEval
+      Pkg.monixEval,
     )
   )
   .dependsOn(core, msgpack)
@@ -134,7 +137,7 @@ lazy val examples = project.in(file("examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    crossScalaVersions := Seq("2.12.3"),
+    crossScalaVersions := Seq(Ver.`scala2.12`),
     fork := true,
     libraryDependencies ++= Seq(
       Pkg.monixReactive,
@@ -150,7 +153,7 @@ lazy val tests = project.in(file("tests"))
     description := "fluflu tests",
     moduleName := "fluflu-tests",
     name := "tests",
-    libraryDependencies ++= Pkg.forTest
+    libraryDependencies ++= Pkg.forTest,
   )
   .settings(fork in test := true)
   .settings(fork := true)
@@ -163,8 +166,8 @@ lazy val benchmark = (project in file("benchmark"))
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
     name := "benchmark",
-    crossScalaVersions := Seq("2.12.4"),
-    libraryDependencies ++= Pkg.forTest
+    crossScalaVersions := Seq(Ver.`scala2.12`),
+    libraryDependencies ++= Pkg.forTest,
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(`msgpack-circe`)
@@ -183,5 +186,5 @@ lazy val compilerOptions = Seq(
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
   "-Xfuture",
-  "-Xlint"
+  "-Xlint",
 )

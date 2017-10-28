@@ -2,6 +2,8 @@ import sbt._
 
 object Deps {
   val Ver = new {
+    val `scala2.12`      = "2.12.4"
+    val `scala2.11`      = "2.11.11"
     val cats             = "1.0.0-MF"
     val circe            = "0.9.0-M1"
     val scalacheck       = "1.13.5"
