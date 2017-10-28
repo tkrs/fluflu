@@ -1,3 +1,5 @@
+import Deps._
+
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
@@ -13,21 +15,14 @@ lazy val buildSettings = Seq(
   crossScalaVersions := Seq("2.11.11", "2.12.4")
 )
 
-val catsVersion = "1.0.0-MF"
-val circeVersion = "0.9.0-M1"
-val scalacheckVersion = "1.13.5"
-val scalatestVersion = "3.0.3"
-val monixVersion = "2.3.0"
-
 lazy val baseSettings = Seq(
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.sonatypeRepo("snapshots")
   ),
   libraryDependencies ++= Seq(
-    "io.monix" %% "monix-eval" % monixVersion,
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
-    "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
+    Pkg.scalaLogging,
+    Pkg.scalaJava8Compat,
   ),
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
@@ -105,7 +100,7 @@ lazy val monix = project.in(file("monix"))
     moduleName := "fluflu-monix",
     name := "monix",
     libraryDependencies ++= Seq(
-      "io.monix" %% "monix-eval" % monixVersion
+      Pkg.monixEval
     )
   )
   .dependsOn(core, msgpack)
@@ -125,9 +120,9 @@ lazy val `msgpack-circe` = project.in(file("msgpack-circe"))
     moduleName := "fluflu-msgpack-circe",
     name := "msgpack-circe",
     libraryDependencies ++= Seq(
-      "io.circe" %% "circe-core" % circeVersion,
-      "io.circe" %% "circe-generic" % circeVersion,
-      "io.circe" %% "circe-parser" % circeVersion
+      Pkg.circeCore,
+      Pkg.circeGeneric,
+      Pkg.circeParser,
     )
   )
   .dependsOn(msgpack)
@@ -142,8 +137,8 @@ lazy val examples = project.in(file("examples"))
     crossScalaVersions := Seq("2.12.3"),
     fork := true,
     libraryDependencies ++= Seq(
-      "io.monix" %% "monix-reactive" % monixVersion,
-      "ch.qos.logback" % "logback-classic" % "1.2.3"
+      Pkg.monixReactive,
+      Pkg.logbackClassic,
     )
   )
   .dependsOn(queue, monix, `msgpack-circe`)
@@ -155,11 +150,7 @@ lazy val tests = project.in(file("tests"))
     description := "fluflu tests",
     moduleName := "fluflu-tests",
     name := "tests",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % catsVersion,
-      "org.scalatest" %% "scalatest" % scalatestVersion,
-      "org.scalacheck" %% "scalacheck" % scalacheckVersion
-    )
+    libraryDependencies ++= Pkg.forTest
   )
   .settings(fork in test := true)
   .settings(fork := true)
@@ -173,11 +164,7 @@ lazy val benchmark = (project in file("benchmark"))
     moduleName := "fluflu-benchmark",
     name := "benchmark",
     crossScalaVersions := Seq("2.12.4"),
-    libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % catsVersion,
-      "org.scalatest" %% "scalatest" % scalatestVersion,
-      "org.scalacheck" %% "scalacheck" % scalacheckVersion
-    )
+    libraryDependencies ++= Pkg.forTest
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(`msgpack-circe`)
