@@ -114,6 +114,9 @@ lazy val msgpack = project.in(file("msgpack"))
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
     name := "msgpack",
+    libraryDependencies ++= Seq(
+      Pkg.msgpackJava,
+    )
   )
 
 lazy val `msgpack-circe` = project.in(file("msgpack-circe"))

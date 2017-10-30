@@ -6,12 +6,13 @@ import fluflu.msgpack.circe.{MessagePacker, MessageUnpacker}
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
+import org.msgpack.core.MessagePack
 
 class TestData {
   import models._
 
-  val packer   = MessagePacker()
-  val unpacker = MessageUnpacker(_)
+  val packer   = MessagePacker(MessagePack.DEFAULT_PACKER_CONFIG)
+  val unpacker = MessageUnpacker(_: ByteBuffer, MessagePack.DEFAULT_UNPACKER_CONFIG)
 
   val string100: String       = "a" * 100
   val string1000: String      = "z" * 1000

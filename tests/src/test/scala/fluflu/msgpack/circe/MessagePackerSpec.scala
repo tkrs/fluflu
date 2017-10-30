@@ -4,6 +4,7 @@ import cats.Eq
 import cats.syntax.either._
 import io.circe.Json
 import io.circe.parser._
+import org.msgpack.core.MessagePack
 import org.scalatest._
 
 class MessagePackerSpec extends WordSpec {
@@ -12,7 +13,7 @@ class MessagePackerSpec extends WordSpec {
     case (a, b) => a == b
   })
 
-  val instance = MessagePacker()
+  val instance = MessagePacker(MessagePack.DEFAULT_PACKER_CONFIG)
 
   val fmt: Byte => String    = "0x%02x" format _
   val p: Array[Byte] => Unit = a => println(a.map(fmt).mkString(" "))
