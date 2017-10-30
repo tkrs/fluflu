@@ -4,6 +4,8 @@ package msgpack
 import java.nio.CharBuffer
 import java.nio.charset.{CharsetEncoder, StandardCharsets}
 
+import org.msgpack.core.MessagePack.Code
+
 import scala.collection.mutable
 
 trait Packer[A] {
@@ -27,13 +29,16 @@ object Packer {
 
   def formatStrFamilyHeader(sz: Int, builder: mutable.ArrayBuilder[Byte]): Unit =
     if (sz < 32)
-      builder += (0xa0 | sz).toByte
-    else if (sz < 65536) {
-      builder += `0xda`
+      builder += (Code.FIXSTR_PREFIX | sz).toByte
+    else if (sz < 256) {
+      builder += Code.STR8
+      builder += sz.toByte
+    } else if (sz < 65536) {
+      builder += Code.STR16
       builder += (sz >>> 8).toByte
       builder += (sz >>> 0).toByte
     } else {
-      builder += `0xdb`
+      builder += Code.STR32
       builder += (sz >>> 24).toByte
       builder += (sz >>> 16).toByte
       builder += (sz >>> 8).toByte
