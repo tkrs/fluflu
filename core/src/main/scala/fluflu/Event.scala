@@ -33,7 +33,8 @@ object Event {
             val acc = mutable.ArrayBuilder.make[Byte]
             acc += 0x93.toByte
             Packer.formatStrFamily(s"$prefix.$label", acc)
-            Packer.formatLong(0xcf.toByte, time.getEpochSecond, acc)
+            acc += 0xce.toByte
+            Packer.formatUInt32(time.getEpochSecond, acc)
             A(record) match {
               case Right(arr) =>
                 acc ++= arr

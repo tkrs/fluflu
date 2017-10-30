@@ -56,16 +56,4 @@ object Packer {
     buf.clear()
     cb.clear()
   }
-
-  def formatLong(t: Byte, v: Long, builder: mutable.ArrayBuilder[Byte]): Unit = {
-    builder += t
-    builder += (v >>> 56).toByte
-    builder += (v >>> 48).toByte
-    builder += (v >>> 40).toByte
-    builder += (v >>> 32).toByte
-    builder += (v >>> 24).toByte
-    builder += (v >>> 16).toByte
-    builder += (v >>> 8).toByte
-    builder += (v >>> 0).toByte
-  }
 }
