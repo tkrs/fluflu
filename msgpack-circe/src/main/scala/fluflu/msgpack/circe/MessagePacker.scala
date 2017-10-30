@@ -4,55 +4,53 @@ package circe
 import cats.syntax.either._
 import io.circe.{Encoder, Json}
 import io.circe.syntax._
-
-import scala.collection.mutable
+import org.msgpack.core.MessagePack.PackerConfig
+import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
 object MessagePacker {
-  def apply(): MessagePacker = new MessagePacker
+  def apply(config: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG): MessagePacker =
+    new MessagePacker(config: PackerConfig)
 }
 
-final class MessagePacker {
-  import Packer._
+final class MessagePacker(config: PackerConfig) {
 
   def encode[A: Encoder](a: A): Either[Throwable, Array[Byte]] = pack(a.asJson)
 
   def pack(doc: Json): Either[Throwable, Array[Byte]] = Either.catchNonFatal {
-    val acc = mutable.ArrayBuilder.make[Byte]
-    go(doc, acc)
-    acc.result
+    val msgPack = config.newBufferPacker()
+    go(doc, msgPack)
+    msgPack.toByteArray
   }
 
   def double(x: BigDecimal): Boolean = x.scale != 0
 
-  def go(json: Json, acc: mutable.ArrayBuilder[Byte]): Unit =
+  def go(json: Json, acc: MessageBufferPacker): Unit =
     json.fold[Unit](
-      formatNil(acc),
-      x => formatBoolFamily(x, acc),
+      acc.packNil(),
+      acc.packBoolean,
       x => {
         val n = x.toBigDecimal
         n match {
           case None => ()
           case Some(v) if double(v) =>
-            formatFloatFamily(v.toDouble, acc)
+            acc.packDouble(v.toDouble)
           case Some(v) if v.isValidLong =>
-            formatIntFamily(v.toLong, acc)
-          case Some(v) if v.signum == -1 =>
-            formatIntFamily(`0x3d`, v.toBigInt(), acc)
+            acc.packLong(v.toLong)
           case Some(v) =>
-            formatIntFamily(`0xcf`, v.toBigInt(), acc)
+            acc.packBigInteger(v.toBigInt().bigInteger)
         }
       },
-      x => formatStrFamily(x, acc),
+      acc.packString,
       xs => {
-        formatArrayFamilyHeader(xs.size, acc)
+        acc.packArrayHeader(xs.size)
         xs.foreach(go(_, acc))
       },
       x => {
         val xs = x.toList
-        formatMapFamilyHeader(xs.size, acc)
+        acc.packMapHeader(xs.size)
         xs.foreach {
           case (key, (v)) =>
-            formatStrFamily(key, acc)
+            acc.packString(key)
             go(v, acc)
         }
       }

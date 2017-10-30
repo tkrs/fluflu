@@ -13,7 +13,7 @@ import io.circe.generic.auto._
 import _root_.monix.eval.Task
 import _root_.monix.execution.Scheduler
 import _root_.monix.reactive.{Consumer, Observable}
-import fluflu.Event.EventTime
+// import fluflu.Event.EventTime
 
 import scala.util.Random
 
@@ -127,7 +127,8 @@ object Scheduling extends Base {
 
       override def run(): Unit = {
         if (counter.get < len.toLong) {
-          val e = EventTime("example", "schedule", Num(counter.getAndIncrement()))
+          // val e = EventTime("example", "schedule", Num(counter.getAndIncrement()))
+          val e = Event("example", "schedule", Num(counter.getAndIncrement()))
           client.emit(e)
           _start(delay)
         }

@@ -4,11 +4,13 @@ import java.nio.ByteBuffer
 
 import cats.syntax.either._
 import io.circe.Json
+import org.msgpack.core.MessagePack
 import org.scalatest.WordSpec
 
 class MessageUnpackerSpec extends WordSpec {
 
-  val instance: Array[Byte] => MessageUnpacker = src => new MessageUnpacker(ByteBuffer.wrap(src))
+  val instance: Array[Byte] => MessageUnpacker =
+    src => new MessageUnpacker(ByteBuffer.wrap(src), MessagePack.DEFAULT_UNPACKER_CONFIG)
 
   "nil" should {
     "be decoded" in {
@@ -26,7 +28,7 @@ class MessageUnpackerSpec extends WordSpec {
   "float32" should {
     "be decoded" in {
       val a = Array(0xca, 0x3f, 0x9d, 0x70, 0xa4).map(_.toByte)
-      assert(instance(a).decode[Json] === Either.right(Json.fromDoubleOrNull(1.23f)))
+      assert(instance(a).decode[Json] === Either.right(Json.fromFloatOrNull(1.23f)))
     }
   }
 
