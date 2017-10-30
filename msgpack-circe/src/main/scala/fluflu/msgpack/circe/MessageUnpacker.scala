@@ -21,8 +21,6 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
 
   private[this] val buffer = config.newUnpacker(src)
 
-  private[this] var offset = src.position
-
   def decode[A: Decoder]: Either[Error, A] =
     Either
       .catchOnly[Exception](unpack)
@@ -90,13 +88,15 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
   }
 
   private def unpackMap(size: Int): Json = {
-    val key: Json => String = _.asString match {
-      case Some(s) => s
-      case None =>
-        throw new Exception(s"Failed to decode key by the offset: $offset")
-    }
-    def loop(i: Int, acc: Vector[(String, Json)]): Vector[(String, Json)] =
-      if (i == 0) acc else loop(i - 1, acc :+ (key(unpack) -> unpack))
+    @tailrec def loop(i: Int, acc: Vector[(String, Json)]): Vector[(String, Json)] =
+      if (i == 0) acc
+      else
+        unpack.asString match {
+          case Some(key) =>
+            loop(i - 1, acc :+ (key -> unpack))
+          case None =>
+            acc
+        }
     Json.fromFields(loop(size, Vector.empty))
   }
 }
