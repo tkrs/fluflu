@@ -1,12 +1,15 @@
 package fluflu
 package msgpack
 
+import java.io.Closeable
 import java.nio.CharBuffer
 import java.nio.charset.{CharsetEncoder, StandardCharsets}
 
 import org.msgpack.core.MessagePack.Code
 
 import scala.collection.mutable
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 trait Packer[A] {
   def apply(a: A): Either[Throwable, Array[Byte]]
@@ -18,6 +21,24 @@ object Packer {
     new ThreadLocal[CharsetEncoder] {
       override def initialValue(): CharsetEncoder =
         StandardCharsets.UTF_8.newEncoder()
+    }
+
+  def using[R <: Closeable, A](get: Try[R])(fr: R => Try[A]): Try[A] =
+    get match {
+      case Success(r) =>
+        fr(r)
+          .map { a =>
+            r.close(); a
+          }
+          .recoverWith {
+            case NonFatal(e) =>
+              try r.close()
+              catch {
+                case NonFatal(_) => ()
+              }
+              Failure(e)
+          }
+      case Failure(e) => Failure(e)
     }
 
   def formatUInt32(v: Long, builder: mutable.ArrayBuilder[Byte]): Unit = {

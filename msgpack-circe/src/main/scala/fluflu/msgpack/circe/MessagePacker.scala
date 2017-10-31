@@ -7,6 +7,8 @@ import io.circe.syntax._
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
+import scala.util.{Failure, Success, Try}
+
 object MessagePacker {
   def apply(config: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG): MessagePacker =
     new MessagePacker(config: PackerConfig)
@@ -16,15 +18,16 @@ final class MessagePacker(config: PackerConfig) {
 
   def encode[A: Encoder](a: A): Either[Throwable, Array[Byte]] = pack(a.asJson)
 
-  def pack(doc: Json): Either[Throwable, Array[Byte]] = Either.catchNonFatal {
-    val msgPack = config.newBufferPacker()
-    go(doc, msgPack)
-    msgPack.toByteArray
+  def pack(doc: Json): Either[Throwable, Array[Byte]] = {
+    Packer.using(Try(config.newBufferPacker()))(r => Try { go(doc, r); r.toByteArray }) match {
+      case Success(v) => Right(v)
+      case Failure(e) => Left(e)
+    }
   }
 
-  def double(x: BigDecimal): Boolean = x.scale != 0
+  private def double(x: BigDecimal): Boolean = x.scale != 0
 
-  def go(json: Json, acc: MessageBufferPacker): Unit =
+  private def go(json: Json, acc: MessageBufferPacker): Unit =
     json.fold[Unit](
       acc.packNil(),
       acc.packBoolean,
