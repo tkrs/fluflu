@@ -32,6 +32,7 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
     else
       buffer.getNextFormat() match {
         case MF.NIL =>
+          buffer.skipValue()
           Json.Null
         case MF.BOOLEAN =>
           Json.fromBoolean(buffer.unpackBoolean())
@@ -90,13 +91,16 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
   private def unpackMap(size: Int): Json = {
     @tailrec def loop(i: Int, acc: Vector[(String, Json)]): Vector[(String, Json)] =
       if (i == 0) acc
-      else
-        unpack.asString match {
+      else {
+        val kj = unpack
+        val vj = unpack
+        kj.asString match {
           case Some(key) =>
-            loop(i - 1, acc :+ (key -> unpack))
+            loop(i - 1, acc :+ (key -> vj))
           case None =>
-            acc
+            throw new Exception(s"Unpack map was failed. current position: $i")
         }
+      }
     Json.fromFields(loop(size, Vector.empty))
   }
 }
