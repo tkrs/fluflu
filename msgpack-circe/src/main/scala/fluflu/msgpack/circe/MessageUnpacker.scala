@@ -3,11 +3,14 @@ package fluflu.msgpack.circe
 import java.nio.ByteBuffer
 
 import cats.syntax.either._
+import fluflu.msgpack.Packer
 import io.circe.{Decoder, DecodingFailure, Error, Json}
-import org.msgpack.core.{MessageFormat => MF, MessagePack}
+import org.msgpack.core.{MessagePack, MessageFormat => MF}
 import org.msgpack.core.MessagePack.UnpackerConfig
+import org.msgpack.core.{MessageUnpacker => MUnpacker}
 
 import scala.annotation.tailrec
+import scala.util.Try
 
 object MessageUnpacker {
 
@@ -19,15 +22,19 @@ object MessageUnpacker {
 
 final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
 
-  private[this] val buffer = config.newUnpacker(src)
-
   def decode[A: Decoder]: Either[Error, A] =
     Either
       .catchOnly[Exception](unpack)
       .leftMap(e => DecodingFailure(e.getMessage, List.empty))
       .flatMap(_.as[A])
 
-  def unpack(): Json =
+  def unpack: Json = {
+    Packer
+      .using(Try(config.newUnpacker(src)))(r => Try(unpack0(r)))
+      .get
+  }
+
+  private def unpack0(buffer: MUnpacker): Json =
     if (!buffer.hasNext) Json.obj()
     else
       buffer.getNextFormat() match {
@@ -50,10 +57,10 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
           Json.fromString(buffer.unpackString())
         case MF.FIXARRAY | MF.ARRAY16 | MF.ARRAY32 =>
           val size = buffer.unpackArrayHeader()
-          unpackList(size)
+          unpackList(size, buffer)
         case MF.FIXMAP | MF.MAP16 | MF.MAP32 =>
           val size = buffer.unpackMapHeader()
-          unpackMap(size)
+          unpackMap(size, buffer)
         case MF.EXT8 =>
           // TODO:
           throw new Exception("Unsupported type: EXT8")
@@ -82,18 +89,18 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
           Json.Null
       }
 
-  private def unpackList(limit: Int): Json = {
+  private def unpackList(limit: Int, buffer: MUnpacker): Json = {
     @tailrec def loop(i: Int, acc: Vector[Json]): Vector[Json] =
-      if (i == limit) acc else loop(i + 1, acc :+ unpack)
+      if (i == limit) acc else loop(i + 1, acc :+ unpack0(buffer))
     Json.fromValues(loop(0, Vector.empty))
   }
 
-  private def unpackMap(size: Int): Json = {
+  private def unpackMap(size: Int, buffer: MUnpacker): Json = {
     @tailrec def loop(i: Int, acc: Vector[(String, Json)]): Vector[(String, Json)] =
       if (i == 0) acc
       else {
-        val kj = unpack
-        val vj = unpack
+        val kj = unpack0(buffer)
+        val vj = unpack0(buffer)
         kj.asString match {
           case Some(key) =>
             loop(i - 1, acc :+ (key -> vj))
