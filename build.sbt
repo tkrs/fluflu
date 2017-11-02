@@ -191,3 +191,6 @@ lazy val compilerOptions = Seq(
   "-Xfuture",
   "-Xlint",
 )
+
+addCommandAlias("cleanAll", ";clean;benchmark/clean;examples/clean")
+addCommandAlias("compileAll", ";compile;benchmark/compile;examples/compile")
