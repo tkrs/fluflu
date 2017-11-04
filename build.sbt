@@ -78,7 +78,7 @@ lazy val noPublishSettings = Seq(
   publishArtifact := false,
 )
 
-lazy val core = project.in(file("core"))
+lazy val core = project.in(file("modules/core"))
   .settings(allSettings)
   .settings(
     description := "fluflu core",
@@ -87,7 +87,7 @@ lazy val core = project.in(file("core"))
   )
   .dependsOn(msgpack)
 
-lazy val queue = project.in(file("queue"))
+lazy val queue = project.in(file("modules/queue"))
   .settings(allSettings)
   .settings(
     description := "fluflu queue",
@@ -96,7 +96,7 @@ lazy val queue = project.in(file("queue"))
   )
   .dependsOn(core, msgpack)
 
-lazy val monix = project.in(file("monix"))
+lazy val monix = project.in(file("modules/monix"))
   .settings(allSettings)
   .settings(
     description := "fluflu monix",
@@ -108,7 +108,7 @@ lazy val monix = project.in(file("monix"))
   )
   .dependsOn(core, msgpack)
 
-lazy val msgpack = project.in(file("msgpack"))
+lazy val msgpack = project.in(file("modules/msgpack"))
   .settings(allSettings)
   .settings(
     description := "fluflu msgpack",
@@ -119,7 +119,7 @@ lazy val msgpack = project.in(file("msgpack"))
     )
   )
 
-lazy val `msgpack-circe` = project.in(file("msgpack-circe"))
+lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
   .settings(allSettings)
   .settings(
     description := "fluflu msgpack-circe",
@@ -133,7 +133,7 @@ lazy val `msgpack-circe` = project.in(file("msgpack-circe"))
   )
   .dependsOn(msgpack)
 
-lazy val examples = project.in(file("examples"))
+lazy val examples = project.in(file("modules/examples"))
   .settings(allSettings)
   .settings(noPublishSettings)
   .settings(
@@ -149,7 +149,7 @@ lazy val examples = project.in(file("examples"))
   )
   .dependsOn(queue, monix, `msgpack-circe`)
 
-lazy val tests = project.in(file("tests"))
+lazy val tests = project.in(file("modules/tests"))
   .settings(allSettings)
   .settings(noPublishSettings)
   .settings(
@@ -162,7 +162,7 @@ lazy val tests = project.in(file("tests"))
   .settings(fork := true)
   .dependsOn(core, monix, queue, `msgpack-circe`)
 
-lazy val benchmark = (project in file("benchmark"))
+lazy val benchmark = (project in file("modules/benchmark"))
   .settings(allSettings)
   .settings(noPublishSettings)
   .settings(
