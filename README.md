@@ -15,7 +15,7 @@ libraryDependencies += "com.github.tkrs" %% "fluflu-monix" % "${version}"
 libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "${version}"
 ```
 
-And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/examples/src/main/scala)
+And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/modules/examples/src/main/scala)
 
 ## Benchmarks
 
