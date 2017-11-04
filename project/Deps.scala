@@ -11,7 +11,6 @@ object Deps {
     val scalatest        = "3.0.3"
     val monix            = "2.3.0"
     val scalaLogging     = "3.5.0"
-    val scalaJava8Compat = "0.8.0"
     val logback          = "1.2.3"
     val msgpackJava      = "0.8.13"
   }
@@ -20,7 +19,6 @@ object Deps {
     lazy val monixEval        = "io.monix"                   %% "monix-eval"         % Ver.monix
     lazy val monixReactive    = "io.monix"                   %% "monix-reactive"     % Ver.monix
     lazy val scalaLogging     = "com.typesafe.scala-logging" %% "scala-logging"      % Ver.scalaLogging
-    lazy val scalaJava8Compat = "org.scala-lang.modules"     %% "scala-java8-compat" % Ver.scalaJava8Compat
     lazy val msgpackJava      = "org.msgpack"                % "msgpack-core"        % Ver.msgpackJava
     lazy val circeCore        = "io.circe"                   %% "circe-core"         % Ver.circe
     lazy val circeGeneric     = "io.circe"                   %% "circe-generic"      % Ver.circe

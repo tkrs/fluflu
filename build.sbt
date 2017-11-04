@@ -25,7 +25,6 @@ lazy val baseSettings = Seq(
   ),
   libraryDependencies ++= Seq(
     Pkg.scalaLogging,
-    Pkg.scalaJava8Compat,
   ),
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
