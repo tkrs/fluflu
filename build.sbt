@@ -3,8 +3,8 @@ import Deps._
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, monix, msgpack, `msgpack-circe`, tests)
-  .dependsOn(core, queue, monix, msgpack, `msgpack-circe`)
+  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, tests)
+  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
@@ -107,6 +107,18 @@ lazy val monix = project.in(file("modules/monix"))
   )
   .dependsOn(core, msgpack)
 
+lazy val `monix-reactive` = project.in(file("modules/monix-reactive"))
+  .settings(allSettings)
+  .settings(
+    description := "fluflu monix-reactive",
+    moduleName := "fluflu-monix-reactive",
+    name := "monix-reactive",
+    libraryDependencies ++= Seq(
+      Pkg.monixReactive,
+    )
+  )
+  .dependsOn(core, msgpack)
+
 lazy val msgpack = project.in(file("modules/msgpack"))
   .settings(allSettings)
   .settings(
@@ -159,7 +171,7 @@ lazy val tests = project.in(file("modules/tests"))
   )
   .settings(fork in test := true)
   .settings(fork := true)
-  .dependsOn(core, monix, queue, `msgpack-circe`)
+  .dependsOn(core, monix, `monix-reactive`, queue, `msgpack-circe`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
   .settings(allSettings)
