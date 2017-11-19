@@ -24,7 +24,7 @@ object Connection {
       implicit clock: Clock = Clock.systemUTC()): Connection =
     new ConnectionImpl(remote, timeout, backoff)
 
-  final class ConnectionImpl(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
+  class ConnectionImpl(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
       implicit clock: Clock)
       extends Connection
       with LazyLogging {
@@ -35,7 +35,7 @@ object Connection {
     @volatile private[this] var channel: SocketChannel =
       doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)).get
 
-    private def channelOpen = {
+    protected def channelOpen: SocketChannel = {
       val ch = SocketChannel.open()
       ch.setOption[JBool](TCP_NODELAY, true)
       ch.setOption[JBool](SO_KEEPALIVE, true)
@@ -46,9 +46,10 @@ object Connection {
                                    retries: Int,
                                    sleeper: Sleeper): Try[SocketChannel] = {
       logger.debug(s"Start connecting to $remote. retries: $retries")
-      try if (ch.connect(remote)) Success(ch)
-      else Failure(new IOException(s"Failed to connect: $remote"))
-      catch {
+      try {
+        if (ch.connect(remote)) Success(ch)
+        else Failure(new IOException(s"Failed to connect: $remote"))
+      } catch {
         case e: IOException =>
           if (sleeper.giveUp) {
             closed = true
@@ -67,7 +68,11 @@ object Connection {
     def connect(): Try[SocketChannel] =
       if (closed) Failure(new Exception("Already closed"))
       else if (channel.isConnected) Success(channel)
-      else doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock))
+      else
+        doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)) match {
+          case t @ Success(c) => channel = c; t
+          case f              => f
+        }
 
     def isClosed: Boolean =
       closed || channel.isConnected
