@@ -169,8 +169,7 @@ lazy val tests = project.in(file("modules/tests"))
     name := "tests",
     libraryDependencies ++= Pkg.forTest,
   )
-  .settings(fork in test := true)
-  .settings(fork := true)
+  .settings(fork in Test := true)
   .dependsOn(core, monix, `monix-reactive`, queue, `msgpack-circe`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
