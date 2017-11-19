@@ -181,7 +181,7 @@ object Counter extends Base {
     val observable =
       Observable.repeatEval(Event("example", "counter", Num(counter.getAndIncrement())))
 
-    val consumer = Consumer.foreachParallelAsync[Event[Num]](4)(event =>
+    val consumer = Consumer.foreachParallelTask[Event[Num]](4)(event =>
       Task(client.emit(event) match {
         case Left(e) => logger.error(s"Exception occurred: ${e.getMessage}")
         case _       => ()
