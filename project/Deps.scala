@@ -12,7 +12,7 @@ object Deps {
     val monix        = "3.0.0-M3"
     val scalaLogging = "3.7.2"
     val logback      = "1.2.3"
-    val msgpackJava  = "0.8.13"
+    val msgpackJava  = "0.8.14"
     val mockito      = "2.12.0"
   }
 
