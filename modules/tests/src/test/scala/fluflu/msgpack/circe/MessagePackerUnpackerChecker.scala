@@ -2,7 +2,6 @@ package fluflu.msgpack.circe
 
 import java.nio.ByteBuffer
 
-import cats.syntax.either._
 import io.circe.{Decoder, Encoder}
 import org.msgpack.core.MessagePack
 import org.scalacheck.{Arbitrary, Prop, Shrink}
@@ -18,9 +17,9 @@ class MessagePackerUnpackerChecker extends FunSuite with Checkers {
   def roundTrip[A: Encoder: Decoder: Arbitrary: Shrink]: Assertion =
     check(Prop.forAll({ a: A =>
       val packer   = MessagePacker(MessagePack.DEFAULT_PACKER_CONFIG)
-      val x        = packer.encode(a).toTry.get
+      val Right(x) = packer.encode(a)
       val unpacker = MessageUnpacker(ByteBuffer.wrap(x))
-      val b        = unpacker.decode[A].toTry.get
+      val Right(b) = unpacker.decode[A]
       a === b
     }))
 
