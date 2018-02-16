@@ -2,8 +2,8 @@ package fluflu.msgpack
 
 import java.util.concurrent.TimeUnit
 
-import io.circe.{Error, Json}
 import io.circe.generic.auto._
+import io.circe.{Error, Json}
 import org.openjdk.jmh.annotations._
 
 @State(Scope.Thread)

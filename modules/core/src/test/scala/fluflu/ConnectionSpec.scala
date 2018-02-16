@@ -6,11 +6,11 @@ import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
 
-import org.scalatest.{FunSpec, Matchers}
-import org.scalatest.mockito.MockitoSugar
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{FunSpec, Matchers}
 
 import scala.util.Failure
 
