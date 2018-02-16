@@ -17,6 +17,8 @@ trait Packer[A] {
 
 object Packer {
 
+  def apply[A](implicit P: Packer[A]): Packer[A] = P
+
   private[this] val encoder: ThreadLocal[CharsetEncoder] =
     new ThreadLocal[CharsetEncoder] {
       override def initialValue(): CharsetEncoder =

@@ -2,6 +2,7 @@ package fluflu.msgpack
 
 import java.nio.ByteBuffer
 
+import cats.syntax.either._
 import fluflu.msgpack.circe.{MessagePacker, MessageUnpacker}
 import io.circe.Json
 import io.circe.generic.auto._

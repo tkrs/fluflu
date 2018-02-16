@@ -3,8 +3,8 @@ import Deps._
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, tests)
-  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`)
+  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, benchmark, examples)
+  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, benchmark, examples)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
@@ -23,9 +23,7 @@ lazy val baseSettings = Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.sonatypeRepo("snapshots")
   ),
-  libraryDependencies ++= Seq(
-    Pkg.scalaLogging,
-  ),
+  libraryDependencies ++= Seq(Pkg.scalaLogging) ++ Pkg.forTest,
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
   scalacOptions in (Compile, console) += "-Yrepl-class-based",
@@ -101,6 +99,8 @@ lazy val monix = project.in(file("modules/monix"))
     description := "fluflu monix",
     moduleName := "fluflu-monix",
     name := "monix",
+  )
+  .settings(
     libraryDependencies ++= Seq(
       Pkg.monixEval,
     )
@@ -113,6 +113,8 @@ lazy val `monix-reactive` = project.in(file("modules/monix-reactive"))
     description := "fluflu monix-reactive",
     moduleName := "fluflu-monix-reactive",
     name := "monix-reactive",
+  )
+  .settings(
     libraryDependencies ++= Seq(
       Pkg.monixReactive,
     )
@@ -136,6 +138,8 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
     description := "fluflu msgpack-circe",
     moduleName := "fluflu-msgpack-circe",
     name := "msgpack-circe",
+  )
+  .settings(
     libraryDependencies ++= Seq(
       Pkg.circeCore,
       Pkg.circeGeneric,
@@ -151,26 +155,15 @@ lazy val examples = project.in(file("modules/examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    crossScalaVersions := Seq(Ver.`scala2.12`),
     fork := true,
+  )
+  .settings(
     libraryDependencies ++= Seq(
       Pkg.monixReactive,
       Pkg.logbackClassic,
     )
   )
   .dependsOn(queue, monix, `msgpack-circe`)
-
-lazy val tests = project.in(file("modules/tests"))
-  .settings(allSettings)
-  .settings(noPublishSettings)
-  .settings(
-    description := "fluflu tests",
-    moduleName := "fluflu-tests",
-    name := "tests",
-    libraryDependencies ++= Pkg.forTest,
-  )
-  .settings(fork in Test := true)
-  .dependsOn(core, monix, `monix-reactive`, queue, `msgpack-circe`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
   .settings(allSettings)
@@ -179,11 +172,12 @@ lazy val benchmark = (project in file("modules/benchmark"))
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
     name := "benchmark",
-    crossScalaVersions := Seq(Ver.`scala2.12`),
+  )
+  .settings(
     libraryDependencies ++= Pkg.forTest,
   )
   .enablePlugins(JmhPlugin)
-  .dependsOn(`msgpack-circe`)
+  .dependsOn(`msgpack-circe` % "test->test")
 
 lazy val compilerOptions = Seq(
   "-deprecation",
