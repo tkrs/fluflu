@@ -27,6 +27,7 @@ lazy val baseSettings = Seq(
   scalacOptions ++= compilerOptions ++ Seq("-Ywarn-unused-import"),
   scalacOptions in (Compile, console) ~= (_ filterNot (_ == "-Ywarn-unused-import")),
   scalacOptions in (Compile, console) += "-Yrepl-class-based",
+  fork in Test := true,
 )
 
 lazy val publishSettings = Seq(
@@ -155,13 +156,16 @@ lazy val examples = project.in(file("modules/examples"))
     description := "fluflu examples",
     moduleName := "fluflu-examples",
     name := "examples",
-    fork := true,
+    fork in run := true,
   )
   .settings(
     libraryDependencies ++= Seq(
       Pkg.monixReactive,
       Pkg.logbackClassic,
     )
+  )
+  .settings(
+    coverageEnabled := false
   )
   .dependsOn(queue, monix, `msgpack-circe`)
 
@@ -175,6 +179,9 @@ lazy val benchmark = (project in file("modules/benchmark"))
   )
   .settings(
     libraryDependencies ++= Pkg.forTest,
+  )
+  .settings(
+    coverageEnabled := false
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(`msgpack-circe` % "test->test")
