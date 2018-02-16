@@ -83,7 +83,7 @@ lazy val core = project.in(file("modules/core"))
     moduleName := "fluflu-core",
     name := "core",
   )
-  .dependsOn(msgpack)
+  .dependsOn(msgpack % "compile->compile;test->test")
 
 lazy val queue = project.in(file("modules/queue"))
   .settings(allSettings)
@@ -147,7 +147,7 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
       Pkg.circeParser,
     )
   )
-  .dependsOn(msgpack)
+  .dependsOn(msgpack % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
   .settings(allSettings)
@@ -176,9 +176,6 @@ lazy val benchmark = (project in file("modules/benchmark"))
     description := "fluflu benchmark",
     moduleName := "fluflu-benchmark",
     name := "benchmark",
-  )
-  .settings(
-    libraryDependencies ++= Pkg.forTest,
   )
   .settings(
     coverageEnabled := false
