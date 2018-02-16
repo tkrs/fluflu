@@ -2,7 +2,7 @@ package fluflu
 
 import java.time.Instant
 
-import fluflu.msgpack.Packer
+import fluflu.msgpack.{MsgpackHelper, Packer}
 import org.scalatest.FunSpec
 
 class EventSpec extends FunSpec with MsgpackHelper {

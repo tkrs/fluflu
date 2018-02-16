@@ -1,5 +1,6 @@
 package fluflu.msgpack.circe
 
+import fluflu.msgpack.MsgpackHelper
 import io.circe.Json
 import io.circe.parser._
 import org.msgpack.core.MessagePack
