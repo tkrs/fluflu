@@ -38,7 +38,6 @@ object Connection {
     protected def channelOpen: SocketChannel = {
       val ch = SocketChannel.open()
       ch.setOption[JBool](TCP_NODELAY, true)
-      ch.setOption[JBool](SO_KEEPALIVE, true)
       ch
     }
 
