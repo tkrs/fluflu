@@ -2,7 +2,7 @@ package fluflu
 
 import java.io.IOException
 import java.lang.{Boolean => JBool}
-import java.net.{InetSocketAddress, StandardSocketOptions}
+import java.net.{InetSocketAddress, NetworkInterface, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
@@ -20,12 +20,36 @@ trait Connection {
 
 object Connection {
 
-  def apply(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
-      implicit clock: Clock = Clock.systemUTC()): Connection =
-    new ConnectionImpl(remote, timeout, backoff)
+  final case class SocketOptions(
+      soBroadcast: Option[Boolean] = None,
+      soKeepalive: Option[Boolean] = None,
+      soSndbuf: Option[Int] = None,
+      soRcvbuf: Option[Int] = None,
+      soReuseAddr: Option[Boolean] = None,
+      soLinger: Option[Int] = None,
+      ipTos: Option[Int] = None,
+      ipMulticastIf: Option[NetworkInterface] = None,
+      ipMulticastTtl: Option[Int] = None,
+      ipMulticastLoop: Option[Boolean] = None,
+      tcpNoDelay: Option[Boolean] = Some(true)
+  )
 
-  class ConnectionImpl(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
-      implicit clock: Clock)
+  def apply(remote: InetSocketAddress,
+            socketOptions: SocketOptions,
+            timeout: Duration,
+            backoff: Backoff,
+            clock: Clock): Connection =
+    new ConnectionImpl(remote, socketOptions, timeout, backoff)(clock)
+
+  def apply(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
+      implicit
+      clock: Clock = Clock.systemUTC()): Connection =
+    new ConnectionImpl(remote, SocketOptions(), timeout, backoff)(clock)
+
+  class ConnectionImpl(remote: InetSocketAddress,
+                       socketOptions: SocketOptions,
+                       timeout: Duration,
+                       backoff: Backoff)(implicit clock: Clock)
       extends Connection
       with LazyLogging {
     import StandardSocketOptions._
@@ -37,7 +61,17 @@ object Connection {
 
     protected def channelOpen: SocketChannel = {
       val ch = SocketChannel.open()
-      ch.setOption[JBool](TCP_NODELAY, true)
+      socketOptions.ipMulticastIf.foreach(ch.setOption(IP_MULTICAST_IF, _))
+      socketOptions.ipMulticastLoop.foreach(ch.setOption[JBool](IP_MULTICAST_LOOP, _))
+      socketOptions.ipMulticastTtl.foreach(ch.setOption[Integer](IP_MULTICAST_TTL, _))
+      socketOptions.ipTos.foreach(ch.setOption[Integer](IP_TOS, _))
+      socketOptions.soBroadcast.foreach(ch.setOption[JBool](SO_BROADCAST, _))
+      socketOptions.soKeepalive.foreach(ch.setOption[JBool](SO_KEEPALIVE, _))
+      socketOptions.soLinger.foreach(ch.setOption[Integer](SO_LINGER, _))
+      socketOptions.soSndbuf.foreach(ch.setOption[Integer](SO_SNDBUF, _))
+      socketOptions.soRcvbuf.foreach(ch.setOption[Integer](SO_RCVBUF, _))
+      socketOptions.soReuseAddr.foreach(ch.setOption[JBool](SO_REUSEADDR, _))
+      socketOptions.tcpNoDelay.foreach(ch.setOption[JBool](TCP_NODELAY, _))
       ch
     }
 
