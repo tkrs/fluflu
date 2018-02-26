@@ -6,6 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
 
+import fluflu.Connection.SocketOptions
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
@@ -33,7 +34,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       when(channelMock.isConnected)
         .thenReturn(false)
         .thenReturn(true)
-      final class TestConnection extends ConnectionImpl(address, duration, backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel =
           channelMock
       }
@@ -44,7 +46,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       when(channelMock.connect(address))
         .thenThrow(new IOException("ε≡≡ﾍ( ´Д`)ﾉ"))
       doNothing().when(channelMock).close()
-      final class TestConnection extends ConnectionImpl(address, Duration.ofMillis(5), backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), Duration.ofMillis(5), backoff) {
         override protected def channelOpen: SocketChannel =
           channelMock
       }
@@ -64,7 +67,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
           1
         }
       })
-      final class TestConnection extends ConnectionImpl(address, duration, backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel = channelMock
       }
       val conn = new TestConnection
@@ -79,7 +83,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       when(channelMock.connect(address)).thenReturn(true)
       when(channelMock.write(arg)).thenThrow(new IOException)
 
-      final class TestConnection extends ConnectionImpl(address, duration, backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel = channelMock
       }
       val conn = new TestConnection
@@ -96,7 +101,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       when(channelMock.write(arg))
         .thenThrow(new IOException)
 
-      final class TestConnection extends ConnectionImpl(address, duration, backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel = channelMock
       }
       val conn = new TestConnection
@@ -115,7 +121,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
         .thenReturn(false)
 
       when(address.toString).thenReturn("hahahahahaha")
-      final class TestConnection extends ConnectionImpl(address, duration, backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel = channelMock
       }
 
@@ -131,7 +138,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       doNothing().when(channelMock).close()
       when(channelMock.isConnected)
         .thenReturn(true)
-      final class TestConnection extends ConnectionImpl(address, duration, backoff) {
+      final class TestConnection
+          extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel =
           channelMock
       }
