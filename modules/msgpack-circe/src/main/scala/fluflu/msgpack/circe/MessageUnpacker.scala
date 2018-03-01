@@ -10,6 +10,7 @@ import org.msgpack.core.MessagePack.UnpackerConfig
 import org.msgpack.core.{MessageUnpacker => MUnpacker}
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.util.Try
 
 object MessageUnpacker {
@@ -90,24 +91,26 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
       }
 
   private def unpackList(limit: Int, buffer: MUnpacker): Json = {
-    @tailrec def loop(i: Int, acc: Vector[Json]): Vector[Json] =
-      if (i == limit) acc else loop(i + 1, acc :+ unpack0(buffer))
-    Json.fromValues(loop(0, Vector.empty))
+    @tailrec def loop(i: Int, acc: mutable.Builder[Json, Vector[Json]]): Vector[Json] =
+      if (i == limit) acc.result() else loop(i + 1, acc += unpack0(buffer))
+    Json.fromValues(loop(0, Vector.newBuilder[Json]))
   }
 
   private def unpackMap(size: Int, buffer: MUnpacker): Json = {
-    @tailrec def loop(i: Int, acc: Vector[(String, Json)]): Vector[(String, Json)] =
-      if (i == 0) acc
+    @tailrec def loop(
+        i: Int,
+        acc: mutable.Builder[(String, Json), Vector[(String, Json)]]): Vector[(String, Json)] =
+      if (i == 0) acc.result()
       else {
         val kj = unpack0(buffer)
         val vj = unpack0(buffer)
         kj.asString match {
           case Some(key) =>
-            loop(i - 1, acc :+ (key -> vj))
+            loop(i - 1, acc += (key -> vj))
           case None =>
             throw new Exception(s"Unpack map was failed. current position: $i")
         }
       }
-    Json.fromFields(loop(size, Vector.empty))
+    Json.fromFields(loop(size, Vector.newBuilder))
   }
 }
