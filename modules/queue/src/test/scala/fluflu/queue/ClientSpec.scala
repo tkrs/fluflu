@@ -19,16 +19,13 @@ class ClientSpec extends Suite with BeforeAndAfterEach {
   }
 
   implicit val packer: Packer[Int] = new Packer[Int] {
-    override def apply(a: Int): Either[Throwable, Array[Byte]] = Right(Array.empty)
+    def apply(a: Int): Either[Throwable, Array[Byte]] = Right(Array(0x10))
   }
 
-  describe("Client") {
-    describe("emit") {
-      it("should emit successfully") {
-        val x = client.emit("t.l", 10)
-        assert(x.isRight)
-      }
+  describe("emit") {
+    it("should emit successfully") {
+      val x = client.emit("t.l", 10)
+      assert(x.isRight)
     }
   }
-
 }

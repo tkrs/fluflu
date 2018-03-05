@@ -154,9 +154,6 @@ object Scheduling extends Base {
 
     client.close()
 
-    val remaining = client.remaining
-    if (remaining > 0) logger.info(s"Client has remaining data: ${client.remaining}.")
-
     logger.info(s"Elapsed: ${NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
   }
 }
