@@ -1,0 +1,37 @@
+package fluflu.queue
+
+import java.time.Duration
+import java.util.concurrent.{ArrayBlockingQueue, Executors}
+
+import fluflu.Messenger
+import org.scalatest.{BeforeAndAfterEach, FunSpec}
+
+class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
+
+  var consumer: Consumer                                           = _
+  var messenger: Messenger                                         = _
+  var queue: java.util.Queue[() => Either[Throwable, Array[Byte]]] = _
+
+  override def beforeEach(): Unit = {
+    val scheduler = Executors.newSingleThreadScheduledExecutor()
+    queue = new ArrayBlockingQueue[() => Either[Throwable, Array[Byte]]](10)
+    messenger = new Messenger {
+      def emit(elms: Iterator[Array[Byte]]): Unit = elms.foreach(_ => ())
+      def close(): Unit                           = ()
+    }
+    consumer =
+      new Consumer(Duration.ofMillis(1), Duration.ofMillis(10), 5, messenger, scheduler, queue)
+  }
+
+  override def afterEach(): Unit = {
+    consumer.close()
+  }
+
+  describe("consume") {
+    it("should consume max-pulls messages") {
+      (1 to 6).foreach(_ => queue.offer(() => Right(Array(0x01.toByte))))
+      consumer.consume()
+      assert(queue.size() === 1)
+    }
+  }
+}
