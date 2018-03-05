@@ -1,6 +1,7 @@
 package fluflu.msgpack
 
 import java.io.Closeable
+import java.time.Instant
 
 import org.scalatest._
 
@@ -49,6 +50,37 @@ class PackerSpec extends FunSpec with MsgpackHelper {
         val builder: mutable.ArrayBuilder[Byte] = Array.newBuilder
         Packer.formatStrFamilyHeader(size, builder)
         assert(builder.result() === expected)
+      }
+    }
+  }
+
+  describe("Packer[String]") {
+    it("should create String's header correctly") {
+      val expected = x"a5 61 62 63 65 64"
+      Packer[String].apply("abced") match {
+        case Right(v) =>
+          assert(v === expected)
+        case Left(e) =>
+          fail(e)
+      }
+    }
+  }
+
+  describe("Packer[(String, A, Instant)]") {
+    it("should create String's header correctly") {
+      val expected = x"93 a5 61 62 63 65 64 11 10"
+      implicit val packInstant: Packer[Instant] = new Packer[Instant] {
+        def apply(a: Instant): Either[Throwable, Array[Byte]] = Right(Array(0x11))
+      }
+      implicit val packMap: Packer[Map[String, String]] = new Packer[Map[String, String]] {
+        def apply(a: Map[String, String]): Either[Throwable, Array[Byte]] = Right(Array(0x10))
+      }
+      Packer[(String, Map[String, String], Instant)]
+        .apply(("abced", Map("a" -> "b"), Instant.ofEpochSecond(1500000000L, 1L))) match {
+        case Right(v) =>
+          assert(v === expected)
+        case Left(e) =>
+          fail(e)
       }
     }
   }

@@ -2,9 +2,7 @@ package fluflu
 
 trait Messenger {
 
-  type Elm = () => Either[Throwable, Array[Byte]]
-
-  def emit(elms: Iterator[Elm]): Unit
+  def emit(elms: Iterator[Array[Byte]]): Unit
 
   def close(): Unit
 }
@@ -12,7 +10,7 @@ trait Messenger {
 object Messenger {
 
   lazy val noop: Messenger = new Messenger {
-    override def emit(elms: Iterator[Elm]): Unit = ()
-    override def close(): Unit                   = ()
+    def emit(elms: Iterator[Array[Byte]]): Unit = ()
+    def close(): Unit                           = ()
   }
 }

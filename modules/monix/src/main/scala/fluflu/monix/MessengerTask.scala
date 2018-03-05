@@ -17,7 +17,7 @@ final class MessengerTask(timeout: Duration, backoff: Backoff)(implicit connecti
     extends Messenger
     with LazyLogging {
 
-  def emit(elms: Iterator[Elm]): Unit = {
+  def emit(elms: Iterator[Array[Byte]]): Unit = {
     def go(buffer: ByteBuffer, retries: Int, start: Instant): Task[Unit] =
       Task
         .fromTry(connection.write(buffer))
@@ -34,14 +34,8 @@ final class MessengerTask(timeout: Duration, backoff: Backoff)(implicit connecti
                 .delayExecution(backoff.nextDelay(retries).toNanos.nanos)
         }
 
-    val tasks = elms.map { elm =>
-      elm() match {
-        case Left(e) =>
-          logger.warn(e.getMessage)
-          Task.unit
-        case Right(arr) =>
-          go(ByteBuffer.wrap(arr), 0, Instant.now(clock))
-      }
+    val tasks = elms.map { arr =>
+      go(ByteBuffer.wrap(arr), 0, Instant.now(clock))
     }
 
     Task

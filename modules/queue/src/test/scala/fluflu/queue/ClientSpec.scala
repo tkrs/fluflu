@@ -2,8 +2,8 @@ package fluflu.queue
 
 import java.time.Duration
 
-import fluflu.Event
 import fluflu.msgpack.Packer
+import fluflu.time.integer._
 import org.scalatest.BeforeAndAfterEach
 
 class ClientSpec extends Suite with BeforeAndAfterEach {
@@ -25,7 +25,7 @@ class ClientSpec extends Suite with BeforeAndAfterEach {
   describe("Client") {
     describe("emit") {
       it("should emit successfully") {
-        val x = client.emit(Event.apply("t", "l", 10))
+        val x = client.emit("t.l", 10)
         assert(x.isRight)
       }
     }
