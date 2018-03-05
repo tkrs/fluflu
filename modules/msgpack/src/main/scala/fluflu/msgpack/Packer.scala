@@ -4,6 +4,7 @@ package msgpack
 import java.io.Closeable
 import java.nio.CharBuffer
 import java.nio.charset.{CharsetEncoder, StandardCharsets}
+import java.time.Instant
 
 import org.msgpack.core.MessagePack.Code
 
@@ -18,6 +19,42 @@ trait Packer[A] {
 object Packer {
 
   def apply[A](implicit P: Packer[A]): Packer[A] = P
+
+  implicit val packString: Packer[String] = new Packer[String] {
+    def apply(a: String): Either[Throwable, Array[Byte]] = {
+      val acc = mutable.ArrayBuilder.make[Byte]
+      Packer.formatStrFamily(a, acc)
+      Right(acc.result())
+    }
+  }
+
+  implicit def packEvent[A](implicit
+                            S: Packer[String],
+                            A: Packer[A],
+                            T: Packer[Instant]): Packer[(String, A, Instant)] =
+    new Packer[(String, A, Instant)] {
+      def apply(v: (String, A, Instant)): Either[Throwable, Array[Byte]] = v match {
+        case (s, a, t) =>
+          S(s) match {
+            case Left(e) => Left(e)
+            case Right(v1) =>
+              T(t) match {
+                case Left(e) => Left(e)
+                case Right(v2) =>
+                  A(a) match {
+                    case Left(e) => Left(e)
+                    case Right(v3) =>
+                      val acc = mutable.ArrayBuilder.make[Byte]
+                      acc += 0x93.toByte
+                      acc ++= v1
+                      acc ++= v2
+                      acc ++= v3
+                      Right(acc.result())
+                  }
+              }
+          }
+      }
+    }
 
   private[this] val encoder: ThreadLocal[CharsetEncoder] =
     new ThreadLocal[CharsetEncoder] {

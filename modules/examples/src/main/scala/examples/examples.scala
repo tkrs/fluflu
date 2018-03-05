@@ -10,10 +10,7 @@ import fluflu._
 import fluflu.queue.Client
 import fluflu.msgpack.circe._
 import io.circe.generic.auto._
-import _root_.monix.eval.Task
 import _root_.monix.execution.Scheduler
-import _root_.monix.reactive.{Consumer, Observable}
-import fluflu.Event.EventTime
 
 import scala.util.Random
 
@@ -94,6 +91,7 @@ abstract class Base extends LazyLogging {
   )
 
   val client: Client = {
+    import fluflu.time.eventTime._
 
     implicit val consumeScheduler: Scheduler =
       Scheduler.singleThread(name = "fluflu-example")
@@ -127,9 +125,7 @@ object Scheduling extends Base {
 
       override def run(): Unit = {
         if (counter.get < len.toLong) {
-          val e = EventTime("example", "schedule", Num(counter.getAndIncrement()))
-          // val e = Event("example", "schedule", Num(counter.getAndIncrement()))
-          client.emit(e)
+          client.emit("docker.schedule", Num(counter.getAndIncrement()))
           _start(delay)
         }
       }
@@ -162,40 +158,5 @@ object Scheduling extends Base {
     if (remaining > 0) logger.info(s"Client has remaining data: ${client.remaining}.")
 
     logger.info(s"Elapsed: ${NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
-  }
-}
-
-/**
-  * sbt "examples/runMain examples.Counter 5000"
-  */
-object Counter extends Base {
-  import scala.concurrent.Await
-  import scala.concurrent.duration._
-
-  def main(args: Array[String]): Unit = {
-
-    implicit val scheduler = Scheduler.computation(daemonic = false)
-
-    val counter = new AtomicLong(0)
-
-    val observable =
-      Observable.repeatEval(Event("example", "counter", Num(counter.getAndIncrement())))
-
-    val consumer = Consumer.foreachParallelTask[Event[Num]](4)(event =>
-      Task(client.emit(event) match {
-        case Left(e) => logger.error(s"Exception occurred: ${e.getMessage}")
-        case _       => ()
-      }))
-
-    val task = observable.consumeWith(consumer)
-
-    logger.info("Start emitting.")
-    try Await.result(task.runAsync, args(0).toLong.millis)
-    catch {
-      case e: TimeoutException => ()
-      case e: Throwable        => e.printStackTrace()
-    } finally {
-      client.close()
-    }
   }
 }

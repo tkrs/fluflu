@@ -34,16 +34,11 @@ final class MessengerStream(timeout: Duration, backoff: Backoff)(implicit connec
               .delayExecution(backoff.nextDelay(retries).toNanos.nanos)
       }
 
-  private[this] val consumer = Consumer.foreachTask[Elm] { f =>
-    f() match {
-      case Left(e) =>
-        logger.warn(e.getMessage); Task.unit
-      case Right(arr) =>
-        go(ByteBuffer.wrap(arr), 0, Instant.now(clock))
-    }
+  private[this] val consumer = Consumer.foreachTask { arr: Array[Byte] =>
+    go(ByteBuffer.wrap(arr), 0, Instant.now(clock))
   }
 
-  def emit(elms: Iterator[Elm]): Unit = {
+  def emit(elms: Iterator[Array[Byte]]): Unit = {
     val observer = Observable.fromIterator(elms)
     consumer(observer).runAsync(new Callback[Unit] {
       override def onError(ex: Throwable): Unit =

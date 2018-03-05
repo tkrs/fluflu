@@ -33,7 +33,7 @@ class MessengerStreamSpec extends FunSpec with Matchers {
       val messenger: Messenger =
         new MessengerStream(Duration.ofMillis(200), Backoff.fix(Duration.ofMillis(10)))
 
-      messenger.emit(Iterator(() => Right(Array(1, 2, 3).map(_.toByte))))
+      messenger.emit(Iterator(Array(1, 2, 3).map(_.toByte)))
     }
   }
 }
