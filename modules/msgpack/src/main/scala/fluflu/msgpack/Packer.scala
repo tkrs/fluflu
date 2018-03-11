@@ -7,6 +7,7 @@ import java.nio.charset.{CharsetEncoder, StandardCharsets}
 import java.time.Instant
 
 import org.msgpack.core.MessagePack.Code
+import org.msgpack.core.MessagePack.Code.{ARRAY16, ARRAY32, FIXARRAY_PREFIX}
 
 import scala.collection.mutable
 import scala.util.control.NonFatal
@@ -51,6 +52,28 @@ object Packer {
                       acc ++= v3
                       Right(acc.result())
                   }
+              }
+          }
+      }
+    }
+
+  implicit def packEntry[A](implicit
+                            A: Packer[A],
+                            T: Packer[Instant]): Packer[(A, Instant)] =
+    new Packer[(A, Instant)] {
+      def apply(v: (A, Instant)): Either[Throwable, Array[Byte]] = v match {
+        case (a, t) =>
+          T(t) match {
+            case Left(e) => Left(e)
+            case Right(v2) =>
+              A(a) match {
+                case Left(e) => Left(e)
+                case Right(v3) =>
+                  val acc = mutable.ArrayBuilder.make[Byte]
+                  acc += 0x92.toByte
+                  acc ++= v2
+                  acc ++= v3
+                  Right(acc.result())
               }
           }
       }
@@ -115,5 +138,21 @@ object Packer {
     builder ++= arr
     buf.clear()
     cb.clear()
+  }
+
+  def formatArrayHeader(arraySize: Int, builder: mutable.ArrayBuilder[Byte]): Unit = {
+    if (arraySize < (1 << 4)) {
+      builder += (FIXARRAY_PREFIX | arraySize).toByte
+    } else if (arraySize < (1 << 16)) {
+      builder += ARRAY16
+      builder += (arraySize >>> 8).toByte
+      builder += (arraySize >>> 0).toByte
+    } else {
+      builder += ARRAY32
+      builder += (arraySize >>> 24).toByte
+      builder += (arraySize >>> 16).toByte
+      builder += (arraySize >>> 8).toByte
+      builder += (arraySize >>> 0).toByte
+    }
   }
 }

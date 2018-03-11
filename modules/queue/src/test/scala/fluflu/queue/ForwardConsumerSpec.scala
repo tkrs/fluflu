@@ -6,9 +6,9 @@ import java.util.concurrent.{ArrayBlockingQueue, Executors}
 import fluflu.Messenger
 import org.scalatest.{BeforeAndAfterEach, FunSpec}
 
-class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
+class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach {
 
-  type Elem = () => Either[Throwable, Array[Byte]]
+  type Elem = () => (String, Either[Throwable, Array[Byte]])
 
   var consumer: Consumer           = _
   var messenger: Messenger         = _
@@ -21,14 +21,14 @@ class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
       def emit(elms: Iterator[Array[Byte]]): Unit = elms.foreach(_ => ())
       def close(): Unit                           = ()
     }
-    consumer = new DefaultConsumer(Duration.ofMillis(1), 5, messenger, scheduler, queue)
+    consumer = new ForwardConsumer(Duration.ofMillis(1), 5, messenger, scheduler, queue)
   }
 
   override def afterEach(): Unit = {}
 
   describe("consume") {
     it("should consume max-pulls messages") {
-      (1 to 6).foreach(_ => queue.offer(() => Right(Array(0x01.toByte))))
+      (1 to 6).foreach(_ => queue.offer(() => ("tag", Right(Array(0x01.toByte)))))
       consumer.consume()
       assert(queue.size() === 1)
     }
