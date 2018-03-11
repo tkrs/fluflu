@@ -8,8 +8,8 @@ import java.util.concurrent.ScheduledExecutorService
 import com.typesafe.scalalogging.LazyLogging
 import fluflu.msgpack.Packer
 
-final class Producer private[fluflu] (scheduler: ScheduledExecutorService,
-                                      queue: util.Queue[() => Either[Throwable, Array[Byte]]])(
+final class Producer private[queue] (scheduler: ScheduledExecutorService,
+                                     queue: util.Queue[() => Either[Throwable, Array[Byte]]])(
     implicit
     PS: Packer[String],
     PI: Packer[Instant])

@@ -12,7 +12,7 @@ package object fluflu {
         if (!term) throw new Exception("Pool did not terminate")
       }
     } catch {
-      case ie: InterruptedException =>
+      case _: InterruptedException =>
         pool.shutdownNow()
         Thread.currentThread().interrupt()
     }

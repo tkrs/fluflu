@@ -7,6 +7,7 @@ import java.util.concurrent.{ConcurrentLinkedQueue, Executors}
 import fluflu.msgpack.Packer
 
 trait Client {
+
   def emit[A: Packer](tag: String, record: A): Either[Exception, Unit] =
     emit(tag, record, Instant.now)
 
@@ -25,7 +26,7 @@ object Client {
                                       PI: Packer[Instant]): Client = {
     val scheduler = Executors.newSingleThreadScheduledExecutor()
     val queue     = new ConcurrentLinkedQueue[() => Either[Throwable, Array[Byte]]]
-    val consumer  = new Consumer(delay, terminationDelay, maximumPulls, messenger, scheduler, queue)
+    val consumer  = new Consumer(delay, maximumPulls, messenger, scheduler, queue)
     val producer  = new Producer(scheduler, queue)
 
     new Client {
@@ -37,7 +38,8 @@ object Client {
       }
 
       def close(): Unit = {
-        consumer.close()
+        awaitTermination(scheduler, terminationDelay)
+        consumer.consume()
       }
     }
   }

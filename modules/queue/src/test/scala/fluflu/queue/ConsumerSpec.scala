@@ -8,9 +8,11 @@ import org.scalatest.{BeforeAndAfterEach, FunSpec}
 
 class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
 
-  var consumer: Consumer                                           = _
-  var messenger: Messenger                                         = _
-  var queue: java.util.Queue[() => Either[Throwable, Array[Byte]]] = _
+  type Elem = () => Either[Throwable, Array[Byte]]
+
+  var consumer: Consumer           = _
+  var messenger: Messenger         = _
+  var queue: java.util.Queue[Elem] = _
 
   override def beforeEach(): Unit = {
     val scheduler = Executors.newSingleThreadScheduledExecutor()
@@ -19,13 +21,10 @@ class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
       def emit(elms: Iterator[Array[Byte]]): Unit = elms.foreach(_ => ())
       def close(): Unit                           = ()
     }
-    consumer =
-      new Consumer(Duration.ofMillis(1), Duration.ofMillis(10), 5, messenger, scheduler, queue)
+    consumer = new Consumer(Duration.ofMillis(1), 5, messenger, scheduler, queue)
   }
 
-  override def afterEach(): Unit = {
-    consumer.close()
-  }
+  override def afterEach(): Unit = {}
 
   describe("consume") {
     it("should consume max-pulls messages") {

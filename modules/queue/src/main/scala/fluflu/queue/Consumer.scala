@@ -8,12 +8,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
 
-final class Consumer private[fluflu] (val delay: Duration,
-                                      val terminationDelay: Duration,
-                                      val maximumPulls: Int,
-                                      val messenger: Messenger,
-                                      val scheduler: ScheduledExecutorService,
-                                      val queue: util.Queue[() => Either[Throwable, Array[Byte]]])
+final class Consumer private[queue] (val delay: Duration,
+                                     val maximumPulls: Int,
+                                     val messenger: Messenger,
+                                     val scheduler: ScheduledExecutorService,
+                                     val queue: util.Queue[() => Either[Throwable, Array[Byte]]])
     extends Runnable
     with LazyLogging {
 
@@ -32,7 +31,7 @@ final class Consumer private[fluflu] (val delay: Duration,
         .map {
           _() match {
             case x @ Right(_) => x
-            case x @ Left(e)  => logger.warn(e.getMessage); x
+            case x @ Left(e)  => logger.warn(s"An exception occurred: ${e.getMessage}", e); x
           }
         }
         .collect {
@@ -50,13 +49,6 @@ final class Consumer private[fluflu] (val delay: Duration,
       running.set(false)
       if (!(scheduler.isShutdown || queue.isEmpty)) Consumer.start(this)
     }
-
-  def close(): Unit = {
-    if (!queue.isEmpty)
-      logger.debug(s"A message queue has remaining: ${queue.size()}")
-    awaitTermination(scheduler, terminationDelay)
-    consume()
-  }
 }
 
 object Consumer extends LazyLogging {
@@ -66,5 +58,4 @@ object Consumer extends LazyLogging {
       logger.trace(s"Reschedule consuming to start after [${c.delay.toNanos} nanoseconds]")
       c.scheduler.schedule(c, c.delay.toNanos, TimeUnit.NANOSECONDS)
     }
-
 }
