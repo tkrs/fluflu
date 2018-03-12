@@ -39,7 +39,10 @@ final class ForwardConsumer private[queue] (
             if (m.contains(s)) m(s) += x
             else m += s -> ListBuffer(x)
           case (s, x @ Left(e)) =>
-            logger.warn(s"An exception occurred: tag: $s, cause: ${e.getMessage}", e); x
+            logger.warn(
+              s"An exception occurred during serializing record: tag: $s, cause: ${e.getMessage}",
+              e)
+            x
         }
       }
 
@@ -49,7 +52,9 @@ final class ForwardConsumer private[queue] (
           val acc = Array.newBuilder[Byte]
           PS.apply(s) match {
             case l @ Left(e) =>
-              logger.warn(s"An exception occurred: tag: $s, cause: ${e.getMessage}", e); l
+              logger.warn(s"An exception occurred during packing tag: $s, cause: ${e.getMessage}",
+                          e)
+              l
             case Right(v) =>
               acc += 0x92.toByte
               acc ++= v
