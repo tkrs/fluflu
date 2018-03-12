@@ -8,15 +8,45 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
 
-final class Consumer private[queue] (val delay: Duration,
-                                     val maximumPulls: Int,
-                                     val messenger: Messenger,
-                                     val scheduler: ScheduledExecutorService,
-                                     val queue: util.Queue[() => Either[Throwable, Array[Byte]]])
-    extends Runnable
+private[queue] trait Consumer extends Runnable {
+  type E
+
+  protected val delay: Duration
+  protected val scheduler: ScheduledExecutorService
+  protected val queue: util.Queue[E]
+
+  protected val running = new AtomicBoolean(false)
+
+  def consume(): Unit
+
+  def run(): Unit =
+    if (queue.isEmpty) running.set(false)
+    else {
+      consume()
+      running.set(false)
+      if (!(scheduler.isShutdown || queue.isEmpty)) Consumer.start(this)
+    }
+}
+
+object Consumer extends LazyLogging {
+
+  def start(c: Consumer): Unit =
+    if (c.running.compareAndSet(false, true)) {
+      logger.trace(s"Reschedule consuming to start after [${c.delay.toNanos} nanoseconds]")
+      c.scheduler.schedule(c, c.delay.toNanos, TimeUnit.NANOSECONDS)
+    }
+}
+
+final class DefaultConsumer private[queue] (
+    val delay: Duration,
+    val maximumPulls: Int,
+    val messenger: Messenger,
+    val scheduler: ScheduledExecutorService,
+    val queue: util.Queue[() => Either[Throwable, Array[Byte]]])
+    extends Consumer
     with LazyLogging {
 
-  private val running = new AtomicBoolean(false)
+  type E = () => Either[Throwable, Array[Byte]]
 
   def consume(): Unit = {
     logger.trace(s"Start emitting. remaining: $queue")
@@ -41,21 +71,4 @@ final class Consumer private[queue] (val delay: Duration,
     logger.trace(
       s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")
   }
-
-  def run(): Unit =
-    if (queue.isEmpty) running.set(false)
-    else {
-      consume()
-      running.set(false)
-      if (!(scheduler.isShutdown || queue.isEmpty)) Consumer.start(this)
-    }
-}
-
-object Consumer extends LazyLogging {
-
-  def start(c: Consumer): Unit =
-    if (c.running.compareAndSet(false, true)) {
-      logger.trace(s"Reschedule consuming to start after [${c.delay.toNanos} nanoseconds]")
-      c.scheduler.schedule(c, c.delay.toNanos, TimeUnit.NANOSECONDS)
-    }
 }
