@@ -10,9 +10,11 @@ Yet another fluentd logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.github.tkrs" %% "fluflu-msgpack-circe" % "${version}"
-libraryDependencies += "com.github.tkrs" %% "fluflu-monix" % "${version}"
-libraryDependencies += "com.github.tkrs" %% "fluflu-queue" % "${version}"
+libraryDependencies ++= Seq(
+  "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z",
+  "com.github.tkrs" %% "fluflu-monix" % "x.y.z",
+  "com.github.tkrs" %% "fluflu-queue" % "x.y.z"
+)
 ```
 
 And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/modules/examples/src/main/scala)
