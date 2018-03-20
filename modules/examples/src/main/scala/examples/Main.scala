@@ -11,52 +11,44 @@ import fluflu.queue.Client
 import fluflu.msgpack.circe._
 import io.circe.generic.auto._
 import _root_.monix.execution.Scheduler
+import _root_.monix.eval.Task
+import _root_.monix.reactive.{Consumer, Observable}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.Random
 
 /**
-  * sbt "examples/runMain examples.Scheduling 10 100"
+  * sbt "examples/runMain examples.Main 10 100"
   */
-object Scheduling extends Base {
+object Main extends Base {
   import TimeUnit._
 
   def main(args: Array[String]): Unit = {
+    val counter = new AtomicLong(0)
+    val start   = System.nanoTime()
 
-    object R extends Runnable {
-      private[this] val sec     = args(0).toLong
-      private[this] val len     = args(1).toLong
-      private[this] val delay   = SECONDS.toNanos(sec) / len
-      private[this] val counter = new AtomicLong(0)
-      private[this] val emitter = Executors.newSingleThreadScheduledExecutor()
+    val seconds = args(0).toLong
+    val count   = args(1).toLong
 
-      override def run(): Unit = {
-        if (counter.get < len.toLong) {
-          client.emit("docker.schedule", Num(counter.getAndIncrement()))
-          _start(delay)
-        }
-      }
+    val observable = Observable
+      .repeatEval(counter.getAndIncrement())
+      .take(count)
 
-      def start: ScheduledFuture[_] = {
-        logger.info("Start consuming thread.")
-        _start(0)
-      }
-
-      def await(): Unit = {
-        if (!emitter.awaitTermination(SECONDS.toNanos(sec), NANOSECONDS))
-          emitter.shutdownNow()
-
-        logger.info(s"Emitted count: ${counter.get}")
-      }
-
-      private def _start(delay: Long): ScheduledFuture[_] =
-        emitter.schedule(this, delay, NANOSECONDS)
+    val consumer = Consumer.foreachParallelTask(10) { x: Long =>
+      Task(client.emit("docker.main", Num(x)))
     }
 
-    val start = System.nanoTime()
+    implicit val s: Scheduler = Scheduler.computation(10)
 
-    R.start
-    R.start
-    R.await()
+    val f = consumer.apply(observable).runAsync
+
+    TimeUnit.SECONDS.sleep(seconds)
+
+    try Await.result(f, 1.milli)
+    catch {
+      case _: TimeoutException => ()
+    }
 
     client.close()
 
@@ -120,8 +112,9 @@ abstract class Base extends LazyLogging {
     )
 
     Client.forwardable(
-      delay = Duration.ofMillis(500),
-      terminationDelay = Duration.ofSeconds(10)
+      delay = Duration.ofNanos(50),
+      terminationDelay = Duration.ofSeconds(10),
+      maximumPulls = 5000
     )
   }
 }

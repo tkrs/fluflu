@@ -15,7 +15,10 @@
         </encoder>
     </appender>
 
-    <root level="info">
+    <root level="trace">
+        <appender-ref ref="file" />
+    </root>
+    <root level="trace">
         <appender-ref ref="console" />
     </root>
 
