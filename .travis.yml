@@ -1,6 +1,8 @@
 language: scala
 dist: trusty
-sudo: false
+sudo: true
+services:
+  - docker
 
 scala:
   - 2.11.11
@@ -26,6 +28,9 @@ cache:
 
 install:
   - pip install --user codecov
+
+before_script:
+  - docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.1.0
 
 script:
   - |
