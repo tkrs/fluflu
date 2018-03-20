@@ -3,8 +3,8 @@ import Deps._
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, benchmark, examples)
-  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, benchmark, examples)
+  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
@@ -148,6 +148,16 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
     )
   )
   .dependsOn(msgpack % "compile->compile;test->test")
+
+lazy val it = project.in(file("modules/it"))
+  .settings(allSettings)
+  .settings(noPublishSettings)
+  .settings(
+    description := "fluflu it",
+    moduleName := "fluflu-it",
+    name := "it",
+  )
+  .dependsOn(core, msgpack % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
   .settings(allSettings)

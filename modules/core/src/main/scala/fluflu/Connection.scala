@@ -108,7 +108,7 @@ object Connection {
         }
 
     def isClosed: Boolean =
-      closed || channel.isConnected
+      closed || !channel.isConnected
 
     def write(message: ByteBuffer): Try[Unit] =
       for {
