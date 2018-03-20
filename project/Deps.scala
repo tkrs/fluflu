@@ -4,15 +4,15 @@ object Deps {
   val Ver = new {
     val `scala2.12`  = "2.12.4"
     val `scala2.11`  = "2.11.12"
-    val scalafmt     = "1.2.0"
+    val scalafmt     = "1.3.0"
     val cats         = "1.1.0"
-    val circe        = "0.9.1"
+    val circe        = "0.9.2"
     val scalacheck   = "1.13.5"
-    val scalatest    = "3.0.4"
-    val monix        = "3.0.0-M3"
+    val scalatest    = "3.0.5"
+    val monix        = "3.0.0-RC1"
     val scalaLogging = "3.7.2"
     val logback      = "1.2.3"
-    val msgpackJava  = "0.8.14"
+    val msgpackJava  = "0.8.15"
     val mockito      = "2.12.0"
   }
 
