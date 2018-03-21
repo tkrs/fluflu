@@ -92,7 +92,7 @@ lazy val queue = project.in(file("modules/queue"))
     moduleName := "fluflu-queue",
     name := "queue",
   )
-  .dependsOn(core, msgpack)
+  .dependsOn(core, msgpack % "compile->compile;test->test")
 
 lazy val monix = project.in(file("modules/monix"))
   .settings(allSettings)

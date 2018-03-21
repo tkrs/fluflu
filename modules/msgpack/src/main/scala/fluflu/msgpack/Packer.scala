@@ -9,7 +9,6 @@ import java.time.Instant
 import org.msgpack.core.MessagePack.Code
 import org.msgpack.core.MessagePack.Code.{ARRAY16, ARRAY32, FIXARRAY_PREFIX}
 
-import scala.collection.mutable
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
@@ -23,9 +22,7 @@ object Packer {
 
   implicit val packString: Packer[String] = new Packer[String] {
     def apply(a: String): Either[Throwable, Array[Byte]] = {
-      val acc = mutable.ArrayBuilder.make[Byte]
-      Packer.formatStrFamily(a, acc)
-      Right(acc.result())
+      Right(Packer.formatStrFamily(a))
     }
   }
 
@@ -45,12 +42,12 @@ object Packer {
                   A(a) match {
                     case Left(e) => Left(e)
                     case Right(v3) =>
-                      val acc = mutable.ArrayBuilder.make[Byte]
-                      acc += 0x93.toByte
-                      acc ++= v1
-                      acc ++= v2
-                      acc ++= v3
-                      Right(acc.result())
+                      val dest = Array.ofDim[Byte](1 + v1.length + v2.length + v3.length)
+                      dest(0) = 0x93.toByte
+                      java.lang.System.arraycopy(v1, 0, dest, 1, v1.length)
+                      java.lang.System.arraycopy(v2, 0, dest, 1 + v1.length, v2.length)
+                      java.lang.System.arraycopy(v3, 0, dest, 1 + v1.length + v2.length, v3.length)
+                      Right(dest)
                   }
               }
           }
@@ -65,15 +62,15 @@ object Packer {
         case (a, t) =>
           T(t) match {
             case Left(e) => Left(e)
-            case Right(v2) =>
+            case Right(v1) =>
               A(a) match {
                 case Left(e) => Left(e)
-                case Right(v3) =>
-                  val acc = mutable.ArrayBuilder.make[Byte]
-                  acc += 0x92.toByte
-                  acc ++= v2
-                  acc ++= v3
-                  Right(acc.result())
+                case Right(v2) =>
+                  val dest = Array.ofDim[Byte](1 + v1.length + v2.length)
+                  dest(0) = 0x92.toByte
+                  java.lang.System.arraycopy(v1, 0, dest, 1, v1.length)
+                  java.lang.System.arraycopy(v2, 0, dest, 1 + v1.length, v2.length)
+                  Right(dest)
               }
           }
       }
@@ -103,56 +100,51 @@ object Packer {
       case Failure(e) => Failure(e)
     }
 
-  def formatUInt32(v: Long, builder: mutable.ArrayBuilder[Byte]): Unit = {
-    builder += (v >>> 24).toByte
-    builder += (v >>> 16).toByte
-    builder += (v >>> 8).toByte
-    builder += (v >>> 0).toByte
+  def formatUInt32(v: Long): Array[Byte] = {
+    Array(
+      (v >>> 24).toByte,
+      (v >>> 16).toByte,
+      (v >>> 8).toByte,
+      (v >>> 0).toByte
+    )
   }
 
-  def formatStrFamilyHeader(sz: Int, builder: mutable.ArrayBuilder[Byte]): Unit =
+  def formatStrFamilyHeader(sz: Int): Array[Byte] =
     if (sz < 32)
-      builder += (Code.FIXSTR_PREFIX | sz).toByte
-    else if (sz < 256) {
-      builder += Code.STR8
-      builder += sz.toByte
-    } else if (sz < 65536) {
-      builder += Code.STR16
-      builder += (sz >>> 8).toByte
-      builder += (sz >>> 0).toByte
-    } else {
-      builder += Code.STR32
-      builder += (sz >>> 24).toByte
-      builder += (sz >>> 16).toByte
-      builder += (sz >>> 8).toByte
-      builder += (sz >>> 0).toByte
-    }
+      Array((Code.FIXSTR_PREFIX | sz).toByte)
+    else if (sz < 256)
+      Array(Code.STR8, sz.toByte)
+    else if (sz < 65536)
+      Array(Code.STR16, (sz >>> 8).toByte, (sz >>> 0).toByte)
+    else
+      Array(Code.STR32,
+            (sz >>> 24).toByte,
+            (sz >>> 16).toByte,
+            (sz >>> 8).toByte,
+            (sz >>> 0).toByte)
 
-  def formatStrFamily(v: String, builder: mutable.ArrayBuilder[Byte]): Unit = {
-    val cb  = CharBuffer.wrap(v)
-    val buf = encoder.get.encode(cb)
-    val len = buf.remaining()
-    formatStrFamilyHeader(len, builder)
-    val arr = Array.ofDim[Byte](len)
-    buf.get(arr)
-    builder ++= arr
+  def formatStrFamily(v: String): Array[Byte] = {
+    val cb   = CharBuffer.wrap(v)
+    val buf  = encoder.get.encode(cb)
+    val len  = buf.remaining()
+    val h    = formatStrFamilyHeader(len)
+    val dest = Array.ofDim[Byte](h.length + len)
+    java.lang.System.arraycopy(h, 0, dest, 0, h.length)
+    buf.get(dest, h.length, len)
     buf.clear()
     cb.clear()
+    dest
   }
 
-  def formatArrayHeader(arraySize: Int, builder: mutable.ArrayBuilder[Byte]): Unit = {
-    if (arraySize < (1 << 4)) {
-      builder += (FIXARRAY_PREFIX | arraySize).toByte
-    } else if (arraySize < (1 << 16)) {
-      builder += ARRAY16
-      builder += (arraySize >>> 8).toByte
-      builder += (arraySize >>> 0).toByte
-    } else {
-      builder += ARRAY32
-      builder += (arraySize >>> 24).toByte
-      builder += (arraySize >>> 16).toByte
-      builder += (arraySize >>> 8).toByte
-      builder += (arraySize >>> 0).toByte
-    }
-  }
+  def formatArrayHeader(arraySize: Int): Array[Byte] =
+    if (arraySize < (1 << 4))
+      Array((FIXARRAY_PREFIX | arraySize).toByte)
+    else if (arraySize < (1 << 16))
+      Array(ARRAY16, (arraySize >>> 8).toByte, (arraySize >>> 0).toByte)
+    else
+      Array(ARRAY32,
+            (arraySize >>> 24).toByte,
+            (arraySize >>> 16).toByte,
+            (arraySize >>> 8).toByte,
+            (arraySize >>> 0).toByte)
 }
