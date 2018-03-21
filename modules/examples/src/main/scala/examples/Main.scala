@@ -36,7 +36,7 @@ object Main extends Base {
       .take(count)
 
     val consumer = Consumer.foreachParallelTask(10) { x: Long =>
-      Task(client.emit("docker.main", Num(x)))
+      Task(client.emit(s"docker.main.${x % 3}", Num(x)))
     }
 
     implicit val s: Scheduler = Scheduler.computation(10)

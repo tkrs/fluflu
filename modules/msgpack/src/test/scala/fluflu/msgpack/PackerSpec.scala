@@ -5,7 +5,6 @@ import java.time.Instant
 
 import org.scalatest._
 
-import scala.collection.mutable
 import scala.util.{Failure, Try}
 
 class PackerSpec extends FunSpec with MsgpackHelper {
@@ -47,9 +46,8 @@ class PackerSpec extends FunSpec with MsgpackHelper {
       )
 
       for ((size, expected) <- table) {
-        val builder: mutable.ArrayBuilder[Byte] = Array.newBuilder
-        Packer.formatStrFamilyHeader(size, builder)
-        assert(builder.result() === expected)
+        val acc = Packer.formatStrFamilyHeader(size)
+        assert(acc === expected)
       }
     }
   }
@@ -66,9 +64,8 @@ class PackerSpec extends FunSpec with MsgpackHelper {
       )
 
       for ((size, expected) <- table) {
-        val builder: mutable.ArrayBuilder[Byte] = Array.newBuilder
-        Packer.formatArrayHeader(size, builder)
-        assert(builder.result() === expected)
+        val acc = Packer.formatArrayHeader(size)
+        assert(acc === expected)
       }
     }
   }
