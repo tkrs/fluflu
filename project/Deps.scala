@@ -6,7 +6,7 @@ object Deps {
     val `scala2.11`  = "2.11.12"
     val scalafmt     = "1.3.0"
     val cats         = "1.1.0"
-    val circe        = "0.9.2"
+    val circe        = "0.9.3"
     val scalacheck   = "1.13.5"
     val scalatest    = "3.0.5"
     val monix        = "3.0.0-RC1"
