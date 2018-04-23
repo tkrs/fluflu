@@ -7,12 +7,12 @@ object Deps {
     val scalafmt     = "1.3.0"
     val cats         = "1.1.0"
     val circe        = "0.9.3"
-    val scalacheck   = "1.13.5"
+    val scalacheck   = "1.14.0"
     val scalatest    = "3.0.5"
     val monix        = "3.0.0-RC1"
-    val scalaLogging = "3.7.2"
+    val scalaLogging = "3.9.0"
     val logback      = "1.2.3"
-    val msgpackJava  = "0.8.15"
+    val msgpackJava  = "0.8.16"
     val mockito      = "2.12.0"
   }
 
