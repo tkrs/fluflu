@@ -2,7 +2,7 @@ package fluflu
 
 import java.io.IOException
 import java.lang.{Boolean => JBool}
-import java.net.{InetSocketAddress, NetworkInterface, StandardSocketOptions}
+import java.net.{SocketAddress, NetworkInterface, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
@@ -34,19 +34,19 @@ object Connection {
       tcpNoDelay: Option[Boolean] = Some(true)
   )
 
-  def apply(remote: InetSocketAddress,
+  def apply(remote: SocketAddress,
             socketOptions: SocketOptions,
             timeout: Duration,
             backoff: Backoff,
             clock: Clock): Connection =
     new ConnectionImpl(remote, socketOptions, timeout, backoff)(clock)
 
-  def apply(remote: InetSocketAddress, timeout: Duration, backoff: Backoff)(
+  def apply(remote: SocketAddress, timeout: Duration, backoff: Backoff)(
       implicit
       clock: Clock = Clock.systemUTC()): Connection =
     new ConnectionImpl(remote, SocketOptions(), timeout, backoff)(clock)
 
-  class ConnectionImpl(remote: InetSocketAddress,
+  class ConnectionImpl(remote: SocketAddress,
                        socketOptions: SocketOptions,
                        timeout: Duration,
                        backoff: Backoff)(implicit clock: Clock)

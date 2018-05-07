@@ -1,7 +1,7 @@
 package fluflu
 
 import java.io.IOException
-import java.net.InetSocketAddress
+import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
@@ -20,9 +20,9 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
 
   implicit val clock: Clock = Clock.systemUTC()
 
-  val address: InetSocketAddress = mock[InetSocketAddress]
-  val duration: Duration         = Duration.ofSeconds(3)
-  val backoff: Backoff           = Backoff.fix(Duration.ofMillis(1))
+  val address: SocketAddress = new SocketAddress {}
+  val duration: Duration     = Duration.ofSeconds(3)
+  val backoff: Backoff       = Backoff.fix(Duration.ofMillis(1))
 
   describe("constructor") {
     it("should create instance successfully with retry some time") {
@@ -120,7 +120,6 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
         .thenReturn(true)
         .thenReturn(false)
 
-      when(address.toString).thenReturn("hahahahahaha")
       final class TestConnection
           extends ConnectionImpl(address, SocketOptions(), duration, backoff) {
         override protected def channelOpen: SocketChannel = channelMock
