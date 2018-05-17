@@ -55,7 +55,7 @@ final class MessagePacker(config: PackerConfig) {
         def onArray(value: Vector[Json]): CMessagePacker =
           value.foldLeft(acc.packArrayHeader(value.size))((_, v) => v.foldWith(this))
         def onObject(value: JsonObject): CMessagePacker = {
-          val xs = value.toVector
+          val xs = value.toIterable
           xs.foldLeft(acc.packMapHeader(xs.size))(this)
         }
       })
