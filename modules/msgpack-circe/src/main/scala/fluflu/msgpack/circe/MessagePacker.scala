@@ -34,7 +34,6 @@ final class MessagePacker(config: PackerConfig) {
           case (k, v) =>
             acc.packString(k)
             v.foldWith(this)
-            acc
         }
         def onNull: CMessagePacker =
           acc.packNil()
@@ -43,7 +42,7 @@ final class MessagePacker(config: PackerConfig) {
         def onNumber(value: JsonNumber): CMessagePacker =
           value.toBigDecimal match {
             case None =>
-              acc
+              acc.packNil()
             case Some(v) if double(v) =>
               acc.packDouble(v.toDouble)
             case Some(v) if v.isValidLong =>
