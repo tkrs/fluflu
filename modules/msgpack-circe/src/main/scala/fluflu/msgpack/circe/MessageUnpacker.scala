@@ -38,7 +38,7 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
   private def unpack0(buffer: MUnpacker): Json =
     if (!buffer.hasNext) Json.obj()
     else
-      buffer.getNextFormat() match {
+      buffer.getNextFormat match {
         case MF.NIL =>
           buffer.skipValue()
           Json.Null
