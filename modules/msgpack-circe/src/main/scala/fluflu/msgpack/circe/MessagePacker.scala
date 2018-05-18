@@ -3,11 +3,10 @@ package circe
 
 import io.circe.{Encoder, Json, JsonNumber, JsonObject}
 import io.circe.syntax._
-import org.msgpack.core.{MessagePacker => CMessagePacker}
-import org.msgpack.core.MessagePack
+import org.msgpack.core.{MessageBufferPacker, MessagePack, MessagePacker => CMessagePacker}
 import org.msgpack.core.MessagePack.PackerConfig
 
-import scala.util.{Failure, Success, Try}
+import scala.util.control.NonFatal
 
 object MessagePacker {
   def apply(config: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG): MessagePacker =
@@ -16,13 +15,22 @@ object MessagePacker {
 
 final class MessagePacker(config: PackerConfig) {
 
+  private[this] val packer = new ThreadLocal[MessageBufferPacker] {
+    override def initialValue(): MessageBufferPacker = config.newBufferPacker()
+  }
+
   def encode[A: Encoder](a: A): Either[Throwable, Array[Byte]] =
     pack(a.asJson)
 
   def pack(doc: Json): Either[Throwable, Array[Byte]] =
-    Packer.using(Try(config.newBufferPacker()))(r => Try { val _ = go(doc, r); r.toByteArray }) match {
-      case Success(v) => Right(v)
-      case Failure(e) => Left(e)
+    try {
+      val buf = packer.get()
+      go(doc, buf)
+      Right(buf.toByteArray)
+    } catch {
+      case NonFatal(t) => Left(t)
+    } finally {
+      packer.get().clear()
     }
 
   private def double(x: BigDecimal): Boolean = x.scale != 0
@@ -54,10 +62,8 @@ final class MessagePacker(config: PackerConfig) {
           acc.packString(value)
         def onArray(value: Vector[Json]): CMessagePacker =
           value.foldLeft(acc.packArrayHeader(value.size))((_, v) => v.foldWith(this))
-        def onObject(value: JsonObject): CMessagePacker = {
-          val xs = value.toIterable
-          xs.foldLeft(acc.packMapHeader(xs.size))(this)
-        }
+        def onObject(value: JsonObject): CMessagePacker =
+          value.toIterable.foldLeft(acc.packMapHeader(value.size))(this)
       })
   }
 }
