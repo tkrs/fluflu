@@ -1,7 +1,5 @@
 package fluflu.msgpack.circe
 
-import java.nio.ByteBuffer
-
 import cats.syntax.either._
 import io.circe.Json
 import org.msgpack.core.MessagePack
@@ -10,7 +8,7 @@ import org.scalatest.WordSpec
 class MessageUnpackerSpec extends WordSpec {
 
   val instance: Array[Byte] => MessageUnpacker =
-    src => new MessageUnpacker(ByteBuffer.wrap(src), MessagePack.DEFAULT_UNPACKER_CONFIG)
+    src => new MessageUnpacker(MessagePack.DEFAULT_UNPACKER_CONFIG.newUnpacker(src))
 
   "nil" should {
     "be decoded" in {

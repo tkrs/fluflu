@@ -1,13 +1,24 @@
 package fluflu.msgpack
 
 import cats.Eq
+import org.msgpack.core.{MessageBufferPacker, MessagePack}
 import org.scalatest._
 
-trait MsgpackHelper extends Matchers {
+trait MsgpackHelper extends Matchers with BeforeAndAfterEach { self: Suite =>
 
   implicit val arrayEq: Eq[Array[Byte]] = Eq.instance[Array[Byte]](_.zip(_).forall {
     case (a, b) => a == b
   })
+
+  var packer: MessageBufferPacker = _
+
+  override def beforeEach(): Unit = {
+    packer = MessagePack.DEFAULT_PACKER_CONFIG.newBufferPacker()
+  }
+
+  override def afterEach(): Unit = {
+    packer.close()
+  }
 
 }
 

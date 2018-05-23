@@ -8,7 +8,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSpec}
 
 class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
 
-  type Elem = () => Either[Throwable, Array[Byte]]
+  type Elem = () => Array[Byte]
 
   var consumer: Consumer           = _
   var messenger: Messenger         = _
@@ -28,7 +28,7 @@ class ConsumerSpec extends FunSpec with BeforeAndAfterEach {
 
   describe("consume") {
     it("should consume max-pulls messages") {
-      (1 to 6).foreach(_ => queue.offer(() => Right(Array(0x01.toByte))))
+      (1 to 6).foreach(_ => queue.offer(() => Array(0x01.toByte)))
       consumer.consume()
       assert(queue.size() === 1)
     }

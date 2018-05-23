@@ -4,6 +4,7 @@ import java.time.Duration
 
 import fluflu.msgpack.Packer
 import fluflu.time.integer._
+import org.msgpack.core.MessagePacker
 import org.scalatest.BeforeAndAfterEach
 
 class ClientSpec extends Suite with BeforeAndAfterEach {
@@ -19,7 +20,7 @@ class ClientSpec extends Suite with BeforeAndAfterEach {
   }
 
   implicit val packer: Packer[Int] = new Packer[Int] {
-    def apply(a: Int): Either[Throwable, Array[Byte]] = Right(Array(0x10))
+    def apply(a: Int, packer: MessagePacker): Unit = ()
   }
 
   describe("emit") {
@@ -43,7 +44,7 @@ class ForwardClientSpec extends Suite with BeforeAndAfterEach {
   }
 
   implicit val packer: Packer[Int] = new Packer[Int] {
-    def apply(a: Int): Either[Throwable, Array[Byte]] = Right(Array(0x10))
+    def apply(a: Int, packer: MessagePacker): Unit = ()
   }
 
   describe("emit") {
