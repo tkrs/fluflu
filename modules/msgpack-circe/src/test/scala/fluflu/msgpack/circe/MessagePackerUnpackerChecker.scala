@@ -1,28 +1,48 @@
 package fluflu.msgpack.circe
 
-import java.nio.ByteBuffer
-
+import fluflu.msgpack.MsgpackHelper
 import io.circe.{Decoder, Encoder}
+import io.circe.generic.semiauto._
 import org.msgpack.core.MessagePack
-import org.scalacheck.{Arbitrary, Prop, Shrink}
+import org.scalacheck.{Arbitrary, Gen, Prop, Shrink}
 import org.scalatest.prop.Checkers
 import org.scalatest.{Assertion, FunSuite}
 
-class MessagePackerUnpackerChecker extends FunSuite with Checkers {
-
-  // implicit override val generatorDrivenConfig = PropertyCheckConfig(minSize = 10, maxSize = 30)
+class MessagePackerUnpackerChecker extends FunSuite with Checkers with MsgpackHelper {
 
   implicit val arbBigInt: Arbitrary[BigInt] = Arbitrary(gen.genBigInt)
 
+  case class User[F[_]](int: Int, friends: F[User[F]])
+  object User {
+
+    implicit val encodeFix: Encoder[User[List]] = deriveEncoder
+    implicit val decodeFix: Decoder[User[List]] = deriveDecoder
+
+    def fix(depth: Int, i: Int, acc: User[List]): User[List] = {
+      if (depth == 0) acc
+      else fix(depth - 1, i + 1, User(i, List(acc)))
+    }
+
+    val genFix: Gen[User[List]] = for {
+      depth <- Gen.chooseNum(1, 100)
+      i     <- Gen.size
+    } yield fix(depth, i, User[List](i, Nil))
+
+    implicit val arbFix: Arbitrary[User[List]] = Arbitrary(genFix)
+  }
+
   def roundTrip[A: Encoder: Decoder: Arbitrary: Shrink]: Assertion =
     check(Prop.forAll({ a: A =>
-      val packer   = MessagePacker(MessagePack.DEFAULT_PACKER_CONFIG)
-      val Right(x) = packer.encode(a)
-      val unpacker = MessageUnpacker(ByteBuffer.wrap(x))
-      val Right(b) = unpacker.decode[A]
+      val mpacker = MessagePacker(packer)
+      mpacker.encode(a)
+      val munpacker =
+        MessageUnpacker(MessagePack.DEFAULT_UNPACKER_CONFIG.newUnpacker(packer.toByteArray))
+      val Right(b) = munpacker.decode[A]
+      packer.clear()
       a === b
     }))
 
+  test("Boolean")(roundTrip[Boolean])
   test("Int")(roundTrip[Int])
   test("Long")(roundTrip[Long])
   test("Float")(roundTrip[Float])
@@ -53,4 +73,5 @@ class MessagePackerUnpackerChecker extends FunSuite with Checkers {
   test("Seq[Double]")(roundTrip[Seq[Double]])
   test("Seq[BigInt]")(roundTrip[Seq[BigInt]])
   test("Seq[String]")(roundTrip[Seq[String]])
+  test("User[List]")(roundTrip[User[List]])
 }

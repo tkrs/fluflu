@@ -8,23 +8,23 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
 
-private[queue] trait Consumer extends Runnable {
+trait Consumer extends Runnable {
   type E
 
   protected val delay: Duration
   protected val scheduler: ScheduledExecutorService
-  protected val queue: util.Queue[E]
+  protected val packQueue: util.Queue[E]
 
   protected val running = new AtomicBoolean(false)
 
   def consume(): Unit
 
   def run(): Unit =
-    if (queue.isEmpty) running.set(false)
+    if (packQueue.isEmpty) running.set(false)
     else {
       consume()
       running.set(false)
-      if (!(scheduler.isShutdown || queue.isEmpty)) Consumer.start(this)
+      if (!(scheduler.isShutdown || packQueue.isEmpty)) Consumer.start(this)
     }
 }
 
@@ -37,36 +37,27 @@ object Consumer extends LazyLogging {
     }
 }
 
-final class DefaultConsumer private[queue] (
-    val delay: Duration,
-    val maximumPulls: Int,
-    val messenger: Messenger,
-    val scheduler: ScheduledExecutorService,
-    val queue: util.Queue[() => Either[Throwable, Array[Byte]]])
+final class DefaultConsumer private[queue] (val delay: Duration,
+                                            val maximumPulls: Int,
+                                            val messenger: Messenger,
+                                            val scheduler: ScheduledExecutorService,
+                                            val packQueue: util.Queue[() => Array[Byte]])
     extends Consumer
     with LazyLogging {
 
-  type E = () => Either[Throwable, Array[Byte]]
+  type E = () => Array[Byte]
 
   def consume(): Unit = {
-    logger.trace(s"Start emitting. remaining: $queue")
+    logger.trace(s"Start emitting. remaining: $packQueue")
     val start = System.nanoTime()
     val tasks =
       Iterator
-        .continually(queue.poll())
+        .continually(packQueue.poll())
         .takeWhile { v =>
           logger.trace(s"Polled value: $v"); v != null
         }
         .take(maximumPulls)
-        .map {
-          _() match {
-            case x @ Right(_) => x
-            case x @ Left(e)  => logger.warn(s"An exception occurred: ${e.getMessage}", e); x
-          }
-        }
-        .collect {
-          case Right(v) => v
-        }
+        .map(_())
     messenger.emit(tasks)
     logger.trace(
       s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")

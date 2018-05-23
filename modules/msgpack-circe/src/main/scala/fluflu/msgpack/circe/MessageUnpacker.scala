@@ -1,27 +1,21 @@
 package fluflu.msgpack.circe
 
-import java.nio.ByteBuffer
-
 import cats.syntax.either._
-import fluflu.msgpack.Packer
 import io.circe.{Decoder, DecodingFailure, Error, Json}
-import org.msgpack.core.{MessagePack, MessageFormat => MF}
-import org.msgpack.core.MessagePack.UnpackerConfig
+import org.msgpack.core.{MessageFormat => MF}
 import org.msgpack.core.{MessageUnpacker => MUnpacker}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.util.Try
 
 object MessageUnpacker {
 
-  def apply(byteBuffer: ByteBuffer,
-            config: UnpackerConfig = MessagePack.DEFAULT_UNPACKER_CONFIG): MessageUnpacker =
-    new MessageUnpacker(byteBuffer, config)
+  def apply(mUnpacker: MUnpacker): MessageUnpacker =
+    new MessageUnpacker(mUnpacker)
 
 }
 
-final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
+final class MessageUnpacker(unpacker: MUnpacker) {
 
   def decode[A: Decoder]: Either[Error, A] =
     Either
@@ -29,11 +23,7 @@ final class MessageUnpacker(src: ByteBuffer, config: UnpackerConfig) {
       .leftMap(e => DecodingFailure(e.getMessage, List.empty))
       .flatMap(_.as[A])
 
-  def unpack: Json = {
-    Packer
-      .using(Try(config.newUnpacker(src)))(r => Try(unpack0(r)))
-      .get
-  }
+  def unpack: Json = unpack0(unpacker)
 
   private def unpack0(buffer: MUnpacker): Json =
     if (!buffer.hasNext) Json.obj()

@@ -7,6 +7,8 @@ import java.util.concurrent._
 import com.typesafe.scalalogging.LazyLogging
 import fluflu.Messenger
 import fluflu.msgpack.Packer
+import org.msgpack.core.{MessageBufferPacker, MessagePack}
+import org.msgpack.core.MessagePack.PackerConfig
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -16,73 +18,55 @@ final class ForwardConsumer private[queue] (
     val maximumPulls: Int,
     val messenger: Messenger,
     val scheduler: ScheduledExecutorService,
-    val queue: util.Queue[() => (String, Either[Throwable, Array[Byte]])])(
-    implicit PS: Packer[String])
+    val packQueue: util.Queue[() => (String, Array[Byte])],
+    val packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(implicit PS: Packer[String])
     extends Consumer
     with LazyLogging {
 
-  type E = () => (String, Either[Throwable, Array[Byte]])
+  private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
+    override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()
+  }
 
-  def mkMap: mutable.Map[String, (ListBuffer[Array[Byte]], Int)] = {
+  type E = () => (String, Array[Byte])
+
+  def mkMap: mutable.Map[String, ListBuffer[Array[Byte]]] = {
     Iterator
-      .continually(queue.poll())
+      .continually(packQueue.poll())
       .takeWhile { v =>
         logger.trace(s"Polled value: $v"); v != null
       }
       .take(maximumPulls)
-      .foldLeft(mutable.Map.empty[String, (ListBuffer[Array[Byte]], Int)]) {
+      .foldLeft(mutable.Map.empty[String, ListBuffer[Array[Byte]]]) {
         case (acc, f) =>
           f() match {
-            case (s, Right(x)) =>
-              if (!acc.contains(s)) acc += s -> (ListBuffer(x) -> x.length)
+            case (s, x) =>
+              if (!acc.contains(s)) acc += s -> ListBuffer(x)
               else {
-                val (l, r) = acc(s)
+                val l = acc(s)
                 l += x
-                val sz = r + x.length
-                acc += s -> (l -> sz)
+                acc += s -> l
               }
-            case (s, x @ Left(e)) =>
-              logger.warn(
-                s"An exception occurred during serializing record: tag: $s, cause: ${e.getMessage}",
-                e)
           }
           acc
       }
   }
 
-  def mkBuffers(m: mutable.Map[String, (ListBuffer[Array[Byte]], Int)]): Iterator[Array[Byte]] = {
-    m.iterator
-      .map {
-        case (s, (vs, sz)) =>
-          PS.apply(s) match {
-            case l @ Left(e) =>
-              logger.warn(s"An exception occurred during packing tag: $s, cause: ${e.getMessage}",
-                          e)
-              l
-            case Right(v) =>
-              val arr  = Packer.formatArrayHeader(vs.size)
-              val dest = Array.ofDim[Byte](sz + 1 + v.length + arr.length)
-              dest(0) = 0x92.toByte
-              java.lang.System.arraycopy(v, 0, dest, 1, v.length)
-              java.lang.System.arraycopy(arr, 0, dest, 1 + v.length, arr.length)
-              val xs = vs.scanLeft(arr.length + v.length + 1)((acc, a) => acc + a.length)
-
-              vs.zip(xs).foreach {
-                case (l, r) =>
-                  java.lang.System.arraycopy(l, 0, dest, r, l.length)
-              }
-
-              Right(dest)
-          }
-      }
-      .collect {
-        case Right(v) =>
-          logger.trace(s"${v.map("%02x".format(_)).mkString(" ")}"); v
-      }
+  def mkBuffers(m: mutable.Map[String, ListBuffer[Array[Byte]]]): Iterator[Array[Byte]] = {
+    m.iterator.map {
+      case (s, vs) =>
+        try {
+          val p = mPacker.get()
+          p.packArrayHeader(2)
+          PS.apply(s, p)
+          p.packArrayHeader(vs.size)
+          vs.foreach(p.writePayload)
+          p.toByteArray
+        } finally mPacker.get().clear()
+    }
   }
 
   def consume(): Unit = {
-    logger.trace(s"Start emitting. remaining: $queue")
+    logger.trace(s"Start emitting. remaining: $packQueue")
     val start  = System.nanoTime()
     val buffer = mkBuffers(mkMap)
     messenger.emit(buffer)
