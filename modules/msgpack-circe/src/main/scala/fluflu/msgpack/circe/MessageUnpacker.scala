@@ -1,7 +1,7 @@
 package fluflu.msgpack.circe
 
 import cats.syntax.either._
-import io.circe.{Decoder, DecodingFailure, Error, Json}
+import io.circe.{Decoder, DecodingFailure, Error, Json, JsonObject}
 import org.msgpack.core.{MessageFormat => MF}
 import org.msgpack.core.{MessageUnpacker => MUnpacker}
 
@@ -26,7 +26,8 @@ final class MessageUnpacker(unpacker: MUnpacker) {
   def unpack: Json = unpack0(unpacker)
 
   private def unpack0(buffer: MUnpacker): Json =
-    if (!buffer.hasNext) Json.obj()
+    if (!buffer.hasNext)
+      Json.fromJsonObject(JsonObject.empty)
     else
       buffer.getNextFormat match {
         case MF.NIL =>
