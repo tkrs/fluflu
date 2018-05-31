@@ -13,7 +13,7 @@ object Deps {
     val scalaLogging = "3.9.0"
     val logback      = "1.2.3"
     val msgpackJava  = "0.8.16"
-    val mockito      = "2.12.0"
+    val mockito      = "2.18.3"
   }
 
   val Pkg = new {
