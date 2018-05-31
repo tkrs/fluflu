@@ -24,6 +24,7 @@ cache:
     - $HOME/.sbt/boot
     - $HOME/.sbt/launchers
     - $HOME/.coursier
+    - $HOME/.cache/install-jdk
 
 install:
   - pip install --user codecov
