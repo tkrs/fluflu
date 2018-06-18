@@ -10,4 +10,10 @@ import org.openjdk.jmh.annotations._
 @Measurement(iterations = 10, time = 1)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Fork(2)
-class Bench extends circe.PackerBench with circe.UnpackerBench
+abstract class Bench
+
+class PackBench extends Bench with circe.PackerBench with shapes.PackerBench
+
+class UnpackBench extends Bench with circe.UnpackerBench with shapes.UnpackerBench
+
+class AstBench extends Bench with circe.PackAstBench with shapes.PackAstBench

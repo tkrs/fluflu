@@ -149,7 +149,7 @@ class MessageUnpackerSpec extends WordSpec {
       // {"a":1.1,"b":2.2,"c":3.3,"d":4.4,"e":5.5,"f":6.6,"g":7.7,"h":8.8,"i":9.9,"j":10.1,"k":11.11,"l":12.12,"m":13.13,"n":14.14,"o":15.15,"p":16.16}
       val Right(parsed) = io.circe.parser.parse(
         """{"a":1.1,"b":2.2,"c":3.3,"d":4.4,"e":5.5,"f":6.6,"g":7.7,"h":8.8,"i":9.9,"j":10.1,"k":11.11,"l":12.12,"m":13.13,"n":14.14,"o":15.15,"p":16.16}""")
-      val decoded = instance(a).decode[Json].toTry.get
+      val decoded = instance(a).decode[Json].right.get
       assert(parsed === decoded)
     }
   }

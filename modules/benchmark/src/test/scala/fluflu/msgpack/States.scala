@@ -22,6 +22,7 @@ object States {
     final val UInt64   = IntT.uInt64
     final val Long10CC = Long10.default
     final val Long30CC = Long30.default
+    final val Long60CC = Long60.default
 
     var packer: MessageBufferPacker = _
 
@@ -55,5 +56,8 @@ object States {
 
     private[this] val long30CC_            = Long30.bytes
     @inline final def long30CC: ByteBuffer = long30CC_.duplicate()
+
+    private[this] val long60CC_            = Long60.bytes
+    @inline final def long60CC: ByteBuffer = long60CC_.duplicate()
   }
 }
