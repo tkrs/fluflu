@@ -38,16 +38,16 @@ object models {
     def uInt32Bytes: ByteBuffer = ByteBuffer.wrap(packer(uInt32.asJson))
   }
 
-  case class Long10(a000000001: Long = Long.MaxValue,
-                    a000000002: Long = Long.MinValue,
-                    a000000003: Long = Long.MaxValue,
-                    a000000004: Long = Long.MinValue,
-                    a000000005: Long = Long.MaxValue,
-                    a000000006: Long = Long.MinValue,
-                    a000000007: Long = Long.MaxValue,
-                    a000000008: Long = Long.MinValue,
-                    a000000009: Long = Long.MaxValue,
-                    a000000010: Long = Long.MinValue)
+  case class Long10(a000000001: Long = Rnd.nextLong(),
+                    a000000002: Long = Rnd.nextLong(),
+                    a000000003: Long = Rnd.nextLong(),
+                    a000000004: Long = Rnd.nextLong(),
+                    a000000005: Long = Rnd.nextLong(),
+                    a000000006: Long = Rnd.nextLong(),
+                    a000000007: Long = Rnd.nextLong(),
+                    a000000008: Long = Rnd.nextLong(),
+                    a000000009: Long = Rnd.nextLong(),
+                    a000000010: Long = Rnd.nextLong())
 
   object Long10 {
     def default = Long10()
