@@ -3,8 +3,8 @@ import Deps._
 lazy val root = (project in file("."))
   .settings(allSettings)
   .settings(noPublishSettings)
-  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, `msgpack-shapes`, it, benchmark, examples)
-  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, `msgpack-shapes`, it, benchmark, examples)
+  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
 
 lazy val allSettings = buildSettings ++ baseSettings ++ publishSettings
 
@@ -146,23 +146,6 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
   )
   .dependsOn(msgpack % "compile->compile;test->test")
 
-lazy val `msgpack-shapes` = project.in(file("modules/msgpack-shapes"))
-  .settings(allSettings)
-  .settings(
-    description := "fluflu msgpack-shapes",
-    moduleName := "fluflu-msgpack-shapes",
-    name := "msgpack-shapes",
-  )
-  .settings(
-    libraryDependencies ++= Seq(
-      Pkg.shapeless,
-      Pkg.exportHook,
-      Pkg.catsCore,
-      compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch)
-    )
-  )
-  .dependsOn(msgpack % "compile->compile;test->test")
-
 lazy val it = project.in(file("modules/it"))
   .settings(allSettings)
   .settings(noPublishSettings)
@@ -205,7 +188,7 @@ lazy val benchmark = (project in file("modules/benchmark"))
     coverageEnabled := false
   )
   .enablePlugins(JmhPlugin)
-  .dependsOn(`msgpack-circe` % "test->test", `msgpack-shapes`)
+  .dependsOn(`msgpack-circe` % "test->test")
 
 lazy val compilerOptions = Seq(
   "-deprecation",

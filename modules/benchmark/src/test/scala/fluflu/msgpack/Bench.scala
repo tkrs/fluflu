@@ -12,8 +12,5 @@ import org.openjdk.jmh.annotations._
 @Fork(2)
 abstract class Bench
 
-class PackBench extends Bench with circe.PackerBench with shapes.PackerBench
-
-class UnpackBench extends Bench with circe.UnpackerBench with shapes.UnpackerBench
-
-class AstBench extends Bench with circe.PackAstBench with shapes.PackAstBench
+class PackBench   extends Bench with circe.PackerBench
+class UnpackBench extends Bench with circe.UnpackerBench
