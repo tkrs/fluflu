@@ -7,7 +7,6 @@ object Deps {
     val scalafmt      = "1.3.0"
     val cats          = "1.1.0"
     val shapeless     = "2.3.3"
-    val exportHook    = "1.2.0"
     val circe         = "0.9.3"
     val scalacheck    = "1.14.0"
     val scalatest     = "3.0.5"
@@ -24,7 +23,6 @@ object Deps {
     lazy val monixReactive  = "io.monix"                   %% "monix-reactive" % Ver.monix
     lazy val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"  % Ver.scalaLogging
     lazy val shapeless      = "com.chuusai"                %% "shapeless"      % Ver.shapeless
-    lazy val exportHook     = "org.typelevel"              %% "export-hook"    % Ver.exportHook
     lazy val circeCore      = "io.circe"                   %% "circe-core"     % Ver.circe
     lazy val circeGeneric   = "io.circe"                   %% "circe-generic"  % Ver.circe
     lazy val circeParser    = "io.circe"                   %% "circe-parser"   % Ver.circe

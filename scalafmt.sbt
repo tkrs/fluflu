@@ -1,5 +1,5 @@
 import Deps._
 
-scalafmtVersion in ThisBuild := Ver.scalafmt
-scalafmtOnCompile in Compile in ThisBuild := true
-scalafmtTestOnCompile in Compile in ThisBuild := true
+ThisBuild / scalafmtVersion := Ver.scalafmt
+ThisBuild / Compile / scalafmtOnCompile := true
+ThisBuild / Compile / scalafmtTestOnCompile := true
