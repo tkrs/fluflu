@@ -1,1 +1,8 @@
--Xss3m
+-Xms512M
+-Xmx1024M
+-Xss3M
+-XX:MaxMetaspaceSize=1024M
+-XX:+UseCompressedOops
+-XX:+TieredCompilation
+-XX:+CMSClassUnloadingEnabled
+-XX:+UseParallelGC
