@@ -1,11 +1,10 @@
 import Deps._
 
-lazy val root = (project in file("."))
+lazy val fluflu = (project in file("."))
   .settings(noPublishSettings)
   .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
   .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
 
-ThisBuild / name := "fluflu"
 ThisBuild / organization := "com.github.tkrs"
 ThisBuild / scalaVersion := Ver.`scala2.12`
 ThisBuild / crossScalaVersions := Seq(
@@ -20,6 +19,20 @@ ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(
     Pkg.scalaLogging,
     compilerPlugin(Pkg.kindProjector)
   )
+ThisBuild / scalacOptions ++= Seq(
+  "-deprecation",
+  "-encoding", "UTF-8",
+  "-unchecked",
+  "-feature",
+  "-language:_",
+  "-unchecked",
+  "-Yno-adapted-args",
+  "-Ywarn-unused:_",
+  "-Ywarn-dead-code",
+  "-Ywarn-numeric-widen",
+  "-Xfuture",
+  "-Xlint",
+)
 ThisBuild / Compile / console / scalacOptions ~= (_ filterNot (_.startsWith("-Ywarn-unused")))
 ThisBuild / Compile / console / scalacOptions ++= Seq(
   "-Yrepl-class-based",
@@ -180,18 +193,3 @@ lazy val benchmark = (project in file("modules/benchmark"))
   )
   .enablePlugins(JmhPlugin)
   .dependsOn(`msgpack-circe` % "test->test")
-
-lazy val compilerOptions = Seq(
-  "-deprecation",
-  "-encoding", "UTF-8",
-  "-unchecked",
-  "-feature",
-  "-language:_",
-  "-unchecked",
-  "-Yno-adapted-args",
-  "-Ywarn-unused:_",
-  "-Ywarn-dead-code",
-  "-Ywarn-numeric-widen",
-  "-Xfuture",
-  "-Xlint",
-)
