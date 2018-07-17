@@ -136,9 +136,13 @@ object Connection {
 
     private def _read(dst: ByteBuffer, size: Int, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
       Try(ch.read(dst)) match {
-        case Success(sz) if size + sz == settings.readSize => Success(size + sz)
-        case Success(sz)                                   => _read(dst, size + sz, ch, retries, sleeper)
+        case Success(sz) if size + sz == settings.readSize =>
+          Success(size + sz)
+        case Success(sz) =>
+          logger.debug(s"Read size: $sz")
+          _read(dst, size + sz, ch, retries, sleeper)
         case Failure(e0) =>
+          logger.debug(s"Failed to read: $e0")
           if (sleeper.giveUp) Failure(e0)
           else {
             sleeper.sleep(retries)
