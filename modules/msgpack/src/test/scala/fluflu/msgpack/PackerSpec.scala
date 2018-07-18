@@ -24,7 +24,7 @@ class PackerSpec extends FunSpec with MsgpackHelper {
     }
   }
 
-  describe("Packer[(String, A, Instant)]") {
+  describe("Packer[(String, A, Instant, Option[MOption)]") {
     it("should be packed") {
       val expected = x"93 a5 61 62 63 65 64 11 10"
       implicit val packInstant: Packer[Instant] = new Packer[Instant] {
@@ -37,8 +37,11 @@ class PackerSpec extends FunSpec with MsgpackHelper {
           packer.packByte(0x10.toByte)
         }
       }
-      Packer[(String, Map[String, String], Instant)]
-        .apply(("abced", Map("a" -> "b"), Instant.ofEpochSecond(1500000000L, 1L)), packer)
+      implicit val packMOption: Packer[MOption] = new Packer[MOption] {
+        def apply(a: MOption, packer: MessagePacker): Unit = fail()
+      }
+      Packer[(String, Map[String, String], Instant, Option[MOption])]
+        .apply(("abced", Map("a" -> "b"), Instant.ofEpochSecond(1500000000L, 1L), None), packer)
       assert(packer.toByteArray === expected)
     }
   }

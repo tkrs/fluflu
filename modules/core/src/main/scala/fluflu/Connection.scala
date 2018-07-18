@@ -13,7 +13,7 @@ import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 trait Connection {
-  def write(message: ByteBuffer): Try[Unit]
+  def writeAndRead(message: ByteBuffer): Try[ByteBuffer]
   def isClosed: Boolean
   def close(): Try[Unit]
 }
@@ -41,15 +41,12 @@ object Connection {
             clock: Clock): Connection =
     new ConnectionImpl(remote, socketOptions, timeout, backoff)(clock)
 
-  def apply(remote: SocketAddress, timeout: Duration, backoff: Backoff)(
-      implicit
-      clock: Clock = Clock.systemUTC()): Connection =
+  def apply(remote: SocketAddress, timeout: Duration, backoff: Backoff)(implicit
+                                                                        clock: Clock = Clock.systemUTC()): Connection =
     new ConnectionImpl(remote, SocketOptions(), timeout, backoff)(clock)
 
-  class ConnectionImpl(remote: SocketAddress,
-                       socketOptions: SocketOptions,
-                       timeout: Duration,
-                       backoff: Backoff)(implicit clock: Clock)
+  class ConnectionImpl(remote: SocketAddress, socketOptions: SocketOptions, timeout: Duration, backoff: Backoff)(
+      implicit clock: Clock)
       extends Connection
       with LazyLogging {
     import StandardSocketOptions._
@@ -75,9 +72,7 @@ object Connection {
       ch
     }
 
-    @tailrec private def doConnect(ch: SocketChannel,
-                                   retries: Int,
-                                   sleeper: Sleeper): Try[SocketChannel] = {
+    @tailrec private def doConnect(ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[SocketChannel] = {
       logger.debug(s"Start connecting to $remote. retries: $retries")
       try {
         if (ch.connect(remote)) Success(ch)
@@ -110,18 +105,25 @@ object Connection {
     def isClosed: Boolean =
       closed || !channel.isConnected
 
-    def write(message: ByteBuffer): Try[Unit] =
+    def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
         ch <- connect()
-        _ <- Try {
+        r <- Try {
               logger.trace(s"Start writing message: $message")
-              @tailrec def go(acc: Int): Int =
+              @tailrec def writeLoop(acc: Int): Int =
                 if (!message.hasRemaining) acc
-                else go(acc + ch.write(message))
-              val toWrite = go(0)
+                else writeLoop(acc + ch.write(message))
+              val toWrite = writeLoop(0)
               logger.trace(s"Number of bytes written: $toWrite")
+
+              val ack    = ByteBuffer.allocate(256)
+              val toRead = ch.read(ack)
+              ack.flip()
+              logger.trace(s"Number of bytes read: $toRead")
+
+              ack
             }
-      } yield ()
+      } yield r
 
     def close(): Try[Unit] = {
       closed = true

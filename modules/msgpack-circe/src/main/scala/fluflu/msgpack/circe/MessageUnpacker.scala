@@ -88,9 +88,7 @@ final class MessageUnpacker(unpacker: MUnpacker) {
   }
 
   private def unpackMap(size: Int, buffer: MUnpacker): Json = {
-    @tailrec def loop(
-        i: Int,
-        acc: mutable.Builder[(String, Json), Vector[(String, Json)]]): Vector[(String, Json)] =
+    @tailrec def loop(i: Int, acc: mutable.Builder[(String, Json), Vector[(String, Json)]]): Vector[(String, Json)] =
       if (i == 0) acc.result()
       else {
         val kj = unpack0(buffer)

@@ -1,4 +1,4 @@
-package fluflu.time
+package fluflu.msgpack.time
 
 import java.time.Instant
 
@@ -7,7 +7,7 @@ import org.scalatest.FunSpec
 
 class IntegerSpec extends FunSpec with MsgpackHelper {
   import MsgpackHelper._
-  import fluflu.time.integer._
+  import fluflu.msgpack.time.integer._
 
   describe("Integer") {
     it("should pack successfully") {

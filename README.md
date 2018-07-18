@@ -12,8 +12,7 @@ Add to your `build.sbt`
 ```scala
 libraryDependencies ++= Seq(
   "com.github.tkrs" %% "fluflu-core" % "x.y.z",
-  "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z",
-  "com.github.tkrs" %% "fluflu-monix" % "x.y.z"
+  "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z"
 )
 ```
 
@@ -22,8 +21,7 @@ And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/module
 ## Benchmarks
 
 - fluflu-msgpack
-
-Encoder
+fluflu.msgpackr
 
 ```
 [info] Benchmark                                                Mode  Cnt       Score       Error   Units
