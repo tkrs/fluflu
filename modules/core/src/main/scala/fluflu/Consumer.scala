@@ -1,5 +1,4 @@
 package fluflu
-package queue
 
 import java.time.Duration
 import java.util
@@ -37,11 +36,11 @@ object Consumer extends LazyLogging {
     }
 }
 
-final class DefaultConsumer private[queue] (val delay: Duration,
-                                            val maximumPulls: Int,
-                                            val messenger: Messenger,
-                                            val scheduler: ScheduledExecutorService,
-                                            val packQueue: util.Queue[() => Array[Byte]])
+final class DefaultConsumer private[fluflu] (val delay: Duration,
+                                             val maximumPulls: Int,
+                                             val messenger: Messenger,
+                                             val scheduler: ScheduledExecutorService,
+                                             val packQueue: util.Queue[() => Array[Byte]])
     extends Consumer
     with LazyLogging {
 

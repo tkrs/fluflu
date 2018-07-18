@@ -1,9 +1,8 @@
-package fluflu.queue
+package fluflu
 
 import java.time.Duration
 import java.util.concurrent.{ArrayBlockingQueue, Executors}
 
-import fluflu.Messenger
 import org.scalatest.{BeforeAndAfterEach, FunSpec}
 
 class ConsumerSpec extends FunSpec with BeforeAndAfterEach {

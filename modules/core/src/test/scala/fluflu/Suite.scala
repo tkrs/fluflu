@@ -1,9 +1,8 @@
-package fluflu.queue
+package fluflu
 
 import java.nio.ByteBuffer
 import java.time.Clock
 
-import fluflu.{Connection, Messenger}
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.util.{Success, Try}

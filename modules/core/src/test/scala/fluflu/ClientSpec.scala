@@ -1,4 +1,4 @@
-package fluflu.queue
+package fluflu
 
 import java.time.Duration
 

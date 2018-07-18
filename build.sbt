@@ -47,8 +47,8 @@ lazy val fluflu = (project in file("."))
     Compile / console / scalacOptions --= compilerOptions ++ warnCompilerOptions,
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
-  .aggregate(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
-  .dependsOn(core, queue, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .aggregate(core, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .dependsOn(core, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
 
 lazy val publishSettings = Seq(
   releaseCrossBuild := true,
@@ -96,15 +96,12 @@ lazy val core = project.in(file("modules/core"))
     description := "fluflu core",
     moduleName := "fluflu-core",
   )
-  .dependsOn(msgpack % "compile->compile;test->test")
-
-lazy val queue = project.in(file("modules/queue"))
-  .settings(publishSettings)
   .settings(
-    description := "fluflu queue",
-    moduleName := "fluflu-queue",
+    libraryDependencies ++= Seq(
+      Pkg.msgpackJava,
+    )
   )
-  .dependsOn(core, msgpack % "compile->compile;test->test")
+  .dependsOn(msgpack % "compile->compile;test->test")
 
 lazy val monix = project.in(file("modules/monix"))
   .settings(publishSettings)
@@ -181,7 +178,7 @@ lazy val examples = project.in(file("modules/examples"))
   .settings(
     coverageEnabled := false
   )
-  .dependsOn(queue, monix, `msgpack-circe`)
+  .dependsOn(monix, `msgpack-circe`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
   .settings(noPublishSettings)

@@ -1,5 +1,4 @@
 package fluflu
-package queue
 
 import java.time.{Duration, Instant}
 import java.util.concurrent.{ConcurrentLinkedQueue, Executors}

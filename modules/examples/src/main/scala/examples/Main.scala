@@ -7,7 +7,6 @@ import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
-import fluflu.queue.Client
 import fluflu.msgpack.circe._
 import io.circe.generic.auto._
 import _root_.monix.execution.Scheduler
