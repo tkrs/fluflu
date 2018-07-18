@@ -11,9 +11,9 @@ Add to your `build.sbt`
 
 ```scala
 libraryDependencies ++= Seq(
+  "com.github.tkrs" %% "fluflu-core" % "x.y.z",
   "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z",
-  "com.github.tkrs" %% "fluflu-monix" % "x.y.z",
-  "com.github.tkrs" %% "fluflu-queue" % "x.y.z"
+  "com.github.tkrs" %% "fluflu-monix" % "x.y.z"
 )
 ```
 

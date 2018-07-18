@@ -1,19 +1,18 @@
-package fluflu.queue
+package fluflu
 
 import java.time.Duration
 import java.util
 import java.util.concurrent._
 
 import com.typesafe.scalalogging.LazyLogging
-import fluflu.Messenger
 import fluflu.msgpack.Packer
-import org.msgpack.core.{MessageBufferPacker, MessagePack}
 import org.msgpack.core.MessagePack.PackerConfig
+import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-final class ForwardConsumer private[queue] (
+final class ForwardConsumer private[fluflu] (
     val delay: Duration,
     val maximumPulls: Int,
     val messenger: Messenger,
