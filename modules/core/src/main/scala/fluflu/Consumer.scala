@@ -1,132 +1,113 @@
 package fluflu
 
-import java.time.Duration
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets._
 import java.util
-import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.{Base64, UUID}
 
+import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
+
+import scala.util.control.NonFatal
 import com.typesafe.scalalogging.LazyLogging
-import fluflu.msgpack.Packer
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.util.{Failure, Success}
 
 trait Consumer extends Runnable {
   type E
 
-  protected val delay: Duration
-  protected val scheduler: ScheduledExecutorService
-  protected val packQueue: util.Queue[E]
-
-  protected val running = new AtomicBoolean(false)
+  protected def msgQueue: util.Queue[E]
 
   def consume(): Unit
 
-  def run(): Unit =
-    if (packQueue.isEmpty) running.set(false)
-    else {
-      consume()
-      running.set(false)
-      if (!(scheduler.isShutdown || packQueue.isEmpty)) Consumer.start(this)
-    }
+  def run(): Unit = consume()
 }
 
-object Consumer extends LazyLogging {
-
-  def start(c: Consumer): Unit =
-    if (c.running.compareAndSet(false, true)) {
-      logger.trace(s"Reschedule consuming to start after [${c.delay.toNanos} nanoseconds]")
-      c.scheduler.schedule(c, c.delay.toNanos, TimeUnit.NANOSECONDS)
-    }
-}
-
-final class DefaultConsumer private[fluflu] (val delay: Duration,
-                                             val maximumPulls: Int,
-                                             val messenger: Messenger,
-                                             val scheduler: ScheduledExecutorService,
-                                             val packQueue: util.Queue[() => Array[Byte]])
-    extends Consumer
+final class ForwardConsumer private[fluflu] (maximumPulls: Int,
+                                             connection: Connection,
+                                             val msgQueue: util.Queue[(String, MessageBufferPacker => Unit)],
+                                             packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
+    implicit PS: Packer[String],
+    PM: Packer[MOption],
+    PA: Unpacker[Ack]
+) extends Consumer
     with LazyLogging {
-
-  type E = () => Array[Byte]
-
-  def consume(): Unit = {
-    logger.trace(s"Start emitting. remaining: $packQueue")
-    val start = System.nanoTime()
-    val tasks =
-      Iterator
-        .continually(packQueue.poll())
-        .takeWhile { v =>
-          logger.trace(s"Polled value: $v"); v != null
-        }
-        .take(maximumPulls)
-        .map(_())
-    messenger.emit(tasks)
-    logger.trace(
-      s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")
-  }
-}
-
-final class ForwardConsumer private[fluflu] (
-    val delay: Duration,
-    val maximumPulls: Int,
-    val messenger: Messenger,
-    val scheduler: ScheduledExecutorService,
-    val packQueue: util.Queue[() => (String, Array[Byte])],
-    val packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(implicit PS: Packer[String])
-    extends Consumer
-    with LazyLogging {
+  private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
 
   private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
     override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()
   }
 
-  type E = () => (String, Array[Byte])
+  private[this] val b64e = Base64.getEncoder
 
-  def mkMap: mutable.Map[String, ListBuffer[Array[Byte]]] = {
+  type E = (String, MessageBufferPacker => Unit)
+
+  def retrieveElements(): Map[String, ListBuffer[MessageBufferPacker => Unit]] = {
     Iterator
-      .continually(packQueue.poll())
-      .takeWhile { v =>
-        logger.trace(s"Polled value: $v"); v != null
-      }
+      .continually(msgQueue.poll())
+      .takeWhile { _ != null }
       .take(maximumPulls)
-      .foldLeft(mutable.Map.empty[String, ListBuffer[Array[Byte]]]) {
-        case (acc, f) =>
-          f() match {
-            case (s, x) =>
-              if (!acc.contains(s)) acc += s -> ListBuffer(x)
-              else {
-                val l = acc(s)
-                l += x
-                acc += s -> l
-              }
-          }
-          acc
+      .foldLeft(mutable.Map.empty[String, ListBuffer[MessageBufferPacker => Unit]]) {
+        case (acc, (k, f)) =>
+          acc += k -> (acc.getOrElse(k, ListBuffer.empty) += f)
       }
+      .toMap
   }
 
-  def mkBuffers(m: mutable.Map[String, ListBuffer[Array[Byte]]]): Iterator[Array[Byte]] = {
-    m.iterator.map {
-      case (s, vs) =>
-        try {
-          val p = mPacker.get()
-          p.packArrayHeader(2)
-          PS.apply(s, p)
-          p.packArrayHeader(vs.size)
-          vs.foreach(p.writePayload)
-          p.toByteArray
-        } finally mPacker.get().clear()
+  def makeMessage(s: String, fs: ListBuffer[MessageBufferPacker => Unit]): Option[(String, ByteBuffer)] = {
+    val packer = mPacker.get()
+    try {
+      val chunk = b64e.encodeToString(UUID.randomUUID().toString.getBytes(UTF_8))
+      logger.trace(s"tag: $s, chunk: $chunk")
+      packer.packArrayHeader(3)
+      PS.apply(s, packer)
+      packer.packArrayHeader(fs.size)
+      fs.foreach(_(packer))
+      PM.apply(MOption(chunk = Some(chunk)), packer)
+      Some(chunk -> packer.toMessageBuffer.sliceAsByteBuffer())
+    } catch {
+      case NonFatal(e) =>
+        logger.error(s"Failed to make a message: $e")
+        None
+    } finally packer.clear()
+  }
+
+  def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] = {
+    m.iterator
+      .map((makeMessage _).tupled)
+      .collect { case Some(v) => v }
+  }
+
+  private def send(chunk: String, msg: ByteBuffer): Unit = {
+    connection.writeAndRead(msg) match {
+      case Success(a) =>
+        PA.apply(a) match {
+          case Right(b) if b.ack == chunk =>
+            logger.trace(s"Succeeded to write a message")
+          case Right(b) =>
+            logger.warn(s"Ack-ID and chunk did not match: ${b.ack} ≠ $chunk")
+            msg.flip()
+            errorQueue.offer(chunk -> msg)
+          case Left(e) =>
+            logger.error(s"Failed to decode a response message: $e")
+        }
+
+      case Failure(e) => logger.error(s"Failed to write a message: $msg, error: $e")
     }
   }
 
-  def consume(): Unit = {
-    logger.trace(s"Start emitting. remaining: $packQueue")
-    val start  = System.nanoTime()
-    val buffer = mkBuffers(mkMap)
-    messenger.emit(buffer)
-    logger.trace(
-      s"It spent ${TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start)} ms in emitting messages.")
+  def retrieveErrors(): Iterator[(String, ByteBuffer)] = {
+    Iterator.continually(errorQueue.poll()).takeWhile(_ != null).take(maximumPulls)
   }
+
+  def consume(): Unit =
+    if (msgQueue.isEmpty) ()
+    else {
+      retrieveErrors().foreach((send _).tupled)
+      makeMessages(retrieveElements()).foreach((send _).tupled)
+    }
 }

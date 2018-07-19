@@ -47,8 +47,8 @@ lazy val fluflu = (project in file("."))
     Compile / console / scalacOptions --= compilerOptions ++ warnCompilerOptions,
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
-  .aggregate(core, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
-  .dependsOn(core, monix, `monix-reactive`, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .aggregate(core, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .dependsOn(core, msgpack, `msgpack-circe`, it, benchmark, examples)
 
 lazy val publishSettings = Seq(
   releaseCrossBuild := true,
@@ -103,32 +103,6 @@ lazy val core = project.in(file("modules/core"))
   )
   .dependsOn(msgpack % "compile->compile;test->test")
 
-lazy val monix = project.in(file("modules/monix"))
-  .settings(publishSettings)
-  .settings(
-    description := "fluflu monix",
-    moduleName := "fluflu-monix",
-  )
-  .settings(
-    libraryDependencies ++= Seq(
-      Pkg.monixEval,
-    )
-  )
-  .dependsOn(core, msgpack)
-
-lazy val `monix-reactive` = project.in(file("modules/monix-reactive"))
-  .settings(publishSettings)
-  .settings(
-    description := "fluflu monix-reactive",
-    moduleName := "fluflu-monix-reactive",
-  )
-  .settings(
-    libraryDependencies ++= Seq(
-      Pkg.monixReactive,
-    )
-  )
-  .dependsOn(core, msgpack)
-
 lazy val msgpack = project.in(file("modules/msgpack"))
   .settings(publishSettings)
   .settings(
@@ -160,7 +134,7 @@ lazy val it = project.in(file("modules/it"))
     description := "fluflu it",
     moduleName := "fluflu-it",
   )
-  .dependsOn(core, msgpack % "compile->compile;test->test")
+  .dependsOn(core, `msgpack-circe` % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
   .settings(noPublishSettings)
@@ -178,7 +152,7 @@ lazy val examples = project.in(file("modules/examples"))
   .settings(
     coverageEnabled := false
   )
-  .dependsOn(monix, `msgpack-circe`)
+  .dependsOn(core, `msgpack-circe`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
   .settings(noPublishSettings)

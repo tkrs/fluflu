@@ -1,4 +1,4 @@
-package fluflu.time
+package fluflu.msgpack.time
 
 import java.time.Instant
 

@@ -1,9 +1,10 @@
 package fluflu
 
 import java.time.{Duration, Instant}
-import java.util.concurrent.{ConcurrentLinkedQueue, Executors}
+import java.util.concurrent.{ConcurrentLinkedQueue, Executors, TimeUnit}
 
-import fluflu.msgpack.Packer
+import com.typesafe.scalalogging.LazyLogging
+import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
@@ -24,29 +25,27 @@ object Client {
             maximumPulls: Int = 1000,
             packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
       implicit
-      messenger: Messenger,
+      connection: Connection,
       PS: Packer[String],
-      PI: Packer[Instant]): Client = {
-    val scheduler = Executors.newSingleThreadScheduledExecutor()
-    val queue     = new ConcurrentLinkedQueue[() => Array[Byte]]
-    val consumer  = new DefaultConsumer(delay, maximumPulls, messenger, scheduler, queue)
+      PI: Packer[Instant],
+      PM: Packer[MOption],
+      PA: Unpacker[Ack]
+  ): Client =
+    new Client with LazyLogging {
+      private[this] val queue     = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
+      private[this] val consumer  = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
+      private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
 
-    new Client {
-      private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
-        override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()
-      }
+      val _ = scheduler.scheduleWithFixedDelay(consumer, 500, delay.toNanos, TimeUnit.NANOSECONDS)
+
       def emit[A: Packer](tag: String, record: A, time: Instant): Either[Exception, Unit] =
         if (scheduler.isShutdown)
-          Left(new Exception("A Client scheduler was already shutdown"))
+          Left(new Exception("Client scheduler was already shutdown"))
         else {
-          val fa = () =>
-            try {
-              val p = mPacker.get()
-              Packer[(String, A, Instant)].apply((tag, record, time), p)
-              p.toByteArray
-            } finally mPacker.get().clear()
-          if (queue.offer(fa)) Right(Consumer.start(consumer))
-          else Left(new Exception("A queue no space is currently available"))
+          logger.trace(s"Queueing message: ${(tag, record, time)}")
+          val fa = (p: MessageBufferPacker) => Packer[(A, Instant)].apply((record, time), p)
+          if (queue.offer(tag -> fa)) Right(())
+          else Left(new Exception("The queue no space is currently available"))
         }
 
       def close(): Unit = {
@@ -54,43 +53,4 @@ object Client {
         consumer.consume()
       }
     }
-  }
-
-  def forwardable(delay: Duration = Duration.ofSeconds(1),
-                  terminationDelay: Duration = Duration.ofSeconds(10),
-                  maximumPulls: Int = 1000,
-                  packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
-      implicit
-      messenger: Messenger,
-      PS: Packer[String],
-      PI: Packer[Instant]): Client = {
-    val scheduler = Executors.newSingleThreadScheduledExecutor()
-    val queue     = new ConcurrentLinkedQueue[() => (String, Array[Byte])]
-    val consumer  = new ForwardConsumer(delay, maximumPulls, messenger, scheduler, queue)
-
-    new Client {
-      private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
-        override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()
-      }
-
-      def emit[A: Packer](tag: String, record: A, time: Instant): Either[Exception, Unit] =
-        if (scheduler.isShutdown)
-          Left(new Exception("A Client scheduler was already shutdown"))
-        else {
-          val fa = () =>
-            try {
-              val p = mPacker.get
-              Packer[(A, Instant)].apply((record, time), p)
-              (tag, p.toByteArray)
-            } finally mPacker.get.clear()
-          if (queue.offer(fa)) Right(Consumer.start(consumer))
-          else Left(new Exception("A queue no space is currently available"))
-        }
-
-      def close(): Unit = {
-        awaitTermination(scheduler, terminationDelay)
-        consumer.consume()
-      }
-    }
-  }
 }

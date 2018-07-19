@@ -100,17 +100,9 @@ abstract class Base extends LazyLogging {
   )
 
   val client: Client = {
-    import fluflu.time.eventTime._
+    import msgpack.time.eventTime._
 
-    implicit val consumeScheduler: Scheduler =
-      Scheduler.singleThread(name = "fluflu-example")
-
-    implicit val messenger: Messenger = new monix.MessengerTask(
-      timeout = Duration.ofSeconds(10),
-      backoff = Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(5), rnd)
-    )
-
-    Client.forwardable(
+    Client.apply(
       delay = Duration.ofNanos(50),
       terminationDelay = Duration.ofSeconds(10),
       maximumPulls = 5000
