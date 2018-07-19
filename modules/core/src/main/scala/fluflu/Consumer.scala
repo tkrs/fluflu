@@ -77,9 +77,7 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
   }
 
   def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] = {
-    m.iterator
-      .map((makeMessage _).tupled)
-      .collect { case Some(v) => v }
+    m.iterator.map((makeMessage _).tupled).collect { case Some(v) => v }
   }
 
   private def send(chunk: String, msg: ByteBuffer): Unit = {
@@ -96,7 +94,9 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
             logger.error(s"Failed to decode a response message: $e")
         }
 
-      case Failure(e) => logger.error(s"Failed to write a message: $msg, error: $e")
+      case Failure(e) =>
+        logger.error(s"Failed to write a message: $msg, error: $e")
+        errorQueue.offer(chunk -> msg)
     }
   }
 
