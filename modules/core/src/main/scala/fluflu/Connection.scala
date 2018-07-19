@@ -2,7 +2,7 @@ package fluflu
 
 import java.io.IOException
 import java.lang.{Boolean => JBool}
-import java.net.{SocketAddress, NetworkInterface, StandardSocketOptions}
+import java.net.{NetworkInterface, SocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
@@ -151,7 +151,7 @@ object Connection {
       }
     }
 
-    private[this] val ackBuffer = ByteBuffer.allocateDirect(256)
+    private[this] val ackBuffer = ByteBuffer.allocate(256)
 
     def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
