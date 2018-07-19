@@ -26,7 +26,8 @@ object Connection {
       writeTimeout: Duration,
       writeBackof: Backoff,
       readTimeout: Duration,
-      readBackof: Backoff
+      readBackof: Backoff,
+      readSize: Int = 55 // When using UUID v4 to chunk
   )
 
   final case class SocketOptions(
@@ -40,7 +41,8 @@ object Connection {
       ipMulticastIf: Option[NetworkInterface] = None,
       ipMulticastTtl: Option[Int] = None,
       ipMulticastLoop: Option[Boolean] = None,
-      tcpNoDelay: Option[Boolean] = Some(true)
+      tcpNoDelay: Option[Boolean] = Some(true),
+      soTimeout: Option[Int] = Some(5000)
   )
 
   def apply(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings, clock: Clock): Connection =
@@ -73,6 +75,9 @@ object Connection {
       socketOptions.soRcvbuf.foreach(ch.setOption[Integer](SO_RCVBUF, _))
       socketOptions.soReuseAddr.foreach(ch.setOption[JBool](SO_REUSEADDR, _))
       socketOptions.tcpNoDelay.foreach(ch.setOption[JBool](TCP_NODELAY, _))
+
+      val s = ch.socket()
+      socketOptions.soTimeout.foreach(s.setSoTimeout)
       ch
     }
 
@@ -110,11 +115,11 @@ object Connection {
       closed || !channel.isConnected
 
     private def _write(message: ByteBuffer, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
-      @tailrec def writeLoop(acc: Int): Int =
+      @tailrec def loop(acc: Int): Int =
         if (!message.hasRemaining) acc
-        else writeLoop(acc + ch.write(message))
+        else loop(acc + ch.write(message))
 
-      Try(writeLoop(0)) match {
+      Try(loop(0)) match {
         case v @ Success(_) => v
         case Failure(e0) =>
           if (sleeper.giveUp) Failure(e0)
@@ -131,7 +136,8 @@ object Connection {
 
     private def _read(dst: ByteBuffer, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
       Try(ch.read(dst)) match {
-        case v @ Success(_) => v
+        case v @ Success(_) if dst.position() == settings.readSize => v
+        case Success(_)                                            => _read(dst, ch, retries, sleeper)
         case Failure(e0) =>
           if (sleeper.giveUp) Failure(e0)
           else {
@@ -145,22 +151,23 @@ object Connection {
       }
     }
 
+    private[this] val ackBuffer = ByteBuffer.allocateDirect(256)
+
     def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
         ch <- connect()
-        _  = logger.trace(s"Start writing message: $message")
+        _  = logger.debug(s"Start writing message: $message")
         ws = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
         toWrite <- _write(message, ch, 0, ws) if ch.isConnected
-        _ = logger.trace(s"Number of bytes written: $toWrite")
-
-        ack = ByteBuffer.allocate(256)
+        _ = logger.debug(s"Number of bytes written: $toWrite")
 
         rs = Sleeper(settings.readBackof, settings.readTimeout, clock)
-        toRead <- _read(ack, ch, 0, rs) if ch.isConnected
-        _ = logger.trace(s"Number of bytes read: $toRead")
+        _  = ackBuffer.clear()
+        _ <- _read(ackBuffer, ch, 0, rs) if ch.isConnected
+        _ = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
       } yield {
-        ack.flip()
-        ack
+        ackBuffer.flip()
+        ackBuffer.duplicate()
       }
 
     def close(): Try[Unit] = {

@@ -33,7 +33,7 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
                                              packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
     implicit PS: Packer[String],
     PM: Packer[MOption],
-    PA: Unpacker[Option[Ack]]
+    UA: Unpacker[Option[Ack]]
 ) extends Consumer
     with LazyLogging {
   private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
@@ -83,7 +83,7 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
   private def send(chunk: String, msg: ByteBuffer): Unit = {
     connection.writeAndRead(msg) match {
       case Success(a) =>
-        PA.apply(a) match {
+        UA.apply(a) match {
           case Right(Some(b)) if b.ack == chunk =>
             logger.trace(s"Succeeded to write a message")
           case Right(b) =>

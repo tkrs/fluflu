@@ -8,6 +8,7 @@ import java.time.{Clock, Duration}
 
 import fluflu.Connection.SocketOptions
 import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest.mockito.MockitoSugar
@@ -21,12 +22,12 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
   implicit val clock: Clock = Clock.systemUTC()
 
   val address: SocketAddress = new SocketAddress {}
-  val connSettings = Connection.Settings(
-    Duration.ofSeconds(3),
+  def connSettings = Connection.Settings(
+    Duration.ofSeconds(1),
     Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofSeconds(3),
+    Duration.ofSeconds(1),
     Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofSeconds(3),
+    Duration.ofSeconds(1),
     Backoff.fix(Duration.ofMillis(1))
   )
 
@@ -72,6 +73,7 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
           1
         }
       })
+      when(channelMock.read(any[ByteBuffer])).thenReturn(55)
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel = channelMock
       }
