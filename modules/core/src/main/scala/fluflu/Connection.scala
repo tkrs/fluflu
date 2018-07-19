@@ -134,17 +134,17 @@ object Connection {
       }
     }
 
-    private def _read(dst: ByteBuffer, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
+    private def _read(dst: ByteBuffer, size: Int, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
       Try(ch.read(dst)) match {
-        case v @ Success(_) if dst.position() == settings.readSize => v
-        case Success(_)                                            => _read(dst, ch, retries, sleeper)
+        case Success(sz) if size + sz == settings.readSize => Success(size + sz)
+        case Success(sz)                                   => _read(dst, size + sz, ch, retries, sleeper)
         case Failure(e0) =>
           if (sleeper.giveUp) Failure(e0)
           else {
             sleeper.sleep(retries)
             channel.close()
             connect() match {
-              case Success(ch1) => _read(dst, ch1, retries + 1, sleeper)
+              case Success(ch1) => _read(dst, size, ch1, retries + 1, sleeper)
               case Failure(e)   => Failure(e)
             }
           }
@@ -163,7 +163,7 @@ object Connection {
 
         rs = Sleeper(settings.readBackof, settings.readTimeout, clock)
         _  = ackBuffer.clear()
-        _ <- _read(ackBuffer, ch, 0, rs) if ch.isConnected
+        _ <- _read(ackBuffer, 0, ch, 0, rs) if ch.isConnected
         _ = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
       } yield {
         ackBuffer.flip()

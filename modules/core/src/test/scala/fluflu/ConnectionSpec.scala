@@ -23,11 +23,11 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
 
   val address: SocketAddress = new SocketAddress {}
   def connSettings = Connection.Settings(
-    Duration.ofSeconds(1),
+    Duration.ofMillis(500),
     Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofSeconds(1),
+    Duration.ofMillis(500),
     Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofSeconds(1),
+    Duration.ofMillis(500),
     Backoff.fix(Duration.ofMillis(1))
   )
 
@@ -68,12 +68,11 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       when(channelMock.connect(address)).thenReturn(true)
       when(channelMock.write(arg)).thenAnswer(new Answer[Int] {
         override def answer(invocation: InvocationOnMock): Int = {
-          val arr = Array.ofDim[Byte](1)
-          arg.get(arr)
+          arg.get(Array.ofDim[Byte](1))
           1
         }
       })
-      when(channelMock.read(any[ByteBuffer])).thenReturn(55)
+      when(channelMock.read(any[ByteBuffer])).thenReturn(50, 5)
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel = channelMock
       }
