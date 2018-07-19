@@ -2,7 +2,7 @@ package fluflu
 
 import java.io.IOException
 import java.lang.{Boolean => JBool}
-import java.net.{SocketAddress, NetworkInterface, StandardSocketOptions}
+import java.net.{NetworkInterface, SocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.{Clock, Duration}
@@ -20,6 +20,16 @@ trait Connection {
 
 object Connection {
 
+  final case class Settings(
+      connectionTimeout: Duration,
+      connectionBackof: Backoff,
+      writeTimeout: Duration,
+      writeBackof: Backoff,
+      readTimeout: Duration,
+      readBackof: Backoff,
+      readSize: Int = 55 // When using UUID v4 to chunk
+  )
+
   final case class SocketOptions(
       soBroadcast: Option[Boolean] = None,
       soKeepalive: Option[Boolean] = None,
@@ -31,22 +41,18 @@ object Connection {
       ipMulticastIf: Option[NetworkInterface] = None,
       ipMulticastTtl: Option[Int] = None,
       ipMulticastLoop: Option[Boolean] = None,
-      tcpNoDelay: Option[Boolean] = Some(true)
+      tcpNoDelay: Option[Boolean] = Some(true),
+      soTimeout: Option[Int] = Some(5000)
   )
 
-  def apply(remote: SocketAddress,
-            socketOptions: SocketOptions,
-            timeout: Duration,
-            backoff: Backoff,
-            clock: Clock): Connection =
-    new ConnectionImpl(remote, socketOptions, timeout, backoff)(clock)
+  def apply(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings, clock: Clock): Connection =
+    new ConnectionImpl(remote, socketOptions, settings)(clock)
 
-  def apply(remote: SocketAddress, timeout: Duration, backoff: Backoff)(implicit
-                                                                        clock: Clock = Clock.systemUTC()): Connection =
-    new ConnectionImpl(remote, SocketOptions(), timeout, backoff)(clock)
+  def apply(remote: SocketAddress, settings: Settings)(implicit
+                                                       clock: Clock = Clock.systemUTC()): Connection =
+    new ConnectionImpl(remote, SocketOptions(), settings)(clock)
 
-  class ConnectionImpl(remote: SocketAddress, socketOptions: SocketOptions, timeout: Duration, backoff: Backoff)(
-      implicit clock: Clock)
+  class ConnectionImpl(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings)(implicit clock: Clock)
       extends Connection
       with LazyLogging {
     import StandardSocketOptions._
@@ -54,7 +60,7 @@ object Connection {
     @volatile private[this] var closed: Boolean = false
 
     @volatile private[this] var channel: SocketChannel =
-      doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)).get
+      doConnect(channelOpen, 0, Sleeper(settings.connectionBackof, settings.connectionTimeout, clock)).get
 
     protected def channelOpen: SocketChannel = {
       val ch = SocketChannel.open()
@@ -69,6 +75,9 @@ object Connection {
       socketOptions.soRcvbuf.foreach(ch.setOption[Integer](SO_RCVBUF, _))
       socketOptions.soReuseAddr.foreach(ch.setOption[JBool](SO_REUSEADDR, _))
       socketOptions.tcpNoDelay.foreach(ch.setOption[JBool](TCP_NODELAY, _))
+
+      val s = ch.socket()
+      socketOptions.soTimeout.foreach(s.setSoTimeout)
       ch
     }
 
@@ -97,7 +106,7 @@ object Connection {
       if (closed) Failure(new Exception("Already closed"))
       else if (channel.isConnected) Success(channel)
       else
-        doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)) match {
+        doConnect(channelOpen, 0, Sleeper(settings.connectionBackof, settings.connectionTimeout, clock)) match {
           case t @ Success(c) => channel = c; t
           case f              => f
         }
@@ -105,25 +114,61 @@ object Connection {
     def isClosed: Boolean =
       closed || !channel.isConnected
 
+    private def _write(message: ByteBuffer, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
+      @tailrec def loop(acc: Int): Int =
+        if (!message.hasRemaining) acc
+        else loop(acc + ch.write(message))
+
+      Try(loop(0)) match {
+        case v @ Success(_) => v
+        case Failure(e0) =>
+          if (sleeper.giveUp) Failure(e0)
+          else {
+            sleeper.sleep(retries)
+            channel.close()
+            connect() match {
+              case Success(ch1) => _write(message, ch1, retries + 1, sleeper)
+              case Failure(e)   => Failure(e)
+            }
+          }
+      }
+    }
+
+    private def _read(dst: ByteBuffer, size: Int, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
+      Try(ch.read(dst)) match {
+        case Success(sz) if size + sz == settings.readSize => Success(size + sz)
+        case Success(sz)                                   => _read(dst, size + sz, ch, retries, sleeper)
+        case Failure(e0) =>
+          if (sleeper.giveUp) Failure(e0)
+          else {
+            sleeper.sleep(retries)
+            channel.close()
+            connect() match {
+              case Success(ch1) => _read(dst, size, ch1, retries + 1, sleeper)
+              case Failure(e)   => Failure(e)
+            }
+          }
+      }
+    }
+
+    private[this] val ackBuffer = ByteBuffer.allocate(256)
+
     def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
         ch <- connect()
-        r <- Try {
-              logger.trace(s"Start writing message: $message")
-              @tailrec def writeLoop(acc: Int): Int =
-                if (!message.hasRemaining) acc
-                else writeLoop(acc + ch.write(message))
-              val toWrite = writeLoop(0)
-              logger.trace(s"Number of bytes written: $toWrite")
+        _  = logger.debug(s"Start writing message: $message")
+        ws = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
+        toWrite <- _write(message, ch, 0, ws) if ch.isConnected
+        _ = logger.debug(s"Number of bytes written: $toWrite")
 
-              val ack    = ByteBuffer.allocate(256)
-              val toRead = ch.read(ack)
-              ack.flip()
-              logger.trace(s"Number of bytes read: $toRead")
-
-              ack
-            }
-      } yield r
+        rs = Sleeper(settings.readBackof, settings.readTimeout, clock)
+        _  = ackBuffer.clear()
+        _ <- _read(ackBuffer, 0, ch, 0, rs) if ch.isConnected
+        _ = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
+      } yield {
+        ackBuffer.flip()
+        ackBuffer.duplicate()
+      }
 
     def close(): Try[Unit] = {
       closed = true

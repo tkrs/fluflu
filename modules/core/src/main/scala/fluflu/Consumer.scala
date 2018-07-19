@@ -33,7 +33,7 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
                                              packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
     implicit PS: Packer[String],
     PM: Packer[MOption],
-    PA: Unpacker[Ack]
+    UA: Unpacker[Option[Ack]]
 ) extends Consumer
     with LazyLogging {
   private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
@@ -77,26 +77,29 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
   }
 
   def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] = {
-    m.iterator
-      .map((makeMessage _).tupled)
-      .collect { case Some(v) => v }
+    m.iterator.map((makeMessage _).tupled).collect { case Some(v) => v }
   }
 
   private def send(chunk: String, msg: ByteBuffer): Unit = {
     connection.writeAndRead(msg) match {
       case Success(a) =>
-        PA.apply(a) match {
-          case Right(b) if b.ack == chunk =>
+        UA.apply(a) match {
+          case Right(Some(b)) if b.ack == chunk =>
             logger.trace(s"Succeeded to write a message")
           case Right(b) =>
-            logger.warn(s"Ack-ID and chunk did not match: ${b.ack} ≠ $chunk")
+            logger.warn(s"Ack-ID and chunk did not match: ${b.fold("")(_.ack)} ≠ $chunk")
             msg.flip()
             errorQueue.offer(chunk -> msg)
           case Left(e) =>
             logger.error(s"Failed to decode a response message: $e")
+            msg.flip()
+            errorQueue.offer(chunk -> msg)
         }
 
-      case Failure(e) => logger.error(s"Failed to write a message: $msg, error: $e")
+      case Failure(e) =>
+        logger.error(s"Failed to write a message: $msg, error: $e")
+        msg.flip()
+        errorQueue.offer(chunk -> msg)
     }
   }
 
@@ -105,7 +108,7 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
   }
 
   def consume(): Unit =
-    if (msgQueue.isEmpty) ()
+    if (msgQueue.isEmpty && errorQueue.isEmpty) ()
     else {
       retrieveErrors().foreach((send _).tupled)
       makeMessages(retrieveElements()).foreach((send _).tupled)
