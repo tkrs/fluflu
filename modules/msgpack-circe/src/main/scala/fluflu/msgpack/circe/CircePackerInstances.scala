@@ -8,6 +8,7 @@ import io.circe.generic.semiauto._
 import org.msgpack.core.{MessagePack, MessagePacker => CMessagePacker}
 
 trait CircePackerInstances {
+
   implicit def circePackerInstance[A: Encoder]: Packer[A] =
     new Packer[A] {
       def apply(a: A, packer: CMessagePacker): Unit =
@@ -29,5 +30,4 @@ trait CircePackerInstances {
     def apply(bytes: ByteBuffer): Either[Throwable, Option[Ack]] =
       MessageUnpacker(unpackerConfig.newUnpacker(bytes)).decode[Option[Ack]]
   }
-
 }

@@ -91,13 +91,13 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
             msg.flip()
             errorQueue.offer(chunk -> msg)
           case Left(e) =>
-            logger.error(s"Failed to decode a response message: $e")
+            logger.warn(s"Failed to decode a response message: $e")
             msg.flip()
             errorQueue.offer(chunk -> msg)
         }
 
       case Failure(e) =>
-        logger.error(s"Failed to write a message: $msg, error: $e")
+        logger.warn(s"Failed to write a message: $msg, error: $e")
         msg.flip()
         errorQueue.offer(chunk -> msg)
     }
