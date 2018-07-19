@@ -3,6 +3,7 @@ package fluflu
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets._
 import java.util
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.{Base64, UUID}
 
 import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
@@ -12,31 +13,30 @@ import com.typesafe.scalalogging.LazyLogging
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
-import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 trait Consumer extends Runnable {
   type E
 
   protected def msgQueue: util.Queue[E]
-  // protected def errorQueue: util.Queue[ByteBuffer]
 
   def consume(): Unit
 
   def run(): Unit = consume()
 }
 
-final class ForwardConsumer private[fluflu] (val maximumPulls: Int,
-                                             val connection: Connection,
+final class ForwardConsumer private[fluflu] (maximumPulls: Int,
+                                             connection: Connection,
                                              val msgQueue: util.Queue[(String, MessageBufferPacker => Unit)],
-                                             val packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
+                                             packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
     implicit PS: Packer[String],
     PM: Packer[MOption],
     PA: Unpacker[Ack]
 ) extends Consumer
     with LazyLogging {
+  private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
 
   private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
     override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()
@@ -58,65 +58,56 @@ final class ForwardConsumer private[fluflu] (val maximumPulls: Int,
       .toMap
   }
 
+  def makeMessage(s: String, fs: ListBuffer[MessageBufferPacker => Unit]): Option[(String, ByteBuffer)] = {
+    val packer = mPacker.get()
+    try {
+      val chunk = b64e.encodeToString(UUID.randomUUID().toString.getBytes(UTF_8))
+      logger.trace(s"tag: $s, chunk: $chunk")
+      packer.packArrayHeader(3)
+      PS.apply(s, packer)
+      packer.packArrayHeader(fs.size)
+      fs.foreach(_(packer))
+      PM.apply(MOption(chunk = Some(chunk)), packer)
+      Some(chunk -> packer.toMessageBuffer.sliceAsByteBuffer())
+    } catch {
+      case NonFatal(e) =>
+        logger.error(s"Failed to make a message: $e")
+        None
+    } finally packer.clear()
+  }
+
   def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] = {
     m.iterator
-      .map {
-        case (s, fs) =>
-          val packer = mPacker.get()
-          try {
-            val chunk = b64e.encodeToString(UUID.randomUUID().toString.getBytes(UTF_8))
-            logger.trace(s"tag: $s, chunk: $chunk")
-            packer.packArrayHeader(3)
-            PS.apply(s, packer)
-            packer.packArrayHeader(fs.size)
-            fs.foreach(_(packer))
-            PM.apply(MOption(chunk = Some(chunk)), packer)
-            Right(chunk -> packer.toMessageBuffer.sliceAsByteBuffer())
-          } catch {
-            case NonFatal(e) =>
-              logger.error(s"$e")
-              Left(e)
-          } finally packer.clear()
-      }
-      .collect {
-        case Right(v) => v
-      }
+      .map((makeMessage _).tupled)
+      .collect { case Some(v) => v }
+  }
+
+  private def send(chunk: String, msg: ByteBuffer): Unit = {
+    connection.writeAndRead(msg) match {
+      case Success(a) =>
+        PA.apply(a) match {
+          case Right(b) if b.ack == chunk =>
+            logger.trace(s"Succeeded to write a message")
+          case Right(b) =>
+            logger.warn(s"Ack-ID and chunk did not match: ${b.ack} ≠ $chunk")
+            msg.flip()
+            errorQueue.offer(chunk -> msg)
+          case Left(e) =>
+            logger.error(s"Failed to decode a response message: $e")
+        }
+
+      case Failure(e) => logger.error(s"Failed to write a message: $msg, error: $e")
+    }
+  }
+
+  def retrieveErrors(): Iterator[(String, ByteBuffer)] = {
+    Iterator.continually(errorQueue.poll()).takeWhile(_ != null).take(maximumPulls)
   }
 
   def consume(): Unit =
     if (msgQueue.isEmpty) ()
     else {
-      val buffers = makeMessages(retrieveElements())
-
-      buffers.foreach {
-        case (chunk, msg) =>
-          @tailrec def wr(count: Int): Try[ByteBuffer] = {
-            connection.writeAndRead(msg) match {
-              case a @ Success(_) => a
-              case Failure(e) =>
-                if (count == 0) Failure(e)
-                else {
-                  logger.warn(s"Cannot read or write: $e")
-                  Thread.sleep(5)
-                  msg.flip()
-                  wr(count - 1)
-                }
-            }
-          }
-
-          wr(15) match {
-            case Success(a) =>
-              PA.apply(a) match {
-                case Right(b) if b.ack == chunk =>
-                  logger.trace(s"Succeeded to write a message")
-                case Right(b) =>
-                  logger.error(s"Ack ≠ Chunk: ${b.ack}, $chunk")
-                case Left(e) =>
-                  logger.error(s"Failed to decode response message: $e")
-              }
-
-            case Failure(e) => logger.error(s"Failed to write a message: $msg, error: $e")
-          }
-      }
+      retrieveErrors().foreach((send _).tupled)
+      makeMessages(retrieveElements()).foreach((send _).tupled)
     }
 }

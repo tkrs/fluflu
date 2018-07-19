@@ -81,19 +81,4 @@ class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHe
       }
     }
   }
-
-//  describe("mkBuffers") {
-//
-//    it("should create buffers as ForwardMode format") {
-//      val queue = new ArrayBlockingQueue[Elem](3)
-//      queue.offer(("a", (m: MessageBufferPacker) => ("a", Array(1.toByte))))
-//      queue.offer(("b", (m: MessageBufferPacker) => ("a", Array(2.toByte))))
-//      queue.offer(("b", (m: MessageBufferPacker) => ("a", Array(3.toByte))))
-//      val consumer     = new ForwardConsumer(5, connection, queue)
-//      val m            = consumer.retrieveElements()
-//      val List(r1, r2) = consumer.makeMessages(m).toList.sortBy(_.length)
-//      assert(r1 === x"93 a1 61 91 01")
-//      assert(r2 === x"93 a1 62 92 02 02")
-//    }
-//  }
 }
