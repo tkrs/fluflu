@@ -20,8 +20,8 @@ class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHe
     def apply(a: MOption, packer: MessagePacker): Unit = ()
   }
 
-  implicit val unpackAck: Unpacker[Ack] = new Unpacker[Ack] {
-    def apply(bytes: ByteBuffer): Either[Throwable, Ack] = Right(Ack("abc"))
+  implicit val unpackAck: Unpacker[Option[Ack]] = new Unpacker[Option[Ack]] {
+    def apply(bytes: ByteBuffer): Either[Throwable, Option[Ack]] = Right(Some(Ack("abc")))
   }
 
   override def beforeEach(): Unit = {

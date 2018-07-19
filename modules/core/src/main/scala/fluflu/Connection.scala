@@ -20,6 +20,15 @@ trait Connection {
 
 object Connection {
 
+  final case class Settings(
+      connectionTimeout: Duration,
+      connectionBackof: Backoff,
+      writeTimeout: Duration,
+      writeBackof: Backoff,
+      readTimeout: Duration,
+      readBackof: Backoff
+  )
+
   final case class SocketOptions(
       soBroadcast: Option[Boolean] = None,
       soKeepalive: Option[Boolean] = None,
@@ -34,19 +43,14 @@ object Connection {
       tcpNoDelay: Option[Boolean] = Some(true)
   )
 
-  def apply(remote: SocketAddress,
-            socketOptions: SocketOptions,
-            timeout: Duration,
-            backoff: Backoff,
-            clock: Clock): Connection =
-    new ConnectionImpl(remote, socketOptions, timeout, backoff)(clock)
+  def apply(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings, clock: Clock): Connection =
+    new ConnectionImpl(remote, socketOptions, settings)(clock)
 
-  def apply(remote: SocketAddress, timeout: Duration, backoff: Backoff)(implicit
-                                                                        clock: Clock = Clock.systemUTC()): Connection =
-    new ConnectionImpl(remote, SocketOptions(), timeout, backoff)(clock)
+  def apply(remote: SocketAddress, settings: Settings)(implicit
+                                                       clock: Clock = Clock.systemUTC()): Connection =
+    new ConnectionImpl(remote, SocketOptions(), settings)(clock)
 
-  class ConnectionImpl(remote: SocketAddress, socketOptions: SocketOptions, timeout: Duration, backoff: Backoff)(
-      implicit clock: Clock)
+  class ConnectionImpl(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings)(implicit clock: Clock)
       extends Connection
       with LazyLogging {
     import StandardSocketOptions._
@@ -54,7 +58,7 @@ object Connection {
     @volatile private[this] var closed: Boolean = false
 
     @volatile private[this] var channel: SocketChannel =
-      doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)).get
+      doConnect(channelOpen, 0, Sleeper(settings.connectionBackof, settings.connectionTimeout, clock)).get
 
     protected def channelOpen: SocketChannel = {
       val ch = SocketChannel.open()
@@ -97,7 +101,7 @@ object Connection {
       if (closed) Failure(new Exception("Already closed"))
       else if (channel.isConnected) Success(channel)
       else
-        doConnect(channelOpen, 0, Sleeper(backoff, timeout, clock)) match {
+        doConnect(channelOpen, 0, Sleeper(settings.connectionBackof, settings.connectionTimeout, clock)) match {
           case t @ Success(c) => channel = c; t
           case f              => f
         }
@@ -105,25 +109,59 @@ object Connection {
     def isClosed: Boolean =
       closed || !channel.isConnected
 
+    private def _write(message: ByteBuffer, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
+      @tailrec def writeLoop(acc: Int): Int =
+        if (!message.hasRemaining) acc
+        else writeLoop(acc + ch.write(message))
+
+      Try(writeLoop(0)) match {
+        case v @ Success(_) => v
+        case Failure(e0) =>
+          if (sleeper.giveUp) Failure(e0)
+          else {
+            sleeper.sleep(retries)
+            channel.close()
+            connect() match {
+              case Success(ch1) => _write(message, ch1, retries + 1, sleeper)
+              case Failure(e)   => Failure(e)
+            }
+          }
+      }
+    }
+
+    private def _read(dst: ByteBuffer, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
+      Try(ch.read(dst)) match {
+        case v @ Success(_) => v
+        case Failure(e0) =>
+          if (sleeper.giveUp) Failure(e0)
+          else {
+            sleeper.sleep(retries)
+            channel.close()
+            connect() match {
+              case Success(ch1) => _read(dst, ch1, retries + 1, sleeper)
+              case Failure(e)   => Failure(e)
+            }
+          }
+      }
+    }
+
     def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
         ch <- connect()
-        r <- Try {
-              logger.trace(s"Start writing message: $message")
-              @tailrec def writeLoop(acc: Int): Int =
-                if (!message.hasRemaining) acc
-                else writeLoop(acc + ch.write(message))
-              val toWrite = writeLoop(0)
-              logger.trace(s"Number of bytes written: $toWrite")
+        _  = logger.trace(s"Start writing message: $message")
+        ws = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
+        toWrite <- _write(message, ch, 0, ws) if ch.isConnected
+        _ = logger.trace(s"Number of bytes written: $toWrite")
 
-              val ack    = ByteBuffer.allocate(256)
-              val toRead = ch.read(ack)
-              ack.flip()
-              logger.trace(s"Number of bytes read: $toRead")
+        ack = ByteBuffer.allocate(256)
 
-              ack
-            }
-      } yield r
+        rs = Sleeper(settings.readBackof, settings.readTimeout, clock)
+        toRead <- _read(ack, ch, 0, rs) if ch.isConnected
+        _ = logger.trace(s"Number of bytes read: $toRead")
+      } yield {
+        ack.flip()
+        ack
+      }
 
     def close(): Try[Unit] = {
       closed = true

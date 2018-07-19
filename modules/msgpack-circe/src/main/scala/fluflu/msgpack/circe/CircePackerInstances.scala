@@ -25,9 +25,9 @@ trait CircePackerInstances {
 
   implicit val decodeMOption: Decoder[Ack] = deriveDecoder[Ack]
 
-  implicit val unpackAck: Unpacker[Ack] = new Unpacker[Ack] {
-    def apply(bytes: ByteBuffer): Either[Throwable, Ack] =
-      MessageUnpacker(unpackerConfig.newUnpacker(bytes)).decode[Ack]
+  implicit val unpackAck: Unpacker[Option[Ack]] = new Unpacker[Option[Ack]] {
+    def apply(bytes: ByteBuffer): Either[Throwable, Option[Ack]] =
+      MessageUnpacker(unpackerConfig.newUnpacker(bytes)).decode[Option[Ack]]
   }
 
 }

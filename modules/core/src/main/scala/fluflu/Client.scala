@@ -29,7 +29,7 @@ object Client {
       PS: Packer[String],
       PI: Packer[Instant],
       PM: Packer[MOption],
-      PA: Unpacker[Ack]
+      PA: Unpacker[Option[Ack]]
   ): Client =
     new Client with LazyLogging {
       private[this] val queue     = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]

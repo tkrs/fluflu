@@ -35,7 +35,7 @@ object Main extends Base {
       .take(count)
 
     val consumer = Consumer.foreachParallelTask(10) { x: Long =>
-      Task(client.emit(s"docker.main.${x % 3}", Num(x)))
+      Task(client.emit(s"docker.main.${x % 10}", Num(x)))
     }
 
     implicit val s: Scheduler = Scheduler.computation(10)
@@ -93,11 +93,19 @@ abstract class Base extends LazyLogging {
 
   val host = sys.props.getOrElse("fluentd.host", "localhost")
   val port = sys.props.getOrElse("fluentd.port", "24224").toInt
-  implicit val connection: Connection = Connection(
-    remote = new InetSocketAddress(host, port),
-    timeout = Duration.ofSeconds(10),
+
+  val addr = new InetSocketAddress(host, port)
+
+  val connSettings = Connection.Settings(
+    Duration.ofSeconds(60),
+    Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd),
+    Duration.ofSeconds(10),
+    Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd),
+    Duration.ofSeconds(10),
     Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd)
   )
+
+  implicit val connection: Connection = Connection(addr, connSettings)
 
   val client: Client = {
     import msgpack.time.eventTime._
