@@ -1,12 +1,12 @@
 package fluflu.msgpack.circe
 
-import cats.syntax.either._
 import io.circe.{Decoder, DecodingFailure, Error, Json, JsonObject}
 import org.msgpack.core.{MessageFormat => MF}
 import org.msgpack.core.{MessageUnpacker => MUnpacker}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
 object MessageUnpacker {
 
@@ -18,10 +18,10 @@ object MessageUnpacker {
 final class MessageUnpacker(unpacker: MUnpacker) {
 
   def decode[A: Decoder]: Either[Error, A] =
-    Either
-      .catchOnly[Exception](unpack)
-      .leftMap(e => DecodingFailure(e.getMessage, List.empty))
-      .flatMap(_.as[A])
+    Try(unpack) match {
+      case Success(v) => v.as[A]
+      case Failure(e) => Left(DecodingFailure(e.getMessage, List.empty))
+    }
 
   def unpack: Json = unpack0(unpacker)
 

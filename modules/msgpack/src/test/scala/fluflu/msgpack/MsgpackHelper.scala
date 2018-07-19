@@ -1,14 +1,9 @@
 package fluflu.msgpack
 
-import cats.Eq
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 import org.scalatest._
 
 trait MsgpackHelper extends Matchers with BeforeAndAfterEach { self: Suite =>
-
-  implicit val arrayEq: Eq[Array[Byte]] = Eq.instance[Array[Byte]](_.zip(_).forall {
-    case (a, b) => a == b
-  })
 
   var packer: MessageBufferPacker = _
 
