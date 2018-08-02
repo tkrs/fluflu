@@ -84,7 +84,8 @@ lazy val publishSettings = Seq(
 )
 
 lazy val noPublishSettings = Seq(
-  publish / skip := true
+  publish / skip := true,
+  publishTo := Some(Resolver.mavenLocal),
 )
 
 lazy val core = project.in(file("modules/core"))
