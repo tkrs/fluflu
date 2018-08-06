@@ -42,6 +42,7 @@ lazy val warnCompilerOptions = Seq(
 )
 
 lazy val fluflu = (project in file("."))
+  .settings(publishSettings)
   .settings(noPublishSettings)
   .settings(
     Compile / console / scalacOptions --= compilerOptions ++ warnCompilerOptions,
@@ -84,8 +85,9 @@ lazy val publishSettings = Seq(
 )
 
 lazy val noPublishSettings = Seq(
-  publish / skip := true,
-  publishTo := Some(Resolver.mavenLocal),
+  publish := {},
+  publishLocal := {},
+  publishArtifact := false
 )
 
 lazy val core = project.in(file("modules/core"))
@@ -127,6 +129,7 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
   .dependsOn(msgpack % "compile->compile;test->test")
 
 lazy val it = project.in(file("modules/it"))
+  .settings(publishSettings)
   .settings(noPublishSettings)
   .settings(
     description := "fluflu it",
@@ -135,6 +138,7 @@ lazy val it = project.in(file("modules/it"))
   .dependsOn(core, `msgpack-circe` % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
+  .settings(publishSettings)
   .settings(noPublishSettings)
   .settings(
     description := "fluflu examples",
@@ -153,6 +157,7 @@ lazy val examples = project.in(file("modules/examples"))
   .dependsOn(core, `msgpack-circe`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
+  .settings(publishSettings)
   .settings(noPublishSettings)
   .settings(
     description := "fluflu benchmark",
