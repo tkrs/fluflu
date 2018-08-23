@@ -38,6 +38,13 @@ class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHe
   }
 
   describe("consume") {
+    it("should consume messages") {
+      val queue = new ArrayBlockingQueue[Elem](6)
+      (1 to 6).foreach(_ => queue.offer(("tag", (m: MessageBufferPacker) => m.packNil())))
+      val consumer = new ForwardConsumer(10, connection, queue)
+      consumer.consume()
+      assert(queue.size() === 0)
+    }
     it("should consume max-pulls messages") {
       val queue = new ArrayBlockingQueue[Elem](6)
       (1 to 6).foreach(_ => queue.offer(("tag", (m: MessageBufferPacker) => m.packNil())))
