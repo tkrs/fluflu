@@ -49,8 +49,8 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
   def retrieveElements(): Map[String, ListBuffer[MessageBufferPacker => Unit]] = {
     Iterator
       .continually(msgQueue.poll())
-      .takeWhile { _ != null }
       .take(maximumPulls)
+      .takeWhile { _ != null }
       .foldLeft(mutable.Map.empty[String, ListBuffer[MessageBufferPacker => Unit]]) {
         case (acc, (k, f)) =>
           acc += k -> (acc.getOrElse(k, ListBuffer.empty) += f)

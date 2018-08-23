@@ -5,6 +5,7 @@ ThisBuild / scalaVersion := Ver.`scala2.12`
 ThisBuild / crossScalaVersions := Seq(
   Ver.`scala2.11`,
   Ver.`scala2.12`,
+  Ver.`scala2.13`,
 )
 ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
@@ -16,8 +17,9 @@ ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(
 )
 ThisBuild / scalacOptions ++= compilerOptions ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, p)) if p >= 12 => warnCompilerOptions
-    case _                       => Nil
+    case Some((2, 13)) => warnCompilerOptions
+    case Some((2, 12)) => warnCompilerOptions :+ "-Yno-adapted-args"
+    case _             => Nil
   }
 }
 ThisBuild / Test / fork := true
@@ -33,7 +35,6 @@ lazy val compilerOptions = Seq(
 
 lazy val warnCompilerOptions = Seq(
   "-Xlint",
-  "-Yno-adapted-args",
   "-Xfatal-warnings",
   "-Ywarn-extra-implicit",
   "-Ywarn-unused:_",
@@ -48,8 +49,8 @@ lazy val fluflu = (project in file("."))
     Compile / console / scalacOptions --= compilerOptions ++ warnCompilerOptions,
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
-  .aggregate(core, msgpack, `msgpack-circe`, it, benchmark, examples)
-  .dependsOn(core, msgpack, `msgpack-circe`, it, benchmark, examples)
+  .aggregate(core, msgpack, `msgpack-circe`, it, benchmark)
+  .dependsOn(core, msgpack, `msgpack-circe`, it, benchmark)
 
 lazy val publishSettings = Seq(
   releaseCrossBuild := true,
@@ -138,6 +139,7 @@ lazy val it = project.in(file("modules/it"))
   .dependsOn(core, `msgpack-circe` % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
+  // .settings(crossScalaVersions := crossScalaVersions.value.filterNot(_ == Ver.`scala2.13`))
   .settings(publishSettings)
   .settings(noPublishSettings)
   .settings(
