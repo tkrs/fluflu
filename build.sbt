@@ -11,7 +11,7 @@ ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
-ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(
+ThisBuild / libraryDependencies ++= Pkg.forTest(scalaVersion.value) ++ Seq(
   Pkg.scalaLogging,
   compilerPlugin(Pkg.kindProjector)
 )
@@ -121,11 +121,7 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
     moduleName := "fluflu-msgpack-circe",
   )
   .settings(
-    libraryDependencies ++= Seq(
-      Pkg.circeCore,
-      Pkg.circeGeneric,
-      Pkg.circeParser,
-    )
+    libraryDependencies ++= Pkg.circe(scalaVersion.value)
   )
   .dependsOn(msgpack % "compile->compile;test->test")
 
