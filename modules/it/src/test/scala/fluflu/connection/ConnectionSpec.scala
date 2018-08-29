@@ -6,8 +6,8 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 
 import fluflu.msgpack.{Ack, Unpacker}
-import fluflu.{Backoff, Connection}
 import fluflu.msgpack.circe._
+import fluflu.{Backoff, Connection}
 import org.scalatest.FlatSpec
 
 class ConnectionSpec extends FlatSpec {
