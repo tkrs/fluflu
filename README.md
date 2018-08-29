@@ -10,18 +10,18 @@ Yet another fluentd logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies ++= Seq(
-  "com.github.tkrs" %% "fluflu-core" % "x.y.z",
-  "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z"
-)
+libraryDependencies += "com.github.tkrs" %% "fluflu-core" % "x.y.z"
+// and
+libraryDependencies += "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z"
+// or
+libraryDependencies += "com.github.tkrs" %% "fluflu-msgpack-mess" % "x.y.z"
 ```
 
 And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/modules/examples/src/main/scala)
 
 ## Benchmarks
 
-- fluflu-msgpack
-fluflu.msgpackr
+- fluflu-msgpack-circe
 
 ```
 [info] Benchmark                                                Mode  Cnt       Score       Error   Units
@@ -36,8 +36,6 @@ fluflu.msgpackr
 [info] MessagePackerBenchmark.encodeString100_10               thrpt   20  253301.605 ±  6416.145   ops/s
 [info] MessagePackerBenchmark.encodeString100_30               thrpt   20  107762.022 ±  2849.293   ops/s
 ```
-
-Decoder
 
 ```
 [info] Benchmark                                                Mode  Cnt       Score       Error   Units
