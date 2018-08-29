@@ -7,8 +7,9 @@ import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
-import fluflu.msgpack.circe._
-import io.circe.generic.auto._
+import fluflu.msgpack.mess._
+import mess.Encoder
+import mess.codec.generic._
 import _root_.monix.execution.Scheduler
 import _root_.monix.eval.Task
 import _root_.monix.reactive.{Consumer, Observable}
@@ -36,6 +37,7 @@ object Main extends Base {
 
     val consumer = Consumer.foreachParallelTask(10) { x: Long =>
       Task(client.emit(s"docker.main.${x % 10}", Num(x)))
+    // Task(client.emit(s"docker.main.${x % 10}", genFoo(x)))
     }
 
     implicit val s: Scheduler = Scheduler.computation(10)
@@ -59,7 +61,7 @@ abstract class Base extends LazyLogging {
 
   val rnd: Random = new Random(System.nanoTime())
 
-  def ccc(index: Long): CCC = CCC(
+  def genFoo(index: Long): Foo = Foo(
     index,
     rnd.nextString(10),
     rnd.nextString(10),
@@ -119,8 +121,11 @@ abstract class Base extends LazyLogging {
 }
 
 final case class Num(n: Long)
+object Num {
+  implicit val encodeNum: Encoder[Num] = derivedEncoder[Num]
+}
 
-final case class CCC(
+final case class Foo(
     i: Long,
     aaa: String,
     bbb: String,
@@ -149,3 +154,6 @@ final case class CCC(
     yyy: Int,
     zzz: Int
 )
+object Foo {
+  implicit val encodeFoo: Encoder[Foo] = derivedEncoder[Foo]
+}

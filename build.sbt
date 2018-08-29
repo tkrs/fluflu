@@ -49,8 +49,8 @@ lazy val fluflu = (project in file("."))
     Compile / console / scalacOptions --= compilerOptions ++ warnCompilerOptions,
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
-  .aggregate(core, msgpack, `msgpack-circe`, it, benchmark)
-  .dependsOn(core, msgpack, `msgpack-circe`, it, benchmark)
+  .aggregate(core, msgpack, `msgpack-circe`, `msgpack-mess`, it, benchmark)
+  .dependsOn(core, msgpack, `msgpack-circe`, `msgpack-mess`, it, benchmark)
 
 lazy val publishSettings = Seq(
   releaseCrossBuild := true,
@@ -125,6 +125,17 @@ lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
   )
   .dependsOn(msgpack % "compile->compile;test->test")
 
+lazy val `msgpack-mess` = project.in(file("modules/msgpack-mess"))
+  .settings(publishSettings)
+  .settings(
+    description := "fluflu msgpack-mess",
+    moduleName := "fluflu-msgpack-mess",
+  )
+  .settings(
+    libraryDependencies += Pkg.mess
+  )
+  .dependsOn(msgpack % "compile->compile;test->test")
+
 lazy val it = project.in(file("modules/it"))
   .settings(publishSettings)
   .settings(noPublishSettings)
@@ -135,7 +146,6 @@ lazy val it = project.in(file("modules/it"))
   .dependsOn(core, `msgpack-circe` % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
-  // .settings(crossScalaVersions := crossScalaVersions.value.filterNot(_ == Ver.`scala2.13`))
   .settings(publishSettings)
   .settings(noPublishSettings)
   .settings(
@@ -152,7 +162,7 @@ lazy val examples = project.in(file("modules/examples"))
   .settings(
     coverageEnabled := false
   )
-  .dependsOn(core, `msgpack-circe`)
+  .dependsOn(core, `msgpack-mess`)
 
 lazy val benchmark = (project in file("modules/benchmark"))
   .settings(publishSettings)

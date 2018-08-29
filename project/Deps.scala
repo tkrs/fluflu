@@ -7,6 +7,7 @@ object Deps {
     val `scala2.13`   = "2.13.0-M4"
     val scalafmt      = "1.3.0"
     val shapeless     = "2.3.3"
+    val mess          = "0.0.6"
     val circe         = "0.9.3"
     val circeM        = "0.10.0-M2"
     val scalacheck    = "1.14.0"
@@ -26,13 +27,14 @@ object Deps {
   }
 
   val Pkg = new {
-    lazy val monixReactive  = "io.monix"                   %% "monix-reactive" % Ver.monix
+    lazy val mess           = "com.github.tkrs"            %% "mess-core"      % Ver.mess
     lazy val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"  % Ver.scalaLogging
     lazy val scalacheck     = "org.scalacheck"             %% "scalacheck"     % Ver.scalacheck
     lazy val msgpackJava    = "org.msgpack"                % "msgpack-core"    % Ver.msgpackJava
     lazy val logbackClassic = "ch.qos.logback"             % "logback-classic" % Ver.logback
     lazy val mockito        = "org.mockito"                % "mockito-core"    % Ver.mockito
     lazy val kindProjector  = "org.spire-math"             %% "kind-projector" % Ver.kindProjector
+    lazy val monixReactive  = "io.monix"                   %% "monix-reactive" % Ver.monix
 
     def circe(scalaVersion: String) =
       Seq(
