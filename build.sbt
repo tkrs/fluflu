@@ -10,11 +10,10 @@ ThisBuild / crossScalaVersions := Seq(
 ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots"),
-  Resolver.bintrayRepo("mockito", "maven")
 )
 ThisBuild / libraryDependencies ++= Pkg.forTest(scalaVersion.value) ++ Seq(
   Pkg.scalaLogging,
-  compilerPlugin(Pkg.kindProjector)
+  compilerPlugin(Pkg.kindProjector),
 )
 ThisBuild / scalacOptions ++= compilerOptions ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {

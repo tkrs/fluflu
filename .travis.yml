@@ -7,6 +7,7 @@ services:
 scala:
   - 2.11.12
   - 2.12.6
+  - 2.13.0-M4
 
 jdk:
   - openjdk8
@@ -35,7 +36,7 @@ script:
     if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_SCALA_VERSION" = 2.12.* ]]; then
       sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport coverageOff && codecov
     else
-      sbt ++$TRAVIS_SCALA_VERSION clean test
+      sbt ++${TRAVIS_SCALA_VERSION}! clean test
     fi
   - |
     if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_BRANCH" = "master" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
