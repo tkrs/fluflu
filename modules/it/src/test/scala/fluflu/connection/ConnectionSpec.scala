@@ -30,7 +30,7 @@ class ConnectionSpec extends FlatSpec {
     val conn = Connection(inet, connSettings)
     assert(!conn.isClosed)
     val ackR = conn.writeAndRead(ByteBuffer.wrap(message)).get
-    val ack  = implicitly[Unpacker[Option[Ack]]].apply(ackR)
+    val ack = implicitly[Unpacker[Option[Ack]]].apply(ackR)
     assert(ack === Right(Some(Ack("MTYxZWFkNDQtMTQxMS00ZjRjLWEzMDgtNjA4MzdmNWI3MDZj"))))
   }
 

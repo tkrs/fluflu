@@ -9,7 +9,8 @@ ThisBuild / crossScalaVersions := Seq(
 )
 ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
-  Resolver.sonatypeRepo("snapshots")
+  Resolver.sonatypeRepo("snapshots"),
+  Resolver.bintrayRepo("mockito", "maven")
 )
 ThisBuild / libraryDependencies ++= Pkg.forTest(scalaVersion.value) ++ Seq(
   Pkg.scalaLogging,
@@ -98,9 +99,8 @@ lazy val core = project.in(file("modules/core"))
     moduleName := "fluflu-core",
   )
   .settings(
-    libraryDependencies ++= Seq(
-      Pkg.msgpackJava,
-    )
+    libraryDependencies += Pkg.msgpackJava,
+    Test / javaOptions += "-Dnet.bytebuddy.experimental=true",
   )
   .dependsOn(msgpack % "compile->compile;test->test")
 
@@ -142,6 +142,7 @@ lazy val it = project.in(file("modules/it"))
   .settings(
     description := "fluflu it",
     moduleName := "fluflu-it",
+    libraryDependencies += Pkg.logbackClassic,
   )
   .dependsOn(core, `msgpack-circe` % "compile->compile;test->test")
 
