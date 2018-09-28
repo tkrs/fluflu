@@ -11,11 +11,12 @@ scala:
 
 jdk:
   - openjdk8
+  - openjdk11
 
 matrix:
-  include:
-    - scala: 2.12.6
-      jdk: openjdk11
+  allow_failures:
+    - jdk: openjdk11
+      scala: 2.13.0-M4
 
 cache:
   directories:
@@ -36,7 +37,7 @@ script:
     if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_SCALA_VERSION" = 2.12.* ]]; then
       sbt ++$TRAVIS_SCALA_VERSION clean coverage test coverageReport coverageOff && codecov
     else
-      sbt ++${TRAVIS_SCALA_VERSION}! clean test
+      sbt ++$TRAVIS_SCALA_VERSION clean test
     fi
   - |
     if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_BRANCH" = "master" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
