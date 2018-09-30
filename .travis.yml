@@ -7,7 +7,7 @@ services:
 scala:
   - 2.11.12
   - 2.12.8
-  - 2.13.0-M4
+  - 2.13.0-M5
 
 jdk:
   - openjdk8
@@ -16,8 +16,6 @@ jdk:
 
 matrix:
   allow_failures:
-    - jdk: openjdk11
-      scala: 2.13.0-M4
     - jdk: openjdk-ea
 
 cache:
