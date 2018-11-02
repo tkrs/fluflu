@@ -8,8 +8,8 @@ object Deps {
     val scalafmt      = "1.5.1"
     val shapeless     = "2.3.3"
     val mess          = "0.0.9"
-    val circe         = "0.10.0"
-    val circeM        = "0.10.0"
+    val circe         = "0.10.1"
+    val circeM        = "0.10.1"
     val scalacheck    = "1.14.0"
     val scalatest     = "3.0.5"
     val scalatestSnap = "3.0.6-SNAP2"
@@ -17,7 +17,7 @@ object Deps {
     val scalaLogging  = "3.9.0"
     val logback       = "1.2.3"
     val msgpackJava   = "0.8.16"
-    val mockito       = "2.22.0"
+    val mockito       = "2.23.0"
     val kindProjector = "0.9.7"
   }
 
