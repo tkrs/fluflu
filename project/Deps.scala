@@ -7,7 +7,7 @@ object Deps {
     val `scala2.13`   = "2.13.0-M4"
     val scalafmt      = "1.5.1"
     val shapeless     = "2.3.3"
-    val mess          = "0.0.9"
+    val mess          = "0.0.10"
     val circe         = "0.10.1"
     val circeM        = "0.10.1"
     val scalacheck    = "1.14.0"
