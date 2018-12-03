@@ -35,14 +35,24 @@ object Main extends Base {
       .repeatEval(counter.getAndIncrement())
       .take(count)
 
-    val consumer = Consumer.foreachParallelTask(10) { x: Long =>
-      Task(client.emit(s"docker.main.${x % 10}", Num(x)))
+    val consumer = Consumer.foreachParallelTask(16) { x: Long =>
+      val xx = x % 10
+      Task[Unit](client.emit(s"docker.main.$xx", Num(x))).delayExecution((xx * 20).micros)
     // Task(client.emit(s"docker.main.${x % 10}", genFoo(x)))
     }
 
-    implicit val s: Scheduler = Scheduler.computation(10)
+    implicit val s: Scheduler = Scheduler.computation(4)
 
     val f = consumer.apply(observable).runAsync
+
+    val monitor = new Thread(new Runnable {
+      def run(): Unit =
+        do {
+          Thread.sleep(1000)
+          logger.info(s"Remaining: ${client.size}")
+        } while (!client.isClosed)
+    })
+    monitor.start()
 
     TimeUnit.SECONDS.sleep(seconds)
 
@@ -51,9 +61,15 @@ object Main extends Base {
       case _: TimeoutException => ()
     }
 
+    logger.info("Time is up.")
+
     client.close()
 
-    logger.info(s"Elapsed: ${NANOSECONDS.toMillis(System.nanoTime() - start)} ms.")
+    logger.info("client closed.")
+
+    logger.info(s"Remaining: ${client.size}")
+
+    logger.info(s"Elapsed: ${NANOSECONDS.toMillis(System.nanoTime() - start)} ms, emit count: ${counter.get}")
   }
 }
 
@@ -112,9 +128,8 @@ abstract class Base extends LazyLogging {
   val client: Client = {
     import msgpack.time.eventTime._
 
-    Client.apply(
-      delay = Duration.ofNanos(50),
-      terminationDelay = Duration.ofSeconds(10),
+    Client(
+      terminationTimeout = Duration.ofSeconds(10),
       maximumPulls = 5000
     )
   }

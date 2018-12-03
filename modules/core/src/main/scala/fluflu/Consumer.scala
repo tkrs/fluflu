@@ -17,14 +17,12 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Success}
 
-trait Consumer extends Runnable {
+trait Consumer {
   type E
 
   protected def msgQueue: util.Queue[E]
 
   def consume(): Unit
-
-  def run(): Unit = consume()
 }
 
 final class ForwardConsumer private[fluflu] (maximumPulls: Int,
