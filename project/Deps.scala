@@ -3,7 +3,7 @@ import sbt._
 object Deps {
   val Ver = new {
     val `scala2.11`   = "2.11.12"
-    val `scala2.12`   = "2.12.7"
+    val `scala2.12`   = "2.12.8"
     val `scala2.13`   = "2.13.0-M4"
     val scalafmt      = "1.5.1"
     val shapeless     = "2.3.3"
