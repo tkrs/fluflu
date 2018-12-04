@@ -32,7 +32,7 @@ install:
   - pip install --user codecov
 
 before_script:
-  - docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.1.0
+  - docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.3.0
 
 script:
   - |
@@ -42,13 +42,23 @@ script:
       sbt ++$TRAVIS_SCALA_VERSION clean test
     fi
   - |
-    if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_BRANCH" = "master" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
-      gpg_key_path=$HOME/.gnupg
-      mkdir -p $gpg_key_path
-      echo $GPG_KEY | base64 --decode > $gpg_key_path/secring.gpg
-      export PGP_SECRET_RING=$gpg_key_path/secring.gpg
-      sbt ++$TRAVIS_SCALA_VERSION publishSigned
+    if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+      export PGP_SECRET_RING="${HOME}/.gnupg/secring.gpg"
+      mkdir -p $(dirname "${PGP_SECRET_RING}")
+      echo $GPG_KEY | base64 --decode > "${PGP_SECRET_RING}"
+      if [ "$TRAVIS_BRANCH" = "master" ]; then
+        if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+          sbt ++$TRAVIS_SCALA_VERSION publishSigned
+        else
+          if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]; then
+            sbt ++$TRAVIS_SCALA_VERSION publishLocalSigned
+          else
+            sbt ++$TRAVIS_SCALA_VERSION publishLocal
+          fi
+        fi
+      fi
     fi
+
 
 after_script:
   # See http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html
