@@ -5,11 +5,12 @@ import java.lang.{Boolean => JBool}
 import java.net.{NetworkInterface, SocketAddress, StandardSocketOptions}
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
-import java.time.{Clock, Duration}
+import java.time.Clock
 
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success, Try}
 
 trait Connection {
@@ -21,11 +22,11 @@ trait Connection {
 object Connection {
 
   final case class Settings(
-      connectionTimeout: Duration,
+      connectionTimeout: FiniteDuration,
       connectionBackof: Backoff,
-      writeTimeout: Duration,
+      writeTimeout: FiniteDuration,
       writeBackof: Backoff,
-      readTimeout: Duration,
+      readTimeout: FiniteDuration,
       readBackof: Backoff,
       readSize: Int = 55 // When using UUID v4 to chunk
   )
