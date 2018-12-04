@@ -1,9 +1,9 @@
 package fluflu
 
-import java.time.{Clock, Duration, Instant}
-import java.util.concurrent.TimeUnit
+import java.time.{Clock, Instant}
 
 import scala.concurrent.blocking
+import scala.concurrent.duration._
 
 trait Sleeper {
   def giveUp: Boolean
@@ -11,9 +11,8 @@ trait Sleeper {
 }
 
 object Sleeper {
-  import TimeUnit._
 
-  def apply(backoff: Backoff, timeout: Duration, clock: Clock): Sleeper =
+  def apply(backoff: Backoff, timeout: FiniteDuration, clock: Clock): Sleeper =
     new Sleeper {
 
       private[this] val start = Instant.now(clock)

@@ -1,7 +1,7 @@
 package examples
 
 import java.net.InetSocketAddress
-import java.time.{Clock, Duration}
+import java.time.Clock
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicLong
 
@@ -22,7 +22,6 @@ import scala.util.Random
   * sbt "examples/runMain examples.Main 10 100"
   */
 object Main extends Base {
-  import TimeUnit._
 
   def main(args: Array[String]): Unit = {
     val counter = new AtomicLong(0)
@@ -54,7 +53,7 @@ object Main extends Base {
     })
     monitor.start()
 
-    TimeUnit.SECONDS.sleep(seconds)
+    SECONDS.sleep(seconds)
 
     try Await.result(f, 1.milli)
     catch {
@@ -115,12 +114,12 @@ abstract class Base extends LazyLogging {
   val addr = new InetSocketAddress(host, port)
 
   val connSettings = Connection.Settings(
-    Duration.ofSeconds(60),
-    Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd),
-    Duration.ofSeconds(10),
-    Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd),
-    Duration.ofSeconds(10),
-    Backoff.exponential(Duration.ofNanos(500), Duration.ofSeconds(10), rnd)
+    60.seconds,
+    Backoff.exponential(500.nanos, 10.seconds, rnd),
+    10.seconds,
+    Backoff.exponential(500.nanos, 10.seconds, rnd),
+    10.seconds,
+    Backoff.exponential(500.nanos, 10.seconds, rnd)
   )
 
   implicit val connection: Connection = Connection(addr, connSettings)
@@ -129,7 +128,7 @@ abstract class Base extends LazyLogging {
     import msgpack.time.eventTime._
 
     Client(
-      terminationTimeout = Duration.ofSeconds(10),
+      terminationTimeout = 10.seconds,
       maximumPulls = 5000
     )
   }

@@ -1,11 +1,10 @@
-import java.time.Duration
 import java.util.concurrent.{ExecutorService, ThreadFactory}
 
-import scala.concurrent.duration.NANOSECONDS
+import scala.concurrent.duration._
 
 package object fluflu {
 
-  def awaitTermination(pool: ExecutorService, delay: Duration): Unit = {
+  def awaitTermination(pool: ExecutorService, delay: FiniteDuration): Unit = {
     pool.shutdown()
     try {
       if (!pool.awaitTermination(delay.toNanos, NANOSECONDS)) {

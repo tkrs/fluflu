@@ -4,7 +4,7 @@ import java.io.IOException
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
-import java.time.{Clock, Duration}
+import java.time.Clock
 
 import fluflu.Connection.SocketOptions
 import org.mockito.Mockito._
@@ -15,6 +15,7 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
 
 import scala.util.Failure
+import scala.concurrent.duration._
 
 class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
   import Connection.ConnectionImpl
@@ -23,12 +24,12 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
 
   val address: SocketAddress = new SocketAddress {}
   def connSettings = Connection.Settings(
-    Duration.ofMillis(500),
-    Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofMillis(500),
-    Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofMillis(500),
-    Backoff.fix(Duration.ofMillis(1))
+    500.millis,
+    Backoff.fix(1.millis),
+    500.millis,
+    Backoff.fix(1.millis),
+    500.millis,
+    Backoff.fix(1.millis)
   )
 
   describe("constructor") {
@@ -53,7 +54,7 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
         .thenThrow(new IOException("ε≡≡ﾍ( ´Д`)ﾉ"))
       doNothing().when(channelMock).close()
       final class TestConnection
-          extends ConnectionImpl(address, SocketOptions(), connSettings.copy(connectionTimeout = Duration.ofMillis(5))) {
+          extends ConnectionImpl(address, SocketOptions(), connSettings.copy(connectionTimeout = 5.millis)) {
         override protected def channelOpen: SocketChannel =
           channelMock
       }

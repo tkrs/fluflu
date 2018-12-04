@@ -1,6 +1,6 @@
 package fluflu
 
-import java.time.{Duration, Instant}
+import java.time.Instant
 import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -9,7 +9,7 @@ import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
-import scala.concurrent.duration.NANOSECONDS
+import scala.concurrent.duration._
 
 trait Client {
 
@@ -27,7 +27,7 @@ trait Client {
 
 object Client {
 
-  def apply(terminationTimeout: Duration = Duration.ofSeconds(10),
+  def apply(terminationTimeout: FiniteDuration = FiniteDuration(10, SECONDS),
             maximumPulls: Int = 1000,
             packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
       implicit
@@ -89,7 +89,7 @@ object Client {
       def close(): Unit =
         try {
           closed = true
-          awaitTermination(worker, Duration.ofSeconds(1))
+          awaitTermination(worker, 1.second)
           val closer = scheduler("fluflu-closer")
           closer.execute(new Runnable {
             def run(): Unit = {

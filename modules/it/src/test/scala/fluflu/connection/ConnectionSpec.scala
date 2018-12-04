@@ -1,7 +1,6 @@
 package fluflu.connection
 
 import java.io.IOException
-import java.time.Duration
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 
@@ -10,16 +9,18 @@ import fluflu.msgpack.circe._
 import fluflu.{Backoff, Connection}
 import org.scalatest.FlatSpec
 
+import scala.concurrent.duration._
+
 class ConnectionSpec extends FlatSpec {
   import fluflu.msgpack.MsgpackHelper._
 
   val connSettings = Connection.Settings(
-    Duration.ofSeconds(1),
-    Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofSeconds(1),
-    Backoff.fix(Duration.ofMillis(1)),
-    Duration.ofSeconds(1),
-    Backoff.fix(Duration.ofMillis(1))
+    1.second,
+    Backoff.fix(1.second),
+    1.second,
+    Backoff.fix(1.second),
+    1.second,
+    Backoff.fix(1.second)
   )
 
   val message =
