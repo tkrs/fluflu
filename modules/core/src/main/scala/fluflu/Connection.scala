@@ -82,7 +82,7 @@ object Connection {
     }
 
     @tailrec private def doConnect(ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[SocketChannel] = {
-      logger.debug(s"Start connecting to $remote. retries: $retries")
+      logger.info(s"Start connecting to $remote. retries: $retries")
       try {
         if (ch.connect(remote)) Success(ch)
         else Failure(new IOException(s"Failed to connect: $remote"))
@@ -102,7 +102,7 @@ object Connection {
 
     @throws[Exception]("If the connection was already closed")
     @throws[IOException]
-    def connect(): Try[SocketChannel] =
+    def connect(): Try[SocketChannel] = {
       if (closed) Failure(new Exception("Already closed"))
       else if (channel.isConnected) Success(channel)
       else
@@ -110,6 +110,7 @@ object Connection {
           case t @ Success(c) => channel = c; t
           case f              => f
         }
+    }
 
     def isClosed: Boolean =
       closed || !channel.isConnected
@@ -157,7 +158,7 @@ object Connection {
 
     private[this] val ackBuffer = ByteBuffer.allocate(256)
 
-    def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
+    def writeAndRead(message: ByteBuffer): Try[ByteBuffer] = {
       for {
         ch <- connect()
         _  = logger.debug(s"Start writing message: $message")
@@ -173,6 +174,7 @@ object Connection {
         ackBuffer.flip()
         ackBuffer.duplicate()
       }
+    }
 
     def close(): Try[Unit] = {
       closed = true

@@ -1,27 +1,33 @@
 package fluflu
 
 import java.time.{Duration, Instant}
-import java.util.concurrent.{ConcurrentLinkedQueue, Executors, TimeUnit}
+import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
+import scala.concurrent.duration.NANOSECONDS
+
 trait Client {
 
-  def emit[A: Packer](tag: String, record: A): Either[Exception, Unit] =
+  final def emit[A: Packer](tag: String, record: A): Either[Exception, Unit] =
     emit(tag, record, Instant.now)
+
+  def size: Int
 
   def emit[A: Packer](tag: String, record: A, time: Instant): Either[Exception, Unit]
 
   def close(): Unit
+
+  def isClosed: Boolean
 }
 
 object Client {
 
-  def apply(delay: Duration = Duration.ofSeconds(1),
-            terminationDelay: Duration = Duration.ofSeconds(10),
+  def apply(terminationTimeout: Duration = Duration.ofSeconds(10),
             maximumPulls: Int = 1000,
             packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
       implicit
@@ -32,25 +38,74 @@ object Client {
       PA: Unpacker[Option[Ack]]
   ): Client =
     new Client with LazyLogging {
-      private[this] val queue     = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
-      private[this] val consumer  = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
-      private[this] val scheduler = Executors.newSingleThreadScheduledExecutor()
+      @volatile private[this] var closed = false
 
-      val _ = scheduler.scheduleWithFixedDelay(consumer, 500, delay.toNanos, TimeUnit.NANOSECONDS)
+      private def scheduler(name: String) =
+        Executors.newScheduledThreadPool(1, namedThreadFactory(name))
+
+      private[this] val running  = new AtomicBoolean()
+      private[this] val queue    = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
+      private[this] val consumer = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
+      private[this] val worker   = scheduler("fluflu-scheduler")
+
+      private object Worker extends Runnable {
+
+        def start(): Unit = {
+          if (!(closed || worker.isShutdown)) {
+            worker.schedule(this, 5, NANOSECONDS)
+          }
+        }
+
+        def run(): Unit = {
+          def ignore = closed || queue.isEmpty
+          if (ignore) {
+            running.set(false)
+          } else {
+            consumer.consume()
+            if (ignore) {
+              running.set(false)
+            } else {
+              if (!(ignore || worker.isShutdown)) {
+                worker.schedule(this, 5, NANOSECONDS)
+              }
+            }
+          }
+        }
+      }
 
       def emit[A: Packer](tag: String, record: A, time: Instant): Either[Exception, Unit] =
-        if (scheduler.isShutdown)
-          Left(new Exception("Client scheduler was already shutdown"))
+        if (closed || worker.isShutdown)
+          Left(new Exception("Client executor was already shutdown"))
         else {
           logger.trace(s"Queueing message: ${(tag, record, time)}")
           val fa = (p: MessageBufferPacker) => Packer[(A, Instant)].apply((record, time), p)
-          if (queue.offer(tag -> fa)) Right(())
-          else Left(new Exception("The queue no space is currently available"))
+          if (queue.offer(tag -> fa))
+            if (!running.get && running.compareAndSet(false, true)) Right(Worker.start())
+            else Right(())
+          else
+            Left(new Exception("The queue no space is currently available"))
         }
 
-      def close(): Unit = {
-        awaitTermination(scheduler, terminationDelay)
-        consumer.consume()
-      }
+      def close(): Unit =
+        try {
+          closed = true
+          awaitTermination(worker, Duration.ofSeconds(1))
+          val closer = scheduler("fluflu-closer")
+          closer.execute(new Runnable {
+            def run(): Unit = {
+              while (!queue.isEmpty) {
+                consumer.consume()
+                NANOSECONDS.sleep(10)
+              }
+            }
+          })
+          awaitTermination(closer, terminationTimeout)
+        } finally {
+          logger.info(s"Performed close the client. queue remaining: ${queue.size()}")
+        }
+
+      def size: Int = queue.size()
+
+      def isClosed: Boolean = closed
     }
 }
