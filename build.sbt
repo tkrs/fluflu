@@ -49,8 +49,8 @@ lazy val fluflu = (project in file("."))
     Compile / console / scalacOptions --= compilerOptions ++ warnCompilerOptions,
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
-  .aggregate(core, msgpack, `msgpack-circe`, `msgpack-mess`, it, benchmark)
-  .dependsOn(core, msgpack, `msgpack-circe`, `msgpack-mess`, it, benchmark)
+  .aggregate(core, msgpack, `msgpack-mess`, it)
+  .dependsOn(core, msgpack, `msgpack-mess`, it)
 
 lazy val publishSettings = Seq(
   releaseCrossBuild := true,
@@ -113,17 +113,6 @@ lazy val msgpack = project.in(file("modules/msgpack"))
     )
   )
 
-lazy val `msgpack-circe` = project.in(file("modules/msgpack-circe"))
-  .settings(publishSettings)
-  .settings(
-    description := "fluflu msgpack-circe",
-    moduleName := "fluflu-msgpack-circe",
-  )
-  .settings(
-    libraryDependencies ++= Pkg.circe(scalaVersion.value)
-  )
-  .dependsOn(msgpack % "compile->compile;test->test")
-
 lazy val `msgpack-mess` = project.in(file("modules/msgpack-mess"))
   .settings(publishSettings)
   .settings(
@@ -143,7 +132,7 @@ lazy val it = project.in(file("modules/it"))
     moduleName := "fluflu-it",
     libraryDependencies += Pkg.logbackClassic,
   )
-  .dependsOn(core, `msgpack-circe` % "compile->compile;test->test")
+  .dependsOn(core, `msgpack-mess` % "compile->compile;test->test")
 
 lazy val examples = project.in(file("modules/examples"))
   .settings(publishSettings)
@@ -154,25 +143,9 @@ lazy val examples = project.in(file("modules/examples"))
     fork := true,
   )
   .settings(
-    libraryDependencies ++= Seq(
-      Pkg.monixReactive,
-      Pkg.logbackClassic,
-    )
+    libraryDependencies += Pkg.logbackClassic,
   )
   .settings(
     coverageEnabled := false
   )
   .dependsOn(core, `msgpack-mess`)
-
-lazy val benchmark = (project in file("modules/benchmark"))
-  .settings(publishSettings)
-  .settings(noPublishSettings)
-  .settings(
-    description := "fluflu benchmark",
-    moduleName := "fluflu-benchmark",
-  )
-  .settings(
-    coverageEnabled := false
-  )
-  .enablePlugins(JmhPlugin)
-  .dependsOn(`msgpack-circe` % "test->test")
