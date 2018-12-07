@@ -8,12 +8,9 @@ object Deps {
     val scalafmt      = "1.5.1"
     val shapeless     = "2.3.3"
     val mess          = "0.0.10"
-    val circe         = "0.10.1"
-    val circeM        = "0.10.1"
     val scalacheck    = "1.14.0"
     val scalatest     = "3.0.5"
     val scalatestSnap = "3.0.6-SNAP2"
-    val monix         = "3.0.0-RC1"
     val scalaLogging  = "3.9.0"
     val logback       = "1.2.3"
     val msgpackJava   = "0.8.16"
@@ -34,16 +31,6 @@ object Deps {
     lazy val logbackClassic = "ch.qos.logback"             % "logback-classic" % Ver.logback
     lazy val mockito        = "org.mockito"                % "mockito-core"    % Ver.mockito
     lazy val kindProjector  = "org.spire-math"             %% "kind-projector" % Ver.kindProjector
-    lazy val monixReactive  = "io.monix"                   %% "monix-reactive" % Ver.monix
-
-    def circe(scalaVersion: String) =
-      Seq(
-        "io.circe" %% "circe-core",
-        "io.circe" %% "circe-generic",
-        "io.circe" %% "circe-parser"
-      ).map(_ % {
-        if (is2_13(scalaVersion)) Ver.circeM else Ver.circe
-      })
 
     def scalatest(scalaVersion: String) = "org.scalatest" %% "scalatest" % {
       if (is2_13(scalaVersion)) Ver.scalatestSnap else Ver.scalatest
