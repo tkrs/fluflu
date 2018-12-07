@@ -1,4 +1,5 @@
 # fluflu
+
 Yet another fluentd logger for scala
 
 [![Build Status](https://travis-ci.org/tkrs/fluflu.svg?branch=master)](https://travis-ci.org/tkrs/fluflu)
@@ -10,11 +11,10 @@ Yet another fluentd logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies += "com.github.tkrs" %% "fluflu-core" % "x.y.z"
-// and
-libraryDependencies += "com.github.tkrs" %% "fluflu-msgpack-circe" % "x.y.z"
-// or
-libraryDependencies += "com.github.tkrs" %% "fluflu-msgpack-mess" % "x.y.z"
+libraryDependencies ++= Seq(
+  "fluflu-core",
+  "fluflu-msgpack-mess"
+).map(m => "com.github.tkrs" %% m % "x.y.z")
 ```
 
 And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/modules/examples/src/main/scala)
