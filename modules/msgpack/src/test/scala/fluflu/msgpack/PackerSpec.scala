@@ -28,14 +28,12 @@ class PackerSpec extends FunSpec with MsgpackHelper {
     it("should be packed") {
       val expected = x"93 a5 61 62 63 65 64 11 10"
       implicit val packInstant: Packer[Instant] = new Packer[Instant] {
-        def apply(a: Instant, packer: MessagePacker): Unit = {
+        def apply(a: Instant, packer: MessagePacker): Unit =
           packer.packByte(0x11.toByte)
-        }
       }
       implicit val packMap: Packer[Map[String, String]] = new Packer[Map[String, String]] {
-        def apply(a: Map[String, String], packer: MessagePacker): Unit = {
+        def apply(a: Map[String, String], packer: MessagePacker): Unit =
           packer.packByte(0x10.toByte)
-        }
       }
       implicit val packMOption: Packer[MOption] = new Packer[MOption] {
         def apply(a: MOption, packer: MessagePacker): Unit = fail()
@@ -50,14 +48,12 @@ class PackerSpec extends FunSpec with MsgpackHelper {
     it("should be packed") {
       val expected = x"92 11 10"
       implicit val packInstant: Packer[Instant] = new Packer[Instant] {
-        def apply(a: Instant, packer: MessagePacker): Unit = {
+        def apply(a: Instant, packer: MessagePacker): Unit =
           packer.packByte(0x11.toByte)
-        }
       }
       implicit val packMap: Packer[Map[String, String]] = new Packer[Map[String, String]] {
-        def apply(a: Map[String, String], packer: MessagePacker): Unit = {
+        def apply(a: Map[String, String], packer: MessagePacker): Unit =
           packer.packByte(0x10.toByte)
-        }
       }
       Packer[(Map[String, String], Instant)]
         .apply((Map("a" -> "b"), Instant.ofEpochSecond(1500000000L, 1L)), packer)

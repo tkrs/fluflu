@@ -47,7 +47,6 @@ object Packer {
       }
     }
 
-  def formatUInt32(v: Long): Array[Byte] = {
+  def formatUInt32(v: Long): Array[Byte] =
     Array((v >>> 24).toByte, (v >>> 16).toByte, (v >>> 8).toByte, (v >>> 0).toByte)
-  }
 }

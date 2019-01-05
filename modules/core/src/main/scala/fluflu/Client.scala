@@ -50,11 +50,10 @@ object Client {
 
       private object Worker extends Runnable {
 
-        def start(): Unit = {
+        def start(): Unit =
           if (!(closed || worker.isShutdown)) {
             worker.schedule(this, 5, NANOSECONDS)
           }
-        }
 
         def run(): Unit = {
           def ignore = closed || queue.isEmpty
@@ -92,12 +91,11 @@ object Client {
           awaitTermination(worker, 1.second)
           val closer = scheduler("fluflu-closer")
           closer.execute(new Runnable {
-            def run(): Unit = {
+            def run(): Unit =
               while (!queue.isEmpty) {
                 consumer.consume()
                 NANOSECONDS.sleep(10)
               }
-            }
           })
           awaitTermination(closer, terminationTimeout)
         } finally {

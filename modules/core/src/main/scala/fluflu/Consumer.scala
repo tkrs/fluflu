@@ -44,7 +44,7 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
 
   type E = (String, MessageBufferPacker => Unit)
 
-  def retrieveElements(): Map[String, ListBuffer[MessageBufferPacker => Unit]] = {
+  def retrieveElements(): Map[String, ListBuffer[MessageBufferPacker => Unit]] =
     Iterator
       .continually(msgQueue.poll())
       .take(maximumPulls)
@@ -54,7 +54,6 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
           acc += k -> (acc.getOrElse(k, ListBuffer.empty) += f)
       }
       .toMap
-  }
 
   def makeMessage(s: String, fs: ListBuffer[MessageBufferPacker => Unit]): Option[(String, ByteBuffer)] = {
     val packer = mPacker.get()
@@ -74,11 +73,10 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
     } finally packer.clear()
   }
 
-  def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] = {
+  def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] =
     m.iterator.map((makeMessage _).tupled).collect { case Some(v) => v }
-  }
 
-  private def send(chunk: String, msg: ByteBuffer): Unit = {
+  private def send(chunk: String, msg: ByteBuffer): Unit =
     connection.writeAndRead(msg) match {
       case Success(a) =>
         UA.apply(a) match {
@@ -99,11 +97,9 @@ final class ForwardConsumer private[fluflu] (maximumPulls: Int,
         msg.flip()
         errorQueue.offer(chunk -> msg)
     }
-  }
 
-  def retrieveErrors(): Iterator[(String, ByteBuffer)] = {
+  def retrieveErrors(): Iterator[(String, ByteBuffer)] =
     Iterator.continually(errorQueue.poll()).takeWhile(_ != null).take(maximumPulls)
-  }
 
   def consume(): Unit =
     if (msgQueue.isEmpty && errorQueue.isEmpty) ()

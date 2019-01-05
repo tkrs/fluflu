@@ -33,9 +33,8 @@ class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHe
     }
   }
 
-  override def afterEach(): Unit = {
+  override def afterEach(): Unit =
     scheduler.shutdownNow()
-  }
 
   describe("consume") {
     it("should consume messages") {
