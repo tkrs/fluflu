@@ -7,13 +7,11 @@ trait MsgpackHelper extends Matchers with BeforeAndAfterEach { self: Suite =>
 
   var packer: MessageBufferPacker = _
 
-  override def beforeEach(): Unit = {
+  override def beforeEach(): Unit =
     packer = MessagePack.DEFAULT_PACKER_CONFIG.newBufferPacker()
-  }
 
-  override def afterEach(): Unit = {
+  override def afterEach(): Unit =
     packer.close()
-  }
 
 }
 

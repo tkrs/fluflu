@@ -12,9 +12,8 @@ trait MessPackerInstances {
 
   implicit def packAByMess[A](implicit encodeA: Encoder[A]): Packer[A] =
     new Packer[A] {
-      def apply(a: A, packer: CMessagePacker): Unit = {
+      def apply(a: A, packer: CMessagePacker): Unit =
         encodeA(a).pack(packer)
-      }
     }
 
   private[this] val encodeMOption: Encoder[MOption] = derivedEncoder[MOption]

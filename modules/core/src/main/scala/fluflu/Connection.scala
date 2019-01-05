@@ -103,7 +103,7 @@ object Connection {
 
     @throws[Exception]("If the connection was already closed")
     @throws[IOException]
-    def connect(): Try[SocketChannel] = {
+    def connect(): Try[SocketChannel] =
       if (closed) Failure(new Exception("Already closed"))
       else if (channel.isConnected) Success(channel)
       else
@@ -111,7 +111,6 @@ object Connection {
           case t @ Success(c) => channel = c; t
           case f              => f
         }
-    }
 
     def isClosed: Boolean =
       closed || !channel.isConnected
@@ -136,7 +135,7 @@ object Connection {
       }
     }
 
-    private def _read(dst: ByteBuffer, size: Int, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] = {
+    private def _read(dst: ByteBuffer, size: Int, ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[Int] =
       Try(ch.read(dst)) match {
         case Success(sz) if size + sz == settings.readSize =>
           logger.debug(s"Read size: $sz, last: ${dst.array().toSeq.map(a => "%02x".format(a & 0xff)).mkString(" ")}")
@@ -155,27 +154,25 @@ object Connection {
             }
           }
       }
-    }
 
     private[this] val ackBuffer = ByteBuffer.allocate(256)
 
-    def writeAndRead(message: ByteBuffer): Try[ByteBuffer] = {
+    def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
-        ch <- connect()
-        _  = logger.debug(s"Start writing message: $message")
-        ws = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
+        ch      <- connect()
+        _       = logger.debug(s"Start writing message: $message")
+        ws      = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
         toWrite <- _write(message, ch, 0, ws) if ch.isConnected
-        _ = logger.debug(s"Number of bytes written: $toWrite")
+        _       = logger.debug(s"Number of bytes written: $toWrite")
 
         rs = Sleeper(settings.readBackof, settings.readTimeout, clock)
         _  = ackBuffer.clear()
-        _ <- _read(ackBuffer, 0, ch, 0, rs) if ch.isConnected
-        _ = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
+        _  <- _read(ackBuffer, 0, ch, 0, rs) if ch.isConnected
+        _  = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
       } yield {
         ackBuffer.flip()
         ackBuffer.duplicate()
       }
-    }
 
     def close(): Try[Unit] = {
       closed = true
