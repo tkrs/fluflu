@@ -2,64 +2,56 @@ language: scala
 dist: xenial
 sudo: true
 services:
-  - docker
-
+- docker
 scala:
-  - 2.11.12
-  - 2.12.8
-  - 2.13.0-M5
-
+- 2.11.12
+- 2.12.8
+- 2.13.0-M5
 jdk:
-  - openjdk8
-  - openjdk11
-  - openjdk-ea
-
+- openjdk8
+- openjdk11
+- openjdk-ea
 matrix:
   allow_failures:
-    - jdk: openjdk-ea
-
+  - jdk: openjdk-ea
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt/boot
-    - $HOME/.sbt/launchers
-    - $HOME/.coursier
-    - $HOME/.cache/install-jdk
-
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt/boot"
+  - "$HOME/.sbt/launchers"
+  - "$HOME/.coursier"
+  - "$HOME/.cache/install-jdk"
 install:
-  - pip install --user codecov
-
+- pip install --user codecov
 before_script:
-  - docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.3.0
-
+- docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.3.0
 script:
-  - |
-    if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_SCALA_VERSION" = 2.12.* ]]; then
-      sbt ++$TRAVIS_SCALA_VERSION clean coverage scalafmt::test test:scalafmt::test test coverageReport coverageOff && codecov
-    else
-      sbt ++$TRAVIS_SCALA_VERSION clean test
-    fi
-  - |
-    if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
-      export PGP_SECRET_RING="${HOME}/.gnupg/secring.gpg"
-      mkdir -p $(dirname "${PGP_SECRET_RING}")
-      echo $GPG_KEY | base64 --decode > "${PGP_SECRET_RING}"
-      if [ "$TRAVIS_BRANCH" = "master" ]; then
-        if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-          sbt ++$TRAVIS_SCALA_VERSION publishSigned
+- |
+  if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_SCALA_VERSION" = 2.12.* ]]; then
+    sbt ++$TRAVIS_SCALA_VERSION clean coverage scalafmt::test test:scalafmt::test test coverageReport coverageOff && codecov
+  else
+    sbt ++$TRAVIS_SCALA_VERSION clean test
+  fi
+- |
+  if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+    export PGP_SECRET_RING="${HOME}/.gnupg/secring.gpg"
+    mkdir -p $(dirname "${PGP_SECRET_RING}")
+    echo $GPG_KEY | base64 --decode > "${PGP_SECRET_RING}"
+    if [ "$TRAVIS_BRANCH" = "master" ]; then
+      if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
+        sbt ++$TRAVIS_SCALA_VERSION publishSigned
+      else
+        if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]; then
+          sbt ++$TRAVIS_SCALA_VERSION publishLocalSigned
         else
-          if [ "$TRAVIS_SECURE_ENV_VARS" = "true" ]; then
-            sbt ++$TRAVIS_SCALA_VERSION publishLocalSigned
-          else
-            sbt ++$TRAVIS_SCALA_VERSION publishLocal
-          fi
+          sbt ++$TRAVIS_SCALA_VERSION publishLocal
         fi
       fi
     fi
-
-
+  fi
 after_script:
-  # See http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html
-  # Tricks to avoid unnecessary cache updates
-  - find $HOME/.sbt -name "*.lock" | xargs rm
-  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+- find $HOME/.sbt -name "*.lock" | xargs rm
+- find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+notifications:
+  slack:
+    secure: NSv6Pf7gwWFjLn6VVpoF+lcDgJnJ4Y1HYt9gHrDejyvcxQWCUtvOporFrigObQw7Yg8UikT2NblUACP2ebZ3WI/cEmtk/uJJ4tR+x+F94Jzc6TcXon8NsjiDp8krv3N1NHV3kdkxmXrGWYUHdlOAaVhPEX2N3wXPeipaZ3tdq7cf5hoVYgpGfIVf7R1eEe2IVw99o16Flg1CjXwkbbQaFKSt9MfQaRVPJTYhXeU7+yWyS7apm9AJWiNxsZJ6ownYRBjc5NLez6SLAdaGnfEna5AipFxA0YlTQ5hix2QBNjKUmK6QIgBoP57pN2E9/cRJWigky7DGmoc5expMYe6+d5Rpj7yKI65bCZYeszpuJMrsVVz6Annmgdf2ywRolW3KioYy5WwQhESritvRT/w+jP4OHlfOsKzcLR0dY2lDV4vl51Qhz+rBrMyw3DjP33OdKNNuSMkTg2eyM39qZIQ7e5ci8kUgw5DnA5k3d545LthZVORW7GQW7RrBWXLXWFA02RwIlEfpTr9tcIXydkyx0q91mwfNqvtLN22wlaD1oXtHv59yEl1Rah85RusTQA8s/ZL1vSpW14sPhFYxjD09/PyPpMrJtOvxNp0nx+3HgevnpuED9GD08kGW7q+pFu9/IyP1FfK4RojWvnuBxdFbZ2ESUbTkdZ2d5USMHD6kMnA=
