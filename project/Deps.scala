@@ -10,7 +10,7 @@ object Deps {
     val mess          = "0.0.11"
     val scalacheck    = "1.14.0"
     val scalatest     = "3.0.5"
-    val scalatestSnap = "3.0.6-SNAP4"
+    val scalatestSnap = "3.0.6-SNAP5"
     val scalaLogging  = "3.9.0"
     val logback       = "1.2.3"
     val msgpackJava   = "0.8.16"
