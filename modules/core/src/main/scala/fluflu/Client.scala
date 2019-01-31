@@ -50,9 +50,11 @@ object Client {
 
       private object Worker extends Runnable {
 
-        def start(): Unit =
+        def start(): Either[Exception, Unit] =
           if (!(closed || worker.isShutdown)) {
-            worker.schedule(this, 5, NANOSECONDS)
+            Right(worker.schedule(this, 5, NANOSECONDS))
+          } else {
+            Left(new Exception("Client executor was already shutdown"))
           }
 
         def run(): Unit = {
@@ -79,7 +81,7 @@ object Client {
           logger.trace(s"Queueing message: ${(tag, record, time)}")
           val fa = (p: MessageBufferPacker) => Packer[(A, Instant)].apply((record, time), p)
           if (queue.offer(tag -> fa))
-            if (!running.get && running.compareAndSet(false, true)) Right(Worker.start())
+            if (!running.get && running.compareAndSet(false, true)) Worker.start()
             else Right(())
           else
             Left(new Exception("The queue no space is currently available"))
