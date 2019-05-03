@@ -1,7 +1,7 @@
 import Deps._
 
 ThisBuild / organization := "com.github.tkrs"
-ThisBuild / scalaVersion := Ver.`scala2.12`
+ThisBuild / scalaVersion := Ver.`scala2.13`
 ThisBuild / crossScalaVersions := Seq(
   Ver.`scala2.12`,
   Ver.`scala2.13`
@@ -10,17 +10,15 @@ ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
-ThisBuild / libraryDependencies ++= Pkg.forTest(scalaVersion.value) ++ Seq(
-  Pkg.scalaLogging,
-  compilerPlugin(Pkg.kindProjector)
-)
+ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(Pkg.scalaLogging, compilerPlugin(Pkg.kindProjector))
 ThisBuild / scalacOptions ++= compilerOptions ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, n)) if n >= 13 => warnCompilerOptions
-    case _                       => warnCompilerOptions :+ "-Yno-adapted-args"
+    case _                       => warnCompilerOptions ++ Seq("-Xfuture", "-Ypartial-unification", "-Yno-adapted-args")
   }
 }
 ThisBuild / Test / fork := true
+ThisBuild / scalafmtOnCompile := true
 
 lazy val compilerOptions = Seq(
   "-deprecation",
@@ -28,8 +26,7 @@ lazy val compilerOptions = Seq(
   "UTF-8",
   "-unchecked",
   "-feature",
-  "-language:_",
-  "-Xfuture"
+  "-language:_"
 )
 
 lazy val warnCompilerOptions = Seq(
