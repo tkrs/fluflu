@@ -25,7 +25,7 @@ trait MessPackerInstances {
 
   private[this] val unpackerConfig = new MessagePack.UnpackerConfig().withBufferSize(124)
 
-  private[this] implicit val decodeMOption: Decoder[Ack] = derivedDecoder[Ack]
+  implicit private[this] val decodeMOption: Decoder[Ack] = derivedDecoder[Ack]
 
   implicit val unpackAckByMess: Unpacker[Option[Ack]] = new Unpacker[Option[Ack]] {
     def apply(bytes: ByteBuffer): Either[Throwable, Option[Ack]] =
