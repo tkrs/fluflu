@@ -18,11 +18,13 @@ object Packer {
       packer.packString(a)
   }
 
-  implicit def packEvent[A](implicit
-                            S: Packer[String],
-                            A: Packer[A],
-                            T: Packer[Instant],
-                            M: Packer[MOption]): Packer[(String, A, Instant, Option[MOption])] =
+  implicit def packEvent[A](
+    implicit
+    S: Packer[String],
+    A: Packer[A],
+    T: Packer[Instant],
+    M: Packer[MOption]
+  ): Packer[(String, A, Instant, Option[MOption])] =
     new Packer[(String, A, Instant, Option[MOption])] {
       def apply(v: (String, A, Instant, Option[MOption]), packer: MessagePacker): Unit = {
         val (s, a, t, o) = v
@@ -35,9 +37,11 @@ object Packer {
       }
     }
 
-  implicit def packEntry[A](implicit
-                            A: Packer[A],
-                            T: Packer[Instant]): Packer[(A, Instant)] =
+  implicit def packEntry[A](
+    implicit
+    A: Packer[A],
+    T: Packer[Instant]
+  ): Packer[(A, Instant)] =
     new Packer[(A, Instant)] {
       def apply(v: (A, Instant), packer: MessagePacker): Unit = {
         val (a, t) = v
