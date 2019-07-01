@@ -27,17 +27,20 @@ trait Client {
 
 object Client {
 
-  def apply(terminationTimeout: FiniteDuration = FiniteDuration(10, SECONDS),
-            maximumPulls: Int = 1000,
-            packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
-      implicit
-      connection: Connection,
-      PS: Packer[String],
-      PI: Packer[Instant],
-      PM: Packer[MOption],
-      PA: Unpacker[Option[Ack]]
+  def apply(
+    terminationTimeout: FiniteDuration = FiniteDuration(10, SECONDS),
+    maximumPulls: Int = 1000,
+    packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG
+  )(
+    implicit
+    connection: Connection,
+    PS: Packer[String],
+    PI: Packer[Instant],
+    PM: Packer[MOption],
+    PA: Unpacker[Option[Ack]]
   ): Client =
     new Client with LazyLogging {
+
       @volatile private[this] var closed = false
 
       private def scheduler(name: String) =

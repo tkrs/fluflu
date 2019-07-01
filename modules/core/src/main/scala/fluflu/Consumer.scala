@@ -25,13 +25,15 @@ trait Consumer {
   def consume(): Unit
 }
 
-final class ForwardConsumer private[fluflu] (maximumPulls: Int,
-                                             connection: Connection,
-                                             val msgQueue: util.Queue[(String, MessageBufferPacker => Unit)],
-                                             packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG)(
-    implicit PS: Packer[String],
-    PM: Packer[MOption],
-    UA: Unpacker[Option[Ack]]
+final class ForwardConsumer private[fluflu] (
+  maximumPulls: Int,
+  connection: Connection,
+  val msgQueue: util.Queue[(String, MessageBufferPacker => Unit)],
+  packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG
+)(
+  implicit PS: Packer[String],
+  PM: Packer[MOption],
+  UA: Unpacker[Option[Ack]]
 ) extends Consumer
     with LazyLogging {
   private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()

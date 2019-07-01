@@ -22,35 +22,37 @@ trait Connection {
 object Connection {
 
   final case class Settings(
-      connectionTimeout: FiniteDuration,
-      connectionBackof: Backoff,
-      writeTimeout: FiniteDuration,
-      writeBackof: Backoff,
-      readTimeout: FiniteDuration,
-      readBackof: Backoff,
-      readSize: Int = 55 // When using UUID v4 to chunk
+    connectionTimeout: FiniteDuration,
+    connectionBackof: Backoff,
+    writeTimeout: FiniteDuration,
+    writeBackof: Backoff,
+    readTimeout: FiniteDuration,
+    readBackof: Backoff,
+    readSize: Int = 55 // When using UUID v4 to chunk
   )
 
   final case class SocketOptions(
-      soBroadcast: Option[Boolean] = None,
-      soKeepalive: Option[Boolean] = None,
-      soSndbuf: Option[Int] = None,
-      soRcvbuf: Option[Int] = None,
-      soReuseAddr: Option[Boolean] = None,
-      soLinger: Option[Int] = None,
-      ipTos: Option[Int] = None,
-      ipMulticastIf: Option[NetworkInterface] = None,
-      ipMulticastTtl: Option[Int] = None,
-      ipMulticastLoop: Option[Boolean] = None,
-      tcpNoDelay: Option[Boolean] = Some(true),
-      soTimeout: Option[Int] = Some(5000)
+    soBroadcast: Option[Boolean] = None,
+    soKeepalive: Option[Boolean] = None,
+    soSndbuf: Option[Int] = None,
+    soRcvbuf: Option[Int] = None,
+    soReuseAddr: Option[Boolean] = None,
+    soLinger: Option[Int] = None,
+    ipTos: Option[Int] = None,
+    ipMulticastIf: Option[NetworkInterface] = None,
+    ipMulticastTtl: Option[Int] = None,
+    ipMulticastLoop: Option[Boolean] = None,
+    tcpNoDelay: Option[Boolean] = Some(true),
+    soTimeout: Option[Int] = Some(5000)
   )
 
   def apply(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings, clock: Clock): Connection =
     new ConnectionImpl(remote, socketOptions, settings)(clock)
 
-  def apply(remote: SocketAddress, settings: Settings)(implicit
-                                                       clock: Clock = Clock.systemUTC()): Connection =
+  def apply(remote: SocketAddress, settings: Settings)(
+    implicit
+    clock: Clock = Clock.systemUTC()
+  ): Connection =
     new ConnectionImpl(remote, SocketOptions(), settings)(clock)
 
   class ConnectionImpl(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings)(implicit clock: Clock)
