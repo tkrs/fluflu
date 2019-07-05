@@ -3,7 +3,6 @@ import Deps._
 ThisBuild / organization := "com.github.tkrs"
 ThisBuild / scalaVersion := Ver.`scala2.12`
 ThisBuild / crossScalaVersions := Seq(
-  Ver.`scala2.11`,
   Ver.`scala2.12`,
   Ver.`scala2.13`
 )
@@ -17,9 +16,8 @@ ThisBuild / libraryDependencies ++= Pkg.forTest(scalaVersion.value) ++ Seq(
 )
 ThisBuild / scalacOptions ++= compilerOptions ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 13)) => warnCompilerOptions
-    case Some((2, 12)) => warnCompilerOptions :+ "-Yno-adapted-args"
-    case _             => Nil
+    case Some((2, n)) if n >= 13 => warnCompilerOptions
+    case _                       => warnCompilerOptions :+ "-Yno-adapted-args"
   }
 }
 ThisBuild / Test / fork := true
