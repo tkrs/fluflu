@@ -2,11 +2,8 @@ import sbt._
 
 object Deps {
   val Ver = new {
-    val `scala2.11`   = "2.11.12"
     val `scala2.12`   = "2.12.8"
     val `scala2.13`   = "2.13.0-M5"
-    val scalafmt      = "1.5.1"
-    val shapeless     = "2.3.3"
     val mess          = "0.0.11"
     val scalacheck    = "1.14.0"
     val scalatest     = "3.0.5"
