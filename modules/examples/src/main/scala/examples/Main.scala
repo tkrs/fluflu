@@ -8,7 +8,6 @@ import fluflu._
 import fluflu.msgpack.mess._
 import mess.Encoder
 import mess.ast.MsgPack
-import mess.codec.generic.derivedEncoder
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -18,12 +17,16 @@ import scala.util.Random
   */
 object Main extends LazyLogging {
 
+  implicit val encodeLocalDate: Encoder[LocalDate] =
+    a => MsgPack.fromLong(a.toEpochDay)
+
   def main(args: Array[String]): Unit = {
 
     implicit val clock: Clock = Clock.systemUTC()
 
     val host = sys.props.getOrElse("fluentd.host", "localhost")
     val port = sys.props.getOrElse("fluentd.port", "24224").toInt
+    val addr = new InetSocketAddress(host, port)
 
     val rnd = new Random()
     val connSettings = Connection.Settings(
@@ -34,7 +37,6 @@ object Main extends LazyLogging {
       10.seconds,
       Backoff.exponential(500.nanos, 10.seconds, rnd)
     )
-    val addr                            = new InetSocketAddress(host, port)
     implicit val connection: Connection = Connection(addr, connSettings)
 
     import msgpack.time.eventTime._
@@ -54,11 +56,3 @@ object Main extends LazyLogging {
 }
 
 final case class Human(dayOfbirth: LocalDate, name: String)
-object Human {
-  implicit val encodeLocalDate: Encoder[LocalDate] = new Encoder[LocalDate] {
-    def apply(a: LocalDate): MsgPack = {
-      MsgPack.mLong(a.toEpochDay())
-    }
-  }
-  implicit val encodeNum: Encoder[Human] = derivedEncoder[Human]
-}
