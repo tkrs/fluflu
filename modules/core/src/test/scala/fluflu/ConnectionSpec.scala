@@ -7,14 +7,13 @@ import java.nio.channels.SocketChannel
 import java.time.Clock
 
 import fluflu.Connection.SocketOptions
-import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers._
+import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FunSpec, Matchers}
+import org.scalatestplus.mockito.MockitoSugar
 
-import scala.util.Failure
 import scala.concurrent.duration._
 
 class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
@@ -111,8 +110,8 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
       }
       val conn = new TestConnection
       conn.close()
-      val Failure(e) = conn.writeAndRead(arg)
-      assert(e.getMessage === "Already closed")
+      val message = conn.writeAndRead(arg).failed.get.getMessage
+      assert(message === "Already closed")
     }
     it("should return Failure with IOException when it SocketChannel.connect returns false") {
       val arg         = ByteBuffer.wrap(Array(1, 2, 3).map(_.toByte))
