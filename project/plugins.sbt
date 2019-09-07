@@ -1,4 +1,3 @@
-addSbtPlugin("io.get-coursier"    % "sbt-coursier"  % "1.1.0-M1")
 addSbtPlugin("pl.project13.scala" % "sbt-jmh"       % "0.3.4")
 addSbtPlugin("org.scalameta"      % "sbt-scalafmt"  % "2.0.1")
 addSbtPlugin("org.scoverage"      % "sbt-scoverage" % "1.6.0-M3")
