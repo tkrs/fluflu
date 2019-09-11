@@ -4,36 +4,40 @@ sudo: true
 services:
 - docker
 scala:
-- 2.12.8
+- 2.12.10
 - 2.13.0
 jdk:
-- openjdk8
-- openjdk11
 - openjdk12
-- openjdk-ea
+- openjdk13
 matrix:
+  include:
+  - jdk: openjdk11
+    scala: 2.12.10
+    env: COV=false RELEASE=true
+  - jdk: openjdk11
+    scala: 2.13.0
+    env: COV=true RELEASE=true
   allow_failures:
-  - jdk: openjdk-ea
+  - jdk: openjdk13
 cache:
   directories:
   - "$HOME/.ivy2/cache"
   - "$HOME/.sbt/boot"
   - "$HOME/.sbt/launchers"
   - "$HOME/.coursier"
-  - "$HOME/.cache/install-jdk"
 install:
 - pip install --user codecov
 before_script:
 - docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.3.0
 script:
 - |
-  if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && "$TRAVIS_SCALA_VERSION" = 2.12.* ]]; then
+  if [[ "${COV:-""}" = "true" ]]; then
     sbt ++$TRAVIS_SCALA_VERSION clean coverage scalafmtCheckAll scalafmtSbtCheck test coverageReport coverageOff && codecov
   else
     sbt ++$TRAVIS_SCALA_VERSION clean test
   fi
 - |
-  if [[ "$TRAVIS_JDK_VERSION" = "openjdk8" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+  if [[ "${RELEASE:-}" = "true" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
     export PGP_SECRET_RING="${HOME}/.gnupg/secring.gpg"
     mkdir -p $(dirname "${PGP_SECRET_RING}")
     echo $GPG_KEY | base64 --decode > "${PGP_SECRET_RING}"
