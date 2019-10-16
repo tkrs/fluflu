@@ -55,9 +55,7 @@ lazy val publishSettings = Seq(
   licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
   publishMavenStyle := true,
   Test / publishArtifact := false,
-  pomIncludeRepository := { _ =>
-    false
-  },
+  pomIncludeRepository := (_ => false),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
