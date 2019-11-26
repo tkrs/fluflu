@@ -10,7 +10,6 @@ import org.scalatest.{BeforeAndAfterEach, FunSpec}
 import scala.util.{Success, Try}
 
 class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHelper {
-
   type Elem = (String, MessageBufferPacker => Unit)
 
   var scheduler: ScheduledExecutorService = _
@@ -54,7 +53,6 @@ class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHe
   }
 
   describe("retrieveElements") {
-
     it("should create Map with tag as key") {
       val queue = new ArrayBlockingQueue[Elem](3)
       queue.offer(("a", (m: MessageBufferPacker) => m.writePayload(Array(1.toByte))))

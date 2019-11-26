@@ -21,6 +21,7 @@ package object fluflu {
   }
 
   def namedThreadFactory(name: String, isDaemon: Boolean = false): ThreadFactory = new ThreadFactory {
+
     def newThread(r: Runnable): Thread = {
       val t = new Thread(r)
       t.setName(name)

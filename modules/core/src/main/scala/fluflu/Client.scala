@@ -40,7 +40,6 @@ object Client {
     PA: Unpacker[Option[Ack]]
   ): Client =
     new Client with LazyLogging {
-
       @volatile private[this] var closed = false
 
       private def scheduler(name: String) =

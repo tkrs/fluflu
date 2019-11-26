@@ -12,12 +12,12 @@ trait MsgpackHelper extends Matchers with BeforeAndAfterEach { self: Suite =>
 
   override def afterEach(): Unit =
     packer.close()
-
 }
 
 object MsgpackHelper {
 
   implicit class BinHelper(val sc: StringContext) extends AnyVal {
+
     def x(): Array[Byte] = {
       val strings = sc.parts.iterator
 
