@@ -7,6 +7,7 @@ import org.scalatest.FunSpec
 import scala.concurrent.duration._
 
 class BackoffSpec extends FunSpec {
+
   class MyRandom extends Random {
     override def nextDouble: Double = 0.1
   }

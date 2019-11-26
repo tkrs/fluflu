@@ -22,6 +22,7 @@ class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
   implicit val clock: Clock = Clock.systemUTC()
 
   val address: SocketAddress = new SocketAddress {}
+
   def connSettings = Connection.Settings(
     500.millis,
     Backoff.fix(1.millis),

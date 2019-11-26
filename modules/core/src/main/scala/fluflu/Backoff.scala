@@ -10,7 +10,6 @@ trait Backoff {
 object Backoff {
 
   def fix(delay: FiniteDuration): Backoff = new Backoff {
-
     override def nextDelay(retries: Int): FiniteDuration = delay
   }
 

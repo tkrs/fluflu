@@ -14,7 +14,6 @@ object Sleeper {
 
   def apply(backoff: Backoff, timeout: FiniteDuration, clock: Clock): Sleeper =
     new Sleeper {
-
       private[this] val start = Instant.now(clock)
 
       def giveUp: Boolean =

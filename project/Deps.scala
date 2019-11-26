@@ -1,6 +1,7 @@
 import sbt._
 
 object Deps {
+
   val Ver = new {
     val `scala2.12`   = "2.12.10"
     val `scala2.13`   = "2.13.1"

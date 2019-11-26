@@ -17,5 +17,4 @@ class IntegerSpec extends FunSpec with MsgpackHelper {
       assert(packer.toByteArray === expected)
     }
   }
-
 }
