@@ -3,11 +3,12 @@ package fluflu.msgpack.mess
 import java.nio.ByteBuffer
 
 import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
-import mess.{Decoder, Encoder}
-import mess.ast.MsgPack
+import mess.Fmt
+import mess.codec.{Decoder, Encoder}
 import org.msgpack.core.{MessagePack, MessagePacker => CMessagePacker}
 
 trait MessPackerInstances {
+  import mess.codec.auto._
 
   implicit def packAByMess[A](implicit encodeA: Encoder[A]): Packer[A] =
     new Packer[A] {
@@ -31,6 +32,6 @@ trait MessPackerInstances {
   implicit val unpackAckByMess: Unpacker[Option[Ack]] = new Unpacker[Option[Ack]] {
 
     def apply(bytes: ByteBuffer): Either[Throwable, Option[Ack]] =
-      decodeOptionAck(MsgPack.unpack(unpackerConfig.newUnpacker(bytes)))
+      decodeOptionAck(Fmt.unpack(unpackerConfig.newUnpacker(bytes)))
   }
 }
