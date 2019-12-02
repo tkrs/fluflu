@@ -6,8 +6,8 @@ import java.time._
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
 import fluflu.msgpack.mess._
-import mess.Encoder
-import mess.ast.MsgPack
+import mess.Fmt
+import mess.codec.Encoder
 
 import scala.concurrent.duration._
 import scala.util.Random
@@ -17,11 +17,7 @@ import scala.util.Random
   */
 object Main extends LazyLogging {
 
-  implicit val encodeLocalDate: Encoder[LocalDate] =
-    a => MsgPack.fromLong(a.toEpochDay)
-
   def main(args: Array[String]): Unit = {
-
     implicit val clock: Clock = Clock.systemUTC()
 
     val host = sys.props.getOrElse("fluentd.host", "localhost")
@@ -46,13 +42,31 @@ object Main extends LazyLogging {
       maximumPulls = 5000
     )
 
-    client.emit("human.japanese", Human(LocalDate.of(1984, 6, 30), "Takeru Sato")) match {
-      case Right(_) => ()
-      case Left(e)  => e.printStackTrace()
-    }
+    Seq(
+      Human(LocalDate.of(1984, 6, 30), "Takeshi Sato"),
+      Human(LocalDate.of(1984, 5, 30), "Takeo Sato"),
+      Human(LocalDate.of(1984, 4, 30), "Takashi Sato"),
+      Human(LocalDate.of(1984, 6, 28), "Taro Sato"),
+      Human(LocalDate.of(1983, 6, 30), "Makoto Sato")
+    ).foreach(
+      a =>
+        client.emit("human.japanese", a) match {
+          case Right(_) => ()
+          case Left(e)  => e.printStackTrace()
+        }
+    )
 
     client.close()
   }
 }
 
 final case class Human(dayOfbirth: LocalDate, name: String)
+
+object Human {
+  import mess.codec.semiauto._
+
+  implicit val encodeLocalDate: Encoder[LocalDate] =
+    a => Fmt.fromLong(a.toEpochDay)
+
+  implicit val encodeHuman: Encoder[Human] = derivedEncoder[Human]
+}

@@ -10,7 +10,7 @@ ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("releases"),
   Resolver.sonatypeRepo("snapshots")
 )
-ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(Pkg.scalaLogging, compilerPlugin(Pkg.kindProjector))
+ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(Pkg.scalaLogging)
 ThisBuild / scalacOptions ++= compilerOptions ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
     case Some((2, n)) if n >= 13 => warnCompilerOptions
