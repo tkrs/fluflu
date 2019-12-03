@@ -13,7 +13,6 @@ import org.msgpack.core.{MessageBufferPacker, MessagePack}
 import scala.concurrent.duration._
 
 trait Client {
-
   final def emit[A: Packer](tag: String, record: A): Either[Exception, Unit] =
     emit(tag, record, Instant.now)
 
@@ -27,7 +26,6 @@ trait Client {
 }
 
 object Client {
-
   def apply(
     terminationTimeout: FiniteDuration = FiniteDuration(10, SECONDS),
     maximumPulls: Int = 1000,
@@ -52,7 +50,6 @@ object Client {
       private[this] val worker   = scheduler("fluflu-scheduler")
 
       private object Worker extends Runnable {
-
         def start(): Either[Exception, Unit] =
           if (!(closed || worker.isShutdown)) {
             Right(worker.schedule(this, 5, NANOSECONDS))
