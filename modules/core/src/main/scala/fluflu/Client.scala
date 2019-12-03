@@ -5,6 +5,7 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
+import fluflu.internal.Utils
 import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
 import org.msgpack.core.MessagePack.PackerConfig
 import org.msgpack.core.{MessageBufferPacker, MessagePack}
@@ -43,7 +44,7 @@ object Client {
       @volatile private[this] var closed = false
 
       private def scheduler(name: String) =
-        Executors.newScheduledThreadPool(1, namedThreadFactory(name))
+        Executors.newScheduledThreadPool(1, Utils.namedThreadFactory(name))
 
       private[this] val running  = new AtomicBoolean()
       private[this] val queue    = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
@@ -92,7 +93,7 @@ object Client {
       def close(): Unit =
         try {
           closed = true
-          awaitTermination(worker, 1.second)
+          Utils.awaitTermination(worker, 1.second)
           val closer = scheduler("fluflu-closer")
           closer.execute(new Runnable {
             def run(): Unit =
@@ -101,7 +102,7 @@ object Client {
                 NANOSECONDS.sleep(10)
               }
           })
-          awaitTermination(closer, terminationTimeout)
+          Utils.awaitTermination(closer, terminationTimeout)
         } finally {
           logger.info(s"Performed close the client. queue remaining: ${queue.size()}")
         }
