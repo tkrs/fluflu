@@ -16,7 +16,6 @@ import scala.util.Random
   * sbt "examples/runMain examples.Main"
   */
 object Main extends LazyLogging {
-
   def main(args: Array[String]): Unit = {
     implicit val clock: Clock = Clock.systemUTC()
 

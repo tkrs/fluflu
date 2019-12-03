@@ -5,7 +5,6 @@ import java.util.concurrent.{ExecutorService, ThreadFactory}
 import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
 private[fluflu] object Utils {
-
   def awaitTermination(pool: ExecutorService, delay: FiniteDuration): Unit = {
     pool.shutdown()
     try {
@@ -23,7 +22,6 @@ private[fluflu] object Utils {
   }
 
   def namedThreadFactory(name: String, isDaemon: Boolean = false): ThreadFactory = new ThreadFactory {
-
     def newThread(r: Runnable): Thread = {
       val t = new Thread(r)
       t.setName(name)

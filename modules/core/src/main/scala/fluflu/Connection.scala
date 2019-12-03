@@ -20,7 +20,6 @@ trait Connection {
 }
 
 object Connection {
-
   final case class Settings(
     connectionTimeout: FiniteDuration,
     connectionBackof: Backoff,

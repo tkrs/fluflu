@@ -14,7 +14,6 @@ object Packer {
   def apply[A](implicit P: Packer[A]): Packer[A] = P
 
   implicit val packString: Packer[String] = new Packer[String] {
-
     def apply(a: String, packer: MessagePacker): Unit =
       packer.packString(a)
   }
@@ -27,7 +26,6 @@ object Packer {
     M: Packer[MOption]
   ): Packer[(String, A, Instant, Option[MOption])] =
     new Packer[(String, A, Instant, Option[MOption])] {
-
       def apply(v: (String, A, Instant, Option[MOption]), packer: MessagePacker): Unit = {
         val (s, a, t, o) = v
         val sz           = if (o.isDefined) 4 else 3
@@ -45,7 +43,6 @@ object Packer {
     T: Packer[Instant]
   ): Packer[(A, Instant)] =
     new Packer[(A, Instant)] {
-
       def apply(v: (A, Instant), packer: MessagePacker): Unit = {
         val (a, t) = v
         packer.packArrayHeader(2)
