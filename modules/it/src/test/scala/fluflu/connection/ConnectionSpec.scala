@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 
 import fluflu.msgpack.{Ack, Unpacker}
-import fluflu.msgpack.mess._
+import fluflu.msgpack.instances.mess._
 import fluflu.{Backoff, Connection}
 import org.scalatest.FlatSpec
 

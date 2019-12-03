@@ -1,19 +1,20 @@
-package fluflu.msgpack.mess
+package fluflu.msgpack.instances
 
 import java.nio.ByteBuffer
 
+import _root_.mess.Fmt
+import _root_.mess.codec.{Decoder, Encoder}
 import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
-import mess.Fmt
-import mess.codec.{Decoder, Encoder}
-import org.msgpack.core.{MessagePack, MessagePacker => CMessagePacker}
+import org.msgpack.core.MessagePack
+import org.msgpack.core.MessagePacker
 
-trait MessPackerInstances {
-  import mess.codec.auto._
+private[instances] trait MessPackerInstances {
+  import _root_.mess.codec.auto._
 
   implicit def packAByMess[A](implicit encodeA: Encoder[A]): Packer[A] =
     new Packer[A] {
 
-      def apply(a: A, packer: CMessagePacker): Unit =
+      def apply(a: A, packer: MessagePacker): Unit =
         encodeA(a).pack(packer)
     }
 
@@ -21,7 +22,7 @@ trait MessPackerInstances {
 
   implicit val packMOptionByMess: Packer[MOption] = new Packer[MOption] {
 
-    def apply(a: MOption, packer: CMessagePacker): Unit =
+    def apply(a: MOption, packer: MessagePacker): Unit =
       encodeMOption(a).pack(packer)
   }
 

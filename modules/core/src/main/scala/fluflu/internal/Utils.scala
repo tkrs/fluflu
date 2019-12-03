@@ -1,8 +1,10 @@
+package fluflu.internal
+
 import java.util.concurrent.{ExecutorService, ThreadFactory}
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.{FiniteDuration, NANOSECONDS}
 
-package object fluflu {
+private[fluflu] object Utils {
 
   def awaitTermination(pool: ExecutorService, delay: FiniteDuration): Unit = {
     pool.shutdown()

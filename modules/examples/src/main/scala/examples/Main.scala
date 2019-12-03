@@ -5,7 +5,7 @@ import java.time._
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu._
-import fluflu.msgpack.mess._
+import fluflu.msgpack.instances.mess._
 import mess.Fmt
 import mess.codec.Encoder
 
