@@ -4,7 +4,7 @@ object Deps {
   val Ver = new {
     val `scala2.12`  = "2.12.10"
     val `scala2.13`  = "2.13.1"
-    val mess         = "0.1.0"
+    val mess         = "0.2.1"
     val scalacheck   = "1.14.0"
     val scalatest    = "3.0.8"
     val scalaLogging = "3.9.2"
