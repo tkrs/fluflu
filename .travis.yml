@@ -15,7 +15,7 @@ matrix:
     scala: 2.12.10
     env: COV=false RELEASE=true
   - jdk: openjdk11
-    scala: 2.13.0
+    scala: 2.13.1
     env: COV=true RELEASE=true
   allow_failures:
   - jdk: openjdk13
