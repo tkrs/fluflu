@@ -7,8 +7,7 @@ scala:
 - 2.12.10
 - 2.13.1
 jdk:
-- openjdk12
-- openjdk13
+- openjdk-ea
 matrix:
   include:
   - jdk: openjdk11
@@ -18,7 +17,7 @@ matrix:
     scala: 2.13.1
     env: COV=true RELEASE=true
   allow_failures:
-  - jdk: openjdk13
+  - jdk: openjdk-ea
 cache:
   directories:
   - "$HOME/.ivy2/cache"
@@ -28,7 +27,7 @@ cache:
 install:
 - pip install --user codecov
 before_script:
-- docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.3.0
+- docker run -d -p 24224:24224 --name fluentd fluent/fluentd:v1.8-1
 script:
 - |
   if [[ "${COV:-""}" = "true" ]]; then
