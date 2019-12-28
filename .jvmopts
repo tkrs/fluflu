@@ -4,5 +4,4 @@
 -XX:MaxMetaspaceSize=1024M
 -XX:+UseCompressedOops
 -XX:+TieredCompilation
--XX:+CMSClassUnloadingEnabled
 -XX:+UseParallelGC
