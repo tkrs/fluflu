@@ -11,10 +11,10 @@ ThisBuild / resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots")
 )
 ThisBuild / libraryDependencies ++= Pkg.forTest ++ Seq(Pkg.scalaLogging)
-ThisBuild / scalacOptions ++= compilerOptions ++ {
+ThisBuild / scalacOptions ++= compilerOptions ++ warnCompilerOptions ++ {
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, n)) if n >= 13 => warnCompilerOptions
-    case _                       => warnCompilerOptions ++ Seq("-Xfuture", "-Ypartial-unification", "-Yno-adapted-args")
+    case Some((2, n)) if n >= 13 => Nil
+    case _                       => Seq("-Xfuture", "-Ypartial-unification", "-Yno-adapted-args")
   }
 }
 ThisBuild / Test / fork := true
@@ -76,15 +76,11 @@ lazy val publishSettings = Seq(
         <name>Takeru Sato</name>
         <url>https://github.com/tkrs</url>
       </developer>
-    </developers>,
-  pgpPassphrase := sys.env.get("PGP_PASSPHRASE").map(_.toCharArray),
-  pgpSecretRing := sys.env.get("PGP_SECRET_RING").fold(pgpSecretRing.value)(file)
+    </developers>
 )
 
 lazy val noPublishSettings = Seq(
-  publish := {},
-  publishLocal := {},
-  publishArtifact := false
+  publish / skip := true
 )
 
 lazy val core = project
