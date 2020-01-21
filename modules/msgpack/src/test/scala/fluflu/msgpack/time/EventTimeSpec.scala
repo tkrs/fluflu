@@ -3,9 +3,9 @@ package fluflu.msgpack.time
 import java.time.Instant
 
 import fluflu.msgpack.{MsgpackHelper, Packer}
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
-class EventTimeSpec extends FunSpec with MsgpackHelper {
+class EventTimeSpec extends AnyFunSpec with MsgpackHelper {
   import MsgpackHelper._
   import eventTime._
 

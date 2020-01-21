@@ -3,11 +3,12 @@ package fluflu
 import java.nio.ByteBuffer
 import java.time.Clock
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.{Success, Try}
 
-trait Suite extends FunSpec with Matchers {
+trait Suite extends AnyFunSpec with Matchers {
   implicit val clock: Clock = Clock.systemUTC()
 
   implicit val connection: Connection = new Connection {

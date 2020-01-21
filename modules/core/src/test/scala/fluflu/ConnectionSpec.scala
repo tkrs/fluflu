@@ -11,12 +11,13 @@ import org.mockito.ArgumentMatchers._
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 
 import scala.concurrent.duration._
 
-class ConnectionSpec extends FunSpec with MockitoSugar with Matchers {
+class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
   import Connection.ConnectionImpl
 
   implicit val clock: Clock = Clock.systemUTC()

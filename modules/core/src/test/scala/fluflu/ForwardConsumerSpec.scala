@@ -5,11 +5,12 @@ import java.util.concurrent.{ArrayBlockingQueue, Executors, ScheduledExecutorSer
 
 import fluflu.msgpack._
 import org.msgpack.core.{MessageBufferPacker, MessagePack, MessagePacker}
-import org.scalatest.{BeforeAndAfterEach, FunSpec}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funspec.AnyFunSpec
 
 import scala.util.{Success, Try}
 
-class ForwardConsumerSpec extends FunSpec with BeforeAndAfterEach with MsgpackHelper {
+class ForwardConsumerSpec extends AnyFunSpec with BeforeAndAfterEach with MsgpackHelper {
   type Elem = (String, MessageBufferPacker => Unit)
 
   var scheduler: ScheduledExecutorService = _
