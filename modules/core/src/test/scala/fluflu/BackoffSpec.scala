@@ -2,11 +2,11 @@ package fluflu
 
 import java.util.Random
 
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
 import scala.concurrent.duration._
 
-class BackoffSpec extends FunSpec {
+class BackoffSpec extends AnyFunSpec {
   class MyRandom extends Random {
     override def nextDouble: Double = 0.1
   }

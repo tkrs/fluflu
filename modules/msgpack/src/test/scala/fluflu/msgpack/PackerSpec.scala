@@ -4,9 +4,9 @@ import java.io.Closeable
 import java.time.Instant
 
 import org.msgpack.core.MessagePacker
-import org.scalatest._
+import org.scalatest.funspec.AnyFunSpec
 
-class PackerSpec extends FunSpec with MsgpackHelper {
+class PackerSpec extends AnyFunSpec with MsgpackHelper {
   import MsgpackHelper._
 
   final class R extends Closeable {

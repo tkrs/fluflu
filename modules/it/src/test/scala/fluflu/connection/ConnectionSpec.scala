@@ -7,11 +7,11 @@ import java.nio.ByteBuffer
 import fluflu.msgpack.{Ack, Unpacker}
 import fluflu.msgpack.instances.mess._
 import fluflu.{Backoff, Connection}
-import org.scalatest.FlatSpec
+import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.concurrent.duration._
 
-class ConnectionSpec extends FlatSpec {
+class ConnectionSpec extends AnyFlatSpec {
   import fluflu.msgpack.MsgpackHelper._
 
   val connSettings = Connection.Settings(

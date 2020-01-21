@@ -2,11 +2,12 @@ package fluflu
 
 import java.time.{Clock, Instant, ZoneId}
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
-class SleeperSpec extends FunSpec with Matchers {
+class SleeperSpec extends AnyFunSpec with Matchers {
   describe("giveup") {
     it("should return false when it is called in time") {
       val clock   = Clock.fixed(Instant.now, ZoneId.systemDefault())
