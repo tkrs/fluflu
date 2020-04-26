@@ -10,10 +10,10 @@ object Deps {
     val scalaLogging = "3.9.2"
     val logback      = "1.2.3"
 
-    val scalatest = "3.1.0"
+    val scalatest = "3.1.1"
     val scalatestplus = new {
-      val scalacheck = "3.1.0.1"
-      val mockito    = "3.1.0.0"
+      val scalacheck = "3.1.1.1"
+      val mockito    = "3.1.1.0"
     }
   }
 
