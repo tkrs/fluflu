@@ -5,16 +5,16 @@ services:
 - docker
 scala:
 - 2.12.11
-- 2.13.1
+- 2.13.2
 jdk:
 - openjdk-ea
 matrix:
   include:
   - jdk: openjdk11
-    scala: 2.12.10
+    scala: 2.12.11
     env: COV=false RELEASE=true
   - jdk: openjdk11
-    scala: 2.13.1
+    scala: 2.13.2
     env: COV=true RELEASE=true
   allow_failures:
   - jdk: openjdk-ea
