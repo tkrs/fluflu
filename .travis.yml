@@ -23,7 +23,7 @@ cache:
   - "$HOME/.ivy2/cache"
   - "$HOME/.sbt/boot"
   - "$HOME/.sbt/launchers"
-  - "$HOME/.coursier"
+  - "$HOME/.cache"
 install:
 - pip install --user codecov
 before_script:
