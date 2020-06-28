@@ -1,23 +1,15 @@
 language: scala
 dist: xenial
-sudo: true
 services:
 - docker
-scala:
-- 2.12.11
-- 2.13.2
-jdk:
-- openjdk-ea
 matrix:
   include:
   - jdk: openjdk11
     scala: 2.12.11
-    env: COV=false RELEASE=true
+    env: COV=false
   - jdk: openjdk11
-    scala: 2.13.2
-    env: COV=true RELEASE=true
-  allow_failures:
-  - jdk: openjdk-ea
+    scala: 2.13.3
+    env: COV=true
 cache:
   directories:
   - "$HOME/.ivy2/cache"
@@ -33,10 +25,10 @@ script:
   if [[ "${COV:-""}" = "true" ]]; then
     sbt ++$TRAVIS_SCALA_VERSION clean coverage scalafmtCheckAll scalafmtSbtCheck test coverageReport coverageOff && codecov
   else
-    sbt ++$TRAVIS_SCALA_VERSION clean test
+    sbt ++$TRAVIS_SCALA_VERSION clean scalafmtCheckAll scalafmtSbtCheck test
   fi
 - |
-  if [[ "${RELEASE:-}" = "true" && $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
+  if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then
     openssl aes-256-cbc -K $encrypted_f57ffb6e8b34_key -iv $encrypted_f57ffb6e8b34_iv -in .travis/secret-key.asc.enc -out .travis/secret-key.asc -d
     echo "$PGP_PASSPHRASE" | gpg --passphrase-fd 0 --batch --yes --import .travis/secret-key.asc
     if [ "$TRAVIS_BRANCH" = "master" ]; then
