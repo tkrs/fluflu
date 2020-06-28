@@ -47,12 +47,11 @@ object Main extends LazyLogging {
       Human(LocalDate.of(1984, 4, 30), "Takashi Sato"),
       Human(LocalDate.of(1984, 6, 28), "Taro Sato"),
       Human(LocalDate.of(1983, 6, 30), "Makoto Sato")
-    ).foreach(
-      a =>
-        client.emit("human.japanese", a) match {
-          case Right(_) => ()
-          case Left(e)  => e.printStackTrace()
-        }
+    ).foreach(a =>
+      client.emit("human.japanese", a) match {
+        case Right(_) => ()
+        case Left(e)  => e.printStackTrace()
+      }
     )
 
     client.close()

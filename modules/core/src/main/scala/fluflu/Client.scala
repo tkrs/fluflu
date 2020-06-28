@@ -30,8 +30,7 @@ object Client {
     terminationTimeout: FiniteDuration = FiniteDuration(10, SECONDS),
     maximumPulls: Int = 1000,
     packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG
-  )(
-    implicit
+  )(implicit
     connection: Connection,
     PS: Packer[String],
     PI: Packer[Instant],
@@ -51,25 +50,21 @@ object Client {
 
       private object Worker extends Runnable {
         def start(): Either[Exception, Unit] =
-          if (!(closed || worker.isShutdown)) {
+          if (!(closed || worker.isShutdown))
             Right(worker.schedule(this, 5, NANOSECONDS))
-          } else {
+          else
             Left(new Exception("Client executor was already shutdown"))
-          }
 
         def run(): Unit = {
           def ignore = closed || queue.isEmpty
-          if (ignore) {
+          if (ignore)
             running.set(false)
-          } else {
+          else {
             consumer.consume()
-            if (ignore) {
+            if (ignore)
               running.set(false)
-            } else {
-              if (!(ignore || worker.isShutdown)) {
-                worker.schedule(this, 5, NANOSECONDS)
-              }
-            }
+            else if (!(ignore || worker.isShutdown))
+              worker.schedule(this, 5, NANOSECONDS)
           }
         }
       }
@@ -100,9 +95,7 @@ object Client {
               }
           })
           Utils.awaitTermination(closer, terminationTimeout)
-        } finally {
-          logger.info(s"Performed close the client. queue remaining: ${queue.size()}")
-        }
+        } finally logger.info(s"Performed close the client. queue remaining: ${queue.size()}")
 
       def size: Int = queue.size()
 
