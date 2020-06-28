@@ -48,8 +48,7 @@ object Connection {
   def apply(remote: SocketAddress, socketOptions: SocketOptions, settings: Settings, clock: Clock): Connection =
     new ConnectionImpl(remote, socketOptions, settings)(clock)
 
-  def apply(remote: SocketAddress, settings: Settings)(
-    implicit
+  def apply(remote: SocketAddress, settings: Settings)(implicit
     clock: Clock = Clock.systemUTC()
   ): Connection =
     new ConnectionImpl(remote, SocketOptions(), settings)(clock)
@@ -85,10 +84,9 @@ object Connection {
 
     @tailrec private def doConnect(ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[SocketChannel] = {
       logger.info(s"Start connecting to $remote. retries: $retries")
-      try {
-        if (ch.connect(remote)) Success(ch)
-        else Failure(new IOException(s"Failed to connect: $remote"))
-      } catch {
+      try if (ch.connect(remote)) Success(ch)
+      else Failure(new IOException(s"Failed to connect: $remote"))
+      catch {
         case e: IOException =>
           if (sleeper.giveUp) {
             closed = true
@@ -160,16 +158,16 @@ object Connection {
 
     def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {
-        ch      <- connect()
-        _       = logger.debug(s"Start writing message: $message")
-        ws      = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
+        ch <- connect()
+        _  = logger.debug(s"Start writing message: $message")
+        ws = Sleeper(settings.writeBackof, settings.writeTimeout, clock)
         toWrite <- _write(message, ch, 0, ws) if ch.isConnected
-        _       = logger.debug(s"Number of bytes written: $toWrite")
+        _ = logger.debug(s"Number of bytes written: $toWrite")
 
         rs = Sleeper(settings.readBackof, settings.readTimeout, clock)
         _  = ackBuffer.clear()
-        _  <- _read(ackBuffer, 0, ch, 0, rs) if ch.isConnected
-        _  = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
+        _ <- _read(ackBuffer, 0, ch, 0, rs) if ch.isConnected
+        _ = logger.debug(s"Number of bytes read: ${ackBuffer.position()}")
       } yield {
         ackBuffer.flip()
         ackBuffer.duplicate()

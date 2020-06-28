@@ -18,8 +18,7 @@ object Packer {
       packer.packString(a)
   }
 
-  implicit def packEvent[A](
-    implicit
+  implicit def packEvent[A](implicit
     S: Packer[String],
     A: Packer[A],
     T: Packer[Instant],
@@ -37,8 +36,7 @@ object Packer {
       }
     }
 
-  implicit def packEntry[A](
-    implicit
+  implicit def packEntry[A](implicit
     A: Packer[A],
     T: Packer[Instant]
   ): Packer[(A, Instant)] =

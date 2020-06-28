@@ -23,10 +23,10 @@ object Deps {
   }
 
   val Pkg = new {
-    lazy val msgpackJava    = "org.msgpack"                % "msgpack-core"    % Ver.msgpackJava
-    lazy val mess           = "com.github.tkrs"            %% "mess-core"      % Ver.mess
-    lazy val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"  % Ver.scalaLogging
-    lazy val logbackClassic = "ch.qos.logback"             % "logback-classic" % Ver.logback
+    lazy val msgpackJava    = "org.msgpack"                 % "msgpack-core"    % Ver.msgpackJava
+    lazy val mess           = "com.github.tkrs"            %% "mess-core"       % Ver.mess
+    lazy val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % Ver.scalaLogging
+    lazy val logbackClassic = "ch.qos.logback"              % "logback-classic" % Ver.logback
 
     lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest
     lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-14" % Ver.scalatestplus.scalacheck

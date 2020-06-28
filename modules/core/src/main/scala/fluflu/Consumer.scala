@@ -30,8 +30,8 @@ final class ForwardConsumer private[fluflu] (
   connection: Connection,
   val msgQueue: util.Queue[(String, MessageBufferPacker => Unit)],
   packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG
-)(
-  implicit PS: Packer[String],
+)(implicit
+  PS: Packer[String],
   PM: Packer[MOption],
   UA: Unpacker[Option[Ack]]
 ) extends Consumer
