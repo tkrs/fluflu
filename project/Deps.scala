@@ -2,7 +2,7 @@ import sbt._
 
 object Deps {
   val Ver = new {
-    val `scala2.12` = "2.12.11"
+    val `scala2.12` = "2.12.12"
     val `scala2.13` = "2.13.3"
 
     val msgpackJava  = "0.8.20"
