@@ -12,10 +12,10 @@ object Deps {
     val scalaLogging = "3.9.2"
     val logback      = "1.2.3"
 
-    val scalatest = "3.2.0"
+    val scalatest = "3.2.2"
     val scalatestplus = new {
-      val scalacheck = "3.2.0.0"
-      val mockito    = "3.2.0.0"
+      val scalacheck = "3.2.2.0"
+      val mockito    = "3.2.2.0"
     }
   }
 
@@ -34,7 +34,7 @@ object Deps {
 
     lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest
     lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-14" % Ver.scalatestplus.scalacheck
-    lazy val mockito    = "org.scalatestplus" %% "mockito-3-3"     % Ver.scalatestplus.mockito
+    lazy val mockito    = "org.scalatestplus" %% "mockito-3-4"     % Ver.scalatestplus.mockito
 
     lazy val forTest = Seq(scalatest, scalacheck, mockito).map(_ % Test)
   }
