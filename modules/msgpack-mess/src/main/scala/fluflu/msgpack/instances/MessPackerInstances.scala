@@ -3,9 +3,13 @@ package fluflu.msgpack.instances
 import java.nio.ByteBuffer
 
 import _root_.mess.Fmt
+import _root_.mess.codec.Decoder
+import _root_.mess.codec.Encoder
 import _root_.mess.codec.semiauto._
-import _root_.mess.codec.{Decoder, Encoder}
-import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
+import fluflu.msgpack.Ack
+import fluflu.msgpack.MOption
+import fluflu.msgpack.Packer
+import fluflu.msgpack.Unpacker
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePacker
 

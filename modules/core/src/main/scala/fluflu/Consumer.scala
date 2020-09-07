@@ -3,19 +3,24 @@ package fluflu
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets._
 import java.util
+import java.util.Base64
+import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.{Base64, UUID}
 
-import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
-
-import scala.util.control.NonFatal
 import com.typesafe.scalalogging.LazyLogging
+import fluflu.msgpack.Ack
+import fluflu.msgpack.MOption
+import fluflu.msgpack.Packer
+import fluflu.msgpack.Unpacker
+import org.msgpack.core.MessageBufferPacker
+import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePack.PackerConfig
-import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.control.NonFatal
 
 trait Consumer {
   type E

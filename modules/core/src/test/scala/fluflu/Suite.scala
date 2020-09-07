@@ -6,7 +6,8 @@ import java.time.Clock
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.util.{Success, Try}
+import scala.util.Success
+import scala.util.Try
 
 trait Suite extends AnyFunSpec with Matchers {
   implicit val clock: Clock = Clock.systemUTC()

@@ -1,6 +1,8 @@
 package fluflu
 
-import java.time.{Clock, Instant, ZoneId}
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
 
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers

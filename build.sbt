@@ -19,6 +19,9 @@ ThisBuild / scalacOptions ++= compilerOptions ++ warnCompilerOptions ++ {
 }
 ThisBuild / Test / fork := true
 ThisBuild / scalafmtOnCompile := true
+ThisBuild / scalafixDependencies += OrganizeImports
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 lazy val compilerOptions = Seq(
   "-deprecation",

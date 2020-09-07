@@ -2,7 +2,9 @@ package fluflu
 
 import java.io.IOException
 import java.lang.{Boolean => JBool}
-import java.net.{NetworkInterface, SocketAddress, StandardSocketOptions}
+import java.net.NetworkInterface
+import java.net.SocketAddress
+import java.net.StandardSocketOptions
 import java.nio.ByteBuffer
 import java.nio.channels.SocketChannel
 import java.time.Clock
@@ -11,7 +13,9 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.FiniteDuration
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 trait Connection {
   def writeAndRead(message: ByteBuffer): Try[ByteBuffer]
