@@ -4,9 +4,11 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 
-import fluflu.msgpack.{Ack, Unpacker}
+import fluflu.Backoff
+import fluflu.Connection
+import fluflu.msgpack.Ack
+import fluflu.msgpack.Unpacker
 import fluflu.msgpack.instances.mess._
-import fluflu.{Backoff, Connection}
 import org.scalatest.flatspec.AnyFlatSpec
 
 import scala.concurrent.duration._

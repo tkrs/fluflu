@@ -1,6 +1,7 @@
 package fluflu
 
-import java.time.{Clock, Instant}
+import java.time.Clock
+import java.time.Instant
 
 import scala.concurrent.blocking
 import scala.concurrent.duration._

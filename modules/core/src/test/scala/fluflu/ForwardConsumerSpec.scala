@@ -1,14 +1,19 @@
 package fluflu
 
 import java.nio.ByteBuffer
-import java.util.concurrent.{ArrayBlockingQueue, Executors, ScheduledExecutorService}
+import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 
 import fluflu.msgpack._
-import org.msgpack.core.{MessageBufferPacker, MessagePack, MessagePacker}
+import org.msgpack.core.MessageBufferPacker
+import org.msgpack.core.MessagePack
+import org.msgpack.core.MessagePacker
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funspec.AnyFunSpec
 
-import scala.util.{Success, Try}
+import scala.util.Success
+import scala.util.Try
 
 class ForwardConsumerSpec extends AnyFunSpec with BeforeAndAfterEach with MsgpackHelper {
   type Elem = (String, MessageBufferPacker => Unit)

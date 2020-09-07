@@ -23,9 +23,9 @@ before_script:
 script:
 - |
   if [[ "${COV:-""}" = "true" ]]; then
-    sbt ++$TRAVIS_SCALA_VERSION clean coverage scalafmtCheckAll scalafmtSbtCheck test coverageReport coverageOff && codecov
+    sbt ++$TRAVIS_SCALA_VERSION clean coverage scalafmtCheckAll scalafmtSbtCheck "scalafixAll --check" test coverageReport coverageOff && codecov
   else
-    sbt ++$TRAVIS_SCALA_VERSION clean scalafmtCheckAll scalafmtSbtCheck test
+    sbt ++$TRAVIS_SCALA_VERSION clean scalafmtCheckAll scalafmtSbtCheck "scalafixAll --check" test
   fi
 - |
   if [[ $(cat version.sbt) =~ "-SNAPSHOT" ]]; then

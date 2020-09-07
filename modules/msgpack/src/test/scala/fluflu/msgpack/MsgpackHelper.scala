@@ -1,6 +1,7 @@
 package fluflu.msgpack
 
-import org.msgpack.core.{MessageBufferPacker, MessagePack}
+import org.msgpack.core.MessageBufferPacker
+import org.msgpack.core.MessagePack
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers
 

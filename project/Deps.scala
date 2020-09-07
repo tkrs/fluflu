@@ -5,6 +5,8 @@ object Deps {
     val `scala2.12` = "2.12.12"
     val `scala2.13` = "2.13.3"
 
+    val organizeImports = "0.4.0"
+
     val msgpackJava  = "0.8.20"
     val mess         = "0.2.1"
     val scalaLogging = "3.9.2"
@@ -21,6 +23,8 @@ object Deps {
     case Some((2, 13)) => true
     case _             => false
   }
+
+  lazy val OrganizeImports = "com.github.liancheng" %% "organize-imports" % Ver.organizeImports
 
   val Pkg = new {
     lazy val msgpackJava    = "org.msgpack"                 % "msgpack-core"    % Ver.msgpackJava

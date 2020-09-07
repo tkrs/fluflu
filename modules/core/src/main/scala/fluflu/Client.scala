@@ -6,9 +6,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
 import fluflu.internal.Utils
-import fluflu.msgpack.{Ack, MOption, Packer, Unpacker}
+import fluflu.msgpack.Ack
+import fluflu.msgpack.MOption
+import fluflu.msgpack.Packer
+import fluflu.msgpack.Unpacker
+import org.msgpack.core.MessageBufferPacker
+import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePack.PackerConfig
-import org.msgpack.core.{MessageBufferPacker, MessagePack}
 
 import scala.concurrent.duration._
 
