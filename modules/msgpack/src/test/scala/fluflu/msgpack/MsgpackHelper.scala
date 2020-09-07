@@ -23,7 +23,7 @@ object MsgpackHelper {
 
       def toByte(s: String): Byte = BigInt(s, 16).toByte
 
-      strings.next.split(" ").map(toByte)
+      strings.next().split(" ").map(toByte)
     }
   }
 }
