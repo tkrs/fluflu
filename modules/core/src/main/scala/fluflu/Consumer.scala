@@ -56,9 +56,8 @@ final class ForwardConsumer private[fluflu] (
       .continually(msgQueue.poll())
       .take(maximumPulls)
       .takeWhile(_ != null)
-      .foldLeft(mutable.Map.empty[String, ListBuffer[MessageBufferPacker => Unit]]) {
-        case (acc, (k, f)) =>
-          acc += k -> (acc.getOrElse(k, ListBuffer.empty) += f)
+      .foldLeft(mutable.Map.empty[String, ListBuffer[MessageBufferPacker => Unit]]) { case (acc, (k, f)) =>
+        acc += k -> (acc.getOrElse(k, ListBuffer.empty) += f)
       }
       .toMap
 
