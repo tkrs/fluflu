@@ -5,7 +5,7 @@ object Deps {
     val `scala2.12` = "2.12.12"
     val `scala2.13` = "2.13.3"
 
-    val organizeImports = "0.4.0"
+    val organizeImports = "0.4.2"
 
     val msgpackJava  = "0.8.21"
     val mess         = "0.2.2"
