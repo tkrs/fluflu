@@ -8,7 +8,7 @@ object Deps {
     val organizeImports = "0.4.2"
 
     val msgpackJava  = "0.8.21"
-    val mess         = "0.2.2"
+    val mess         = "0.2.3"
     val scalaLogging = "3.9.2"
     val logback      = "1.2.3"
 
