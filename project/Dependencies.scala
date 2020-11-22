@@ -36,6 +36,6 @@ object Dependencies {
     lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-14" % Ver.scalatestplus.scalacheck
     lazy val mockito    = "org.scalatestplus" %% "mockito-3-4"     % Ver.scalatestplus.mockito
 
-    lazy val forTest = Seq(scalatest, scalacheck, mockito).map(_ % Test)
+    lazy val forTest = Seq(scalatest, scalacheck, mockito)
   }
 }
