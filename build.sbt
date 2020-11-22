@@ -1,7 +1,10 @@
 import Dependencies._
 
-lazy val fluflu = (project in file("."))
-  .settings(publish / skip := true)
+lazy val fluflu = project
+  .in(file("."))
+  .configs(IntegrationTest)
+  .settings(Defaults.itSettings, inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
+  .settings(libraryDependencies ++= Pkg.forTest.map(_ % "it"))
   .settings(
     inThisBuild(
       Seq(
@@ -18,7 +21,6 @@ lazy val fluflu = (project in file("."))
         ),
         scalaVersion := Ver.`scala2.13`,
         crossScalaVersions := Seq(Ver.`scala2.12`, Ver.`scala2.13`),
-        libraryDependencies ++= (Pkg.forTest ++ Seq(Pkg.scalaLogging)),
         scalacOptions ++= compilerOptions ++ warnCompilerOptions ++ {
           CrossVersion.partialVersion(scalaVersion.value) match {
             case Some((2, n)) if n >= 13 => Nil
@@ -38,8 +40,9 @@ lazy val fluflu = (project in file("."))
     Compile / console / scalacOptions --= warnCompilerOptions,
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
-  .aggregate(core, msgpack, `msgpack-mess`, it)
-  .dependsOn(core, msgpack, `msgpack-mess`, it)
+  .settings(publish / skip := true)
+  .aggregate(core, msgpack, `msgpack-mess`)
+  .dependsOn(core, msgpack % "it->test", `msgpack-mess`)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -48,7 +51,7 @@ lazy val core = project
     moduleName := "fluflu-core"
   )
   .settings(
-    libraryDependencies += Pkg.msgpackJava,
+    libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava, Pkg.scalaLogging),
     Test / javaOptions += "-Dnet.bytebuddy.experimental=true"
   )
   .dependsOn(msgpack % "compile->compile;test->test")
@@ -58,9 +61,7 @@ lazy val msgpack = project
   .settings(
     description := "fluflu msgpack",
     moduleName := "fluflu-msgpack",
-    libraryDependencies ++= Seq(
-      Pkg.msgpackJava
-    )
+    libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava)
   )
 
 lazy val `msgpack-mess` = project
@@ -69,20 +70,8 @@ lazy val `msgpack-mess` = project
     description := "fluflu msgpack-mess",
     moduleName := "fluflu-msgpack-mess"
   )
-  .settings(
-    libraryDependencies += Pkg.mess
-  )
+  .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.mess))
   .dependsOn(msgpack % "compile->compile;test->test")
-
-lazy val it = project
-  .in(file("modules/it"))
-  .settings(publish / skip := true)
-  .settings(
-    description := "fluflu it",
-    moduleName := "fluflu-it",
-    libraryDependencies += Pkg.logbackClassic
-  )
-  .dependsOn(core, `msgpack-mess` % "compile->compile;test->test")
 
 lazy val examples = project
   .in(file("modules/examples"))
@@ -91,12 +80,8 @@ lazy val examples = project
     description := "fluflu examples",
     moduleName := "fluflu-examples"
   )
-  .settings(
-    libraryDependencies += Pkg.logbackClassic
-  )
-  .settings(
-    coverageEnabled := false
-  )
+  .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.logbackClassic))
+  .settings(coverageEnabled := false)
   .dependsOn(core, `msgpack-mess`)
 
 lazy val compilerOptions = Seq(
