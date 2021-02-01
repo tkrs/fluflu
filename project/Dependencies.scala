@@ -5,7 +5,7 @@ object Dependencies {
     val `scala2.12` = "2.12.12"
     val `scala2.13` = "2.13.3"
 
-    val organizeImports = "0.4.4"
+    val organizeImports = "0.5.0"
 
     val msgpackJava  = "0.8.22"
     val mess         = "0.2.4"
