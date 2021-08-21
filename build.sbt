@@ -9,8 +9,8 @@ lazy val fluflu = project
     inThisBuild(
       Seq(
         organization := "com.github.tkrs",
-        homepage := Some(url("https://github.com/tkrs/fluflu")),
-        licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
+        homepage     := Some(url("https://github.com/tkrs/fluflu")),
+        licenses     := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
         developers := List(
           Developer(
             "tkrs",
@@ -19,7 +19,7 @@ lazy val fluflu = project
             url("https://github.com/tkrs")
           )
         ),
-        scalaVersion := Ver.`scala2.13`,
+        scalaVersion       := Ver.`scala2.13`,
         crossScalaVersions := Seq(Ver.`scala2.12`, Ver.`scala2.13`),
         scalacOptions ++= compilerOptions ++ warnCompilerOptions ++ {
           CrossVersion.partialVersion(scalaVersion.value) match {
@@ -27,7 +27,7 @@ lazy val fluflu = project
             case _                       => Seq("-Xfuture", "-Ypartial-unification", "-Yno-adapted-args")
           }
         },
-        fork := true,
+        fork              := true,
         scalafmtOnCompile := true,
         scalafixOnCompile := true,
         scalafixDependencies += OrganizeImports,
@@ -48,7 +48,7 @@ lazy val core = project
   .in(file("modules/core"))
   .settings(
     description := "fluflu core",
-    moduleName := "fluflu-core"
+    moduleName  := "fluflu-core"
   )
   .settings(
     libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava, Pkg.scalaLogging),
@@ -60,7 +60,7 @@ lazy val msgpack = project
   .in(file("modules/msgpack"))
   .settings(
     description := "fluflu msgpack",
-    moduleName := "fluflu-msgpack",
+    moduleName  := "fluflu-msgpack",
     libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava)
   )
 
@@ -68,7 +68,7 @@ lazy val `msgpack-mess` = project
   .in(file("modules/msgpack-mess"))
   .settings(
     description := "fluflu msgpack-mess",
-    moduleName := "fluflu-msgpack-mess"
+    moduleName  := "fluflu-msgpack-mess"
   )
   .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.mess))
   .dependsOn(msgpack % "compile->compile;test->test")
@@ -78,7 +78,7 @@ lazy val examples = project
   .settings(publish / skip := true)
   .settings(
     description := "fluflu examples",
-    moduleName := "fluflu-examples"
+    moduleName  := "fluflu-examples"
   )
   .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.logbackClassic))
   .settings(coverageEnabled := false)
