@@ -12,8 +12,7 @@ import mess.codec.Encoder
 import scala.concurrent.duration._
 import scala.util.Random
 
-/**
-  * sbt "examples/runMain examples.Main"
+/** sbt "examples/runMain examples.Main"
   */
 object Main extends LazyLogging {
   def main(args: Array[String]): Unit = {
