@@ -7,7 +7,7 @@ import java.nio.channels.SocketChannel
 import java.time.Clock
 
 import fluflu.Connection.SocketOptions
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.{eq => eq_, _}
 import org.mockito.Mockito._
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
@@ -36,13 +36,9 @@ class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
   describe("constructor") {
     it("should create instance successfully with retry some time") {
       val channelMock = mock[SocketChannel]
-      when(channelMock.connect(address))
-        .thenThrow(new IOException("ε≡≡ﾍ( ´Д`)ﾉ"))
-        .thenReturn(true)
+      when(channelMock.connect(eq_(address))).thenThrow(new IOException("ε≡≡ﾍ( ´Д`)ﾉ")).thenReturn(true)
       doNothing().when(channelMock).close()
-      when(channelMock.isConnected)
-        .thenReturn(false)
-        .thenReturn(true)
+      when(channelMock.isConnected()).thenReturn(false).thenReturn(true)
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel =
           channelMock
@@ -66,15 +62,15 @@ class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
     it("should write successfully") {
       val arg         = ByteBuffer.wrap(Array(1, 2, 3).map(_.toByte))
       val channelMock = mock[SocketChannel]
-      when(channelMock.isConnected).thenReturn(true)
-      when(channelMock.connect(address)).thenReturn(true)
-      when(channelMock.write(arg)).thenAnswer(new Answer[Int] {
+      when(channelMock.isConnected()).thenReturn(true)
+      when(channelMock.connect(eq_(address))).thenReturn(true)
+      when(channelMock.write(eq_(arg))).thenAnswer(new Answer[Int] {
         override def answer(invocation: InvocationOnMock): Int = {
           arg.get(Array.ofDim[Byte](1))
           1
         }
       })
-      when(channelMock.read(any[ByteBuffer])).thenReturn(50, 5)
+      when(channelMock.read(any[ByteBuffer])).thenReturn(50).thenReturn(5)
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel = channelMock
       }
@@ -84,11 +80,9 @@ class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
     it("should write failed when it occurs IOException") {
       val arg         = ByteBuffer.wrap(Array(1, 2, 3).map(_.toByte))
       val channelMock = mock[SocketChannel]
-      when(channelMock.isConnected)
-        .thenReturn(false)
-        .thenReturn(true)
-      when(channelMock.connect(address)).thenReturn(true)
-      when(channelMock.write(arg)).thenThrow(new IOException)
+      when(channelMock.isConnected()).thenReturn(false).thenReturn(true)
+      when(channelMock.connect(eq_(address))).thenReturn(true)
+      when(channelMock.write(eq_(arg))).thenThrow(new IOException)
 
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel = channelMock
@@ -99,13 +93,9 @@ class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
     it("should return Failure with message: Already closed when it was closed") {
       val arg         = ByteBuffer.wrap(Array(1, 2, 3).map(_.toByte))
       val channelMock = mock[SocketChannel]
-      when(channelMock.isConnected)
-        .thenReturn(false)
-        .thenReturn(true)
-      when(channelMock.connect(address))
-        .thenReturn(true)
-      when(channelMock.write(arg))
-        .thenThrow(new IOException)
+      when(channelMock.isConnected()).thenReturn(false).thenReturn(true)
+      when(channelMock.connect(eq_(address))).thenReturn(true)
+      when(channelMock.write(eq_(arg))).thenThrow(new IOException)
 
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel = channelMock
@@ -118,12 +108,8 @@ class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
     it("should return Failure with IOException when it SocketChannel.connect returns false") {
       val arg         = ByteBuffer.wrap(Array(1, 2, 3).map(_.toByte))
       val channelMock = mock[SocketChannel]
-      when(channelMock.isConnected)
-        .thenReturn(false)
-        .thenReturn(true)
-      when(channelMock.connect(address))
-        .thenReturn(true)
-        .thenReturn(false)
+      when(channelMock.isConnected()).thenReturn(false).thenReturn(true)
+      when(channelMock.connect(eq_(address))).thenReturn(true).thenReturn(false)
 
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel = channelMock
@@ -136,11 +122,9 @@ class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
   describe("close") {
     it("should close successfully") {
       val channelMock = mock[SocketChannel]
-      when(channelMock.connect(address))
-        .thenReturn(true)
+      when(channelMock.connect(eq_(address))).thenReturn(true)
       doNothing().when(channelMock).close()
-      when(channelMock.isConnected)
-        .thenReturn(true)
+      when(channelMock.isConnected()).thenReturn(true)
       final class TestConnection extends ConnectionImpl(address, SocketOptions(), connSettings) {
         override protected def channelOpen: SocketChannel =
           channelMock
