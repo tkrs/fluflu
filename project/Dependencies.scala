@@ -14,7 +14,7 @@ object Dependencies {
 
     val scalatest = "3.2.10"
     val scalatestplus = new {
-      val scalacheck = "3.2.9.0"
+      val scalacheck = "3.2.10.0"
       val mockito    = "3.2.10.0"
     }
   }
