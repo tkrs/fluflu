@@ -7,6 +7,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scala:
+          [2.12.15, 2.13.6]
     services:
       fluentd:
         image: fluentd
@@ -17,13 +21,32 @@ jobs:
       - uses: olafurpg/setup-scala@v13
         with:
           java-version: openjdk@1.11
-      - run: sbt coverage +test coverageReport
+      - run: sbt ++${{ matrix.scala }} coverage test coverageReport
+      - run: sbt ++${{ matrix.scala }} examples/run
       - uses: codecov/codecov-action@v2
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           flags: unittests
           fail_ci_if_error: true
           verbose: true
+  build3:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        scala:
+          [3.0.2]
+    services:
+      fluentd:
+        image: fluentd
+        ports:
+          - 24224:24224
+    steps:
+      - uses: actions/checkout@v2
+      - uses: olafurpg/setup-scala@v13
+        with:
+          java-version: openjdk@1.11
+      - run: sbt ++${{ matrix.scala }} test
+      - run: sbt ++${{ matrix.scala }} examples/run
   scalafmt:
     runs-on: ubuntu-latest
     steps:
