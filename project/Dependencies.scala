@@ -13,7 +13,7 @@ object Dependencies {
     val scalaLogging = "3.9.4"
     val logback      = "1.2.3"
 
-    val scalatest = "3.2.10"
+    val scalatest = "3.2.11"
     val scalatestplus = new {
       val scalacheck = "3.2.11.0"
       val mockito    = "3.2.10.0"
