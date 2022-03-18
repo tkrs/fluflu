@@ -88,8 +88,9 @@ object Connection {
 
     @tailrec private def doConnect(ch: SocketChannel, retries: Int, sleeper: Sleeper): Try[SocketChannel] = {
       logger.info(s"Start connecting to $remote. retries: $retries")
-      try if (ch.connect(remote)) Success(ch)
-      else Failure(new IOException(s"Failed to connect: $remote"))
+      try
+        if (ch.connect(remote)) Success(ch)
+        else Failure(new IOException(s"Failed to connect: $remote"))
       catch {
         case e: IOException =>
           if (sleeper.giveUp) {
