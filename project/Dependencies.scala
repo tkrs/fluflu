@@ -3,19 +3,20 @@ import sbt._
 object Dependencies {
   val Ver = new {
     val `scala2.12` = "2.12.15"
-    val `scala2.13` = "2.13.5"
+    val `scala2.13` = "2.13.8"
+    val `scala3.0`  = "3.1.1"
 
     val organizeImports = "0.5.0"
 
-    val msgpackJava  = "0.8.24"
-    val mess         = "0.2.7"
+    val msgpackJava  = "0.9.1"
+    val mess         = "0.3.0"
     val scalaLogging = "3.9.4"
     val logback      = "1.2.3"
 
-    val scalatest = "3.2.9"
+    val scalatest = "3.2.11"
     val scalatestplus = new {
-      val scalacheck = "3.2.2.0"
-      val mockito    = "3.2.9.0"
+      val scalacheck = "3.2.11.0"
+      val mockito    = "3.2.10.0"
     }
   }
 
@@ -33,7 +34,7 @@ object Dependencies {
     lazy val logbackClassic = "ch.qos.logback"              % "logback-classic" % Ver.logback
 
     lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest
-    lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-14" % Ver.scalatestplus.scalacheck
+    lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-15" % Ver.scalatestplus.scalacheck
     lazy val mockito    = "org.scalatestplus" %% "mockito-3-4"     % Ver.scalatestplus.mockito
 
     lazy val forTest = Seq(scalatest, scalacheck, mockito)

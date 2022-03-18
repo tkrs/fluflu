@@ -61,8 +61,7 @@ object Client {
 
         def run(): Unit = {
           def ignore = closed || queue.isEmpty
-          if (ignore)
-            running.set(false)
+          if (ignore) running.set(false)
           else {
             consumer.consume()
             if (ignore)
@@ -74,8 +73,7 @@ object Client {
       }
 
       def emit[A: Packer](tag: String, record: A, time: Instant): Either[Exception, Unit] =
-        if (closed || worker.isShutdown)
-          Left(new Exception("Client executor was already shutdown"))
+        if (closed || worker.isShutdown) Left(new Exception("Client executor was already shutdown"))
         else {
           logger.trace(s"Queueing message: ${(tag, record, time)}")
           val fa = (p: MessageBufferPacker) => Packer[(A, Instant)].apply((record, time), p)
