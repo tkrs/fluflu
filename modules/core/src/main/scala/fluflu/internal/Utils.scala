@@ -9,11 +9,13 @@ import scala.concurrent.duration.NANOSECONDS
 private[fluflu] object Utils {
   def awaitTermination(pool: ExecutorService, delay: FiniteDuration): Unit = {
     pool.shutdown()
-    try if (!pool.awaitTermination(delay.toNanos, NANOSECONDS)) {
-      pool.shutdownNow()
-      if (!pool.awaitTermination(delay.toNanos, NANOSECONDS))
-        throw new Exception("Pool did not terminate")
-    } catch {
+    try
+      if (!pool.awaitTermination(delay.toNanos, NANOSECONDS)) {
+        pool.shutdownNow()
+        if (!pool.awaitTermination(delay.toNanos, NANOSECONDS))
+          throw new Exception("Pool did not terminate")
+      }
+    catch {
       case _: InterruptedException =>
         pool.shutdownNow()
         Thread.currentThread().interrupt()
