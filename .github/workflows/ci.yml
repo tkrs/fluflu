@@ -23,7 +23,7 @@ jobs:
           java-version: openjdk@1.11
       - run: sbt ++${{ matrix.scala }} coverage test coverageReport
       - run: sbt ++${{ matrix.scala }} examples/run
-      - uses: codecov/codecov-action@v2
+      - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
           flags: unittests
