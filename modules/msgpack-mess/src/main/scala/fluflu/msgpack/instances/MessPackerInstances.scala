@@ -27,7 +27,7 @@ private[instances] trait MessPackerInstances {
       encodeMOption(a).pack(packer)
   }
 
-  private[this] val unpackerConfig = new MessagePack.UnpackerConfig().withBufferSize(124)
+  private[this] val unpackerConfig = new MessagePack.UnpackerConfig.withBufferSize(124)
 
   implicit private[this] val decodeOptionAck: Decoder[Option[Ack]] = derivedDecoder[Ack].map(Option.apply)
 

@@ -41,7 +41,7 @@ final class ForwardConsumer private[fluflu] (
   UA: Unpacker[Option[Ack]]
 ) extends Consumer
     with LazyLogging {
-  private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
+  private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]
 
   private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
     override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()

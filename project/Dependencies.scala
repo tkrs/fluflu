@@ -21,8 +21,8 @@ object Dependencies {
   }
 
   def is2_13(v: String): Boolean = CrossVersion.partialVersion(v) match {
-    case Some((2, 13)) => true
-    case _             => false
+    case Some(2, 13) => true
+    case _           => false
   }
 
   lazy val OrganizeImports = "com.github.liancheng" %% "organize-imports" % Ver.organizeImports

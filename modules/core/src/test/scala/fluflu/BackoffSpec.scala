@@ -14,7 +14,7 @@ class BackoffSpec extends AnyFunSpec {
     describe("nextDelay") {
       it("should return delay duration") {
         val backoff =
-          Backoff.exponential(100.nanos, 100.nanos, new MyRandom())
+          Backoff.exponential(100.nanos, 100.nanos, new MyRandom)
         assert(backoff.nextDelay(0).toNanos === 10)
         assert(backoff.nextDelay(1).toNanos === 20)
         assert(backoff.nextDelay(2).toNanos === 40)

@@ -22,7 +22,7 @@ object Main extends LazyLogging {
     val port = sys.props.getOrElse("fluentd.port", "24224").toInt
     val addr = new InetSocketAddress(host, port)
 
-    val rnd = new Random()
+    val rnd = new Random
     val connSettings = Connection.Settings(
       60.seconds,
       Backoff.exponential(500.nanos, 10.seconds, rnd),

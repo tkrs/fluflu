@@ -47,7 +47,7 @@ object Client {
       private def scheduler(name: String) =
         Executors.newScheduledThreadPool(1, Utils.namedThreadFactory(name))
 
-      private[this] val running  = new AtomicBoolean()
+      private[this] val running  = new AtomicBoolean
       private[this] val queue    = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
       private[this] val consumer = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
       private[this] val worker   = scheduler("fluflu-scheduler")
