@@ -10,7 +10,9 @@ jobs:
     strategy:
       matrix:
         scala:
-          [2.12.16, 2.13.8]
+          - 2.12.16
+          - 2.13.8
+          - 3.1.3
     services:
       fluentd:
         image: fluentd
@@ -24,29 +26,12 @@ jobs:
       - run: sbt ++${{ matrix.scala }} coverage test coverageReport
       - run: sbt ++${{ matrix.scala }} examples/run
       - uses: codecov/codecov-action@v3
+        if: ${{ !startsWith(matrix.scala, '3') }}
         with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
           fail_ci_if_error: true
           verbose: true
-  build3:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        scala:
-          [3.1.3]
-    services:
-      fluentd:
-        image: fluentd
-        ports:
-          - 24224:24224
-    steps:
-      - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
-        with:
-          java-version: openjdk@1.11
-      - run: sbt ++${{ matrix.scala }} test
-      - run: sbt ++${{ matrix.scala }} examples/run
   scalafmt:
     runs-on: ubuntu-latest
     steps:

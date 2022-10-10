@@ -4,7 +4,7 @@ object Dependencies {
   val Ver = new {
     val `scala2.12` = "2.12.16"
     val `scala2.13` = "2.13.8"
-    val `scala3.0`  = "3.2.0"
+    val scala3      = "3.2.0"
 
     val organizeImports = "0.5.0"
 
@@ -13,7 +13,7 @@ object Dependencies {
     val scalaLogging = "3.9.5"
     val logback      = "1.2.3"
 
-    val scalatest = "3.2.12"
+    val scalatest = "3.2.13"
     val scalatestplus = new {
       val scalacheck = "3.2.11.0"
       val mockito    = "3.2.10.0"
