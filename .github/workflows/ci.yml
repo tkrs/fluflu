@@ -5,14 +5,25 @@ on:
       - master
   pull_request:
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      scala-versions:  ${{ steps.set-scala-versions.outputs.versions }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: set-scala-versions
+        run: |
+          scala212=$(grep "scala2.12" project/Dependencies.scala | sed -E 's/.*= //')
+          scala213=$(grep "scala2.13" project/Dependencies.scala | sed -E 's/.*= //')
+          scala3=$(grep "scala3" project/Dependencies.scala | sed -E 's/.*= //')
+          echo "::set-output name=versions::{\"scala\": [${scala212}, ${scala213}, ${scala3}]}"
+  build:
+    needs:
+      - setup
     strategy:
-      matrix:
-        scala:
-          - 2.12.16
-          - 2.13.8
-          - 3.2.0
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.scala-versions) }}
+    runs-on: ubuntu-latest
     services:
       fluentd:
         image: fluentd
@@ -34,6 +45,12 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
           verbose: true
+  post-build:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - run: ':'
   scalafmt:
     runs-on: ubuntu-latest
     steps:
