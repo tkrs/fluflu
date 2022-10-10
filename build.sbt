@@ -19,8 +19,8 @@ lazy val fluflu = project
             url("https://github.com/tkrs")
           )
         ),
-        scalaVersion       := Ver.`scala3.0`,
-        crossScalaVersions := Seq(Ver.`scala2.12`, Ver.`scala2.13`, Ver.`scala3.0`),
+        scalaVersion       := Ver.scala3,
+        crossScalaVersions := Seq(Ver.`scala2.12`, Ver.`scala2.13`, Ver.scala3),
         scalacOptions ++= {
           CrossVersion.partialVersion(scalaVersion.value) match {
             case Some((3, _))            => Nil
