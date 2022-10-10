@@ -23,8 +23,10 @@ jobs:
       - uses: olafurpg/setup-scala@v13
         with:
           java-version: openjdk@1.11
-      - run: sbt ++${{ matrix.scala }} coverage test coverageReport
+      - run: sbt ++${{ matrix.scala }} coverage test
       - run: sbt ++${{ matrix.scala }} examples/run
+      - run: sbt ++${{ matrix.scala }} coverageReport
+        if: ${{ !startsWith(matrix.scala, '3') }}
       - uses: codecov/codecov-action@v3
         if: ${{ !startsWith(matrix.scala, '3') }}
         with:
