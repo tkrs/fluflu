@@ -8,9 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: olafurpg/setup-scala@v13
+      - uses: actions/setup-java@v3
         with:
-          java-version: openjdk@1.11
+          java-version: '11'
+          distribution: 'temurin'
+          cache: 'sbt'
       - uses: olafurpg/setup-gpg@v3
       - run: git fetch --unshallow
       - run: sbt ci-release
