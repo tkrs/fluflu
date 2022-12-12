@@ -13,7 +13,6 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
           cache: 'sbt'
-      - uses: olafurpg/setup-gpg@v3
       - run: git fetch --unshallow
       - run: sbt ci-release
         env:
