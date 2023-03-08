@@ -16,7 +16,7 @@ jobs:
           scala212=$(grep "scala2.12" project/Dependencies.scala | sed -E 's/.*= //')
           scala213=$(grep "scala2.13" project/Dependencies.scala | sed -E 's/.*= //')
           scala3=$(grep "scala3" project/Dependencies.scala | sed -E 's/.*= //')
-          echo "::set-output name=versions::{\"scala\": [${scala212}, ${scala213}, ${scala3}]}"
+          echo "versions={\"scala\": [${scala212}, ${scala213}, ${scala3}]}" >> $GITHUB_OUTPUT
   build:
     needs:
       - setup
