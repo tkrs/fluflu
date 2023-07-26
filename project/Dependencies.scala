@@ -9,7 +9,7 @@ object Dependencies {
     val organizeImports = "0.5.0"
 
     val msgpackJava  = "0.9.4"
-    val mess         = "0.3.3"
+    val mess         = "0.3.4"
     val scalaLogging = "3.9.5"
     val logback      = "1.2.3"
 
