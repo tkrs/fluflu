@@ -10,7 +10,7 @@ jobs:
     outputs:
       scala-versions:  ${{ steps.set-scala-versions.outputs.versions }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: set-scala-versions
         run: |
           scala212=$(grep "scala2.12" project/Dependencies.scala | sed -E 's/.*= //')
@@ -30,7 +30,7 @@ jobs:
         ports:
           - 24224:24224
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         with:
           java-version: '11'
@@ -56,7 +56,7 @@ jobs:
   scalafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         with:
           java-version: '11'
@@ -66,7 +66,7 @@ jobs:
   scalafix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-java@v3
         with:
           java-version: '11'
