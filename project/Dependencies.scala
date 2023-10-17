@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
   val Ver = new {
     val `scala2.12` = "2.12.18"
-    val `scala2.13` = "2.13.11"
+    val `scala2.13` = "2.13.12"
     val scala3      = "3.3.1"
 
     val organizeImports = "0.5.0"
@@ -13,7 +13,7 @@ object Dependencies {
     val scalaLogging = "3.9.5"
     val logback      = "1.2.3"
 
-    val scalatest = "3.2.16"
+    val scalatest = "3.2.17"
     val scalatestplus = new {
       val scalacheck = "3.2.14.0"
       val mockito    = "3.2.10.0"
