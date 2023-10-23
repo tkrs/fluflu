@@ -17,7 +17,7 @@ jobs:
           git config --global user.name "trks"
           git config --global user.email "type.in.type@gmail.com"
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
       - run: sudo npm install -g standard-version
       - name: Generate tag and release body
         run: standard-version --infile RELEASE_BODY.md --skip.commit
