@@ -47,12 +47,6 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
           verbose: true
-  post-build:
-    needs:
-      - build
-    runs-on: ubuntu-latest
-    steps:
-      - run: ':'
   scalafmt:
     runs-on: ubuntu-latest
     steps:
