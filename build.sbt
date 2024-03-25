@@ -2,9 +2,6 @@ import Dependencies._
 
 lazy val fluflu = project
   .in(file("."))
-  .configs(IntegrationTest)
-  .settings(Defaults.itSettings, inConfig(IntegrationTest)(scalafixConfigSettings(IntegrationTest)))
-  .settings(libraryDependencies ++= Pkg.forTest.map(_ % "it"))
   .settings(
     inThisBuild(
       Seq(
@@ -44,7 +41,7 @@ lazy val fluflu = project
   )
   .settings(publish / skip := true)
   .aggregate(core, msgpack, `msgpack-mess`)
-  .dependsOn(core, msgpack % "it->test", `msgpack-mess`)
+  .dependsOn(core, msgpack, `msgpack-mess`)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -85,6 +82,12 @@ lazy val examples = project
   .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.logbackClassic))
   .settings(coverageEnabled := false)
   .dependsOn(core, `msgpack-mess`)
+
+lazy val it = project
+  .in(file("modules/it"))
+  .settings(publish / skip := true)
+  .settings(libraryDependencies ++= Pkg.forTest)
+  .dependsOn(core, msgpack % "test->test", `msgpack-mess`)
 
 lazy val compilerOptions = Seq(
   "-deprecation",
