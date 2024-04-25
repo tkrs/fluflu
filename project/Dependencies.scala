@@ -4,7 +4,7 @@ object Dependencies {
   val Ver = new {
     val `scala2.12` = "2.12.19"
     val `scala2.13` = "2.13.13"
-    val scala3      = "3.3.3"
+    val scala3      = "3.4.1"
 
     val organizeImports = "0.5.0"
 
