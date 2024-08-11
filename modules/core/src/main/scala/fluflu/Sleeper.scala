@@ -14,7 +14,7 @@ trait Sleeper {
 object Sleeper {
   def apply(backoff: Backoff, timeout: FiniteDuration, clock: Clock): Sleeper =
     new Sleeper {
-      private[this] val start = Instant.now(clock)
+      private val start = Instant.now(clock)
 
       def giveUp: Boolean =
         Instant.now(clock).minusNanos(timeout.toNanos).compareTo(start) > 0

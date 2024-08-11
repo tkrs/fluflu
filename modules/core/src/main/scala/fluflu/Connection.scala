@@ -62,9 +62,9 @@ object Connection {
       with LazyLogging {
     import StandardSocketOptions._
 
-    @volatile private[this] var closed: Boolean = false
+    @volatile private var closed: Boolean = false
 
-    @volatile private[this] var channel: SocketChannel =
+    @volatile private var channel: SocketChannel =
       doConnect(channelOpen, 0, Sleeper(settings.connectionBackof, settings.connectionTimeout, clock)).get
 
     protected def channelOpen: SocketChannel = {
@@ -159,7 +159,7 @@ object Connection {
           }
       }
 
-    private[this] val ackBuffer = ByteBuffer.allocate(256)
+    private val ackBuffer = ByteBuffer.allocate(256)
 
     def writeAndRead(message: ByteBuffer): Try[ByteBuffer] =
       for {

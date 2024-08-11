@@ -42,15 +42,15 @@ object Client {
     PA: Unpacker[Option[Ack]]
   ): Client =
     new Client with LazyLogging {
-      @volatile private[this] var closed = false
+      @volatile private var closed = false
 
       private def scheduler(name: String) =
         Executors.newScheduledThreadPool(1, Utils.namedThreadFactory(name))
 
-      private[this] val running  = new AtomicBoolean()
-      private[this] val queue    = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
-      private[this] val consumer = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
-      private[this] val worker   = scheduler("fluflu-scheduler")
+      private val running  = new AtomicBoolean()
+      private val queue    = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
+      private val consumer = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
+      private val worker   = scheduler("fluflu-scheduler")
 
       private object Worker extends Runnable {
         def start(): Either[Exception, Unit] =
