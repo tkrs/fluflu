@@ -6,8 +6,6 @@ object Dependencies {
     val `scala2.13` = "2.13.14"
     val scala3      = "3.4.2"
 
-    val organizeImports = "0.6.0"
-
     val msgpackJava  = "0.9.8"
     val mess         = "0.3.6"
     val scalaLogging = "3.9.5"
@@ -24,8 +22,6 @@ object Dependencies {
     case Some((2, 13)) => true
     case _             => false
   }
-
-  lazy val OrganizeImports = "com.github.liancheng" %% "organize-imports" % Ver.organizeImports
 
   val Pkg = new {
     lazy val msgpackJava    = "org.msgpack"                 % "msgpack-core"    % Ver.msgpackJava
