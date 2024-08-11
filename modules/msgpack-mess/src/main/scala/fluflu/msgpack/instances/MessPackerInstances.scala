@@ -20,16 +20,16 @@ private[instances] trait MessPackerInstances {
         encodeA(a).pack(packer)
     }
 
-  private[this] val encodeMOption: Encoder[MOption] = derivedEncoder[MOption]
+  private val encodeMOption: Encoder[MOption] = derivedEncoder[MOption]
 
   implicit val packMOptionByMess: Packer[MOption] = new Packer[MOption] {
     def apply(a: MOption, packer: MessagePacker): Unit =
       encodeMOption(a).pack(packer)
   }
 
-  private[this] val unpackerConfig = new MessagePack.UnpackerConfig().withBufferSize(124)
+  private val unpackerConfig = new MessagePack.UnpackerConfig().withBufferSize(124)
 
-  implicit private[this] val decodeOptionAck: Decoder[Option[Ack]] = derivedDecoder[Ack].map(Option.apply)
+  implicit private val decodeOptionAck: Decoder[Option[Ack]] = derivedDecoder[Ack].map(Option.apply)
 
   implicit val unpackAckByMess: Unpacker[Option[Ack]] = new Unpacker[Option[Ack]] {
     def apply(bytes: ByteBuffer): Either[Throwable, Option[Ack]] =

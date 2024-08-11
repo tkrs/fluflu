@@ -41,13 +41,13 @@ final class ForwardConsumer private[fluflu] (
   UA: Unpacker[Option[Ack]]
 ) extends Consumer
     with LazyLogging {
-  private[this] val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
+  private val errorQueue: util.Queue[(String, ByteBuffer)] = new ConcurrentLinkedQueue[(String, ByteBuffer)]()
 
-  private[this] val mPacker = new ThreadLocal[MessageBufferPacker] {
+  private val mPacker = new ThreadLocal[MessageBufferPacker] {
     override def initialValue(): MessageBufferPacker = packerConfig.newBufferPacker()
   }
 
-  private[this] val b64e = Base64.getEncoder
+  private val b64e = Base64.getEncoder
 
   type E = (String, MessageBufferPacker => Unit)
 
@@ -80,7 +80,7 @@ final class ForwardConsumer private[fluflu] (
   }
 
   def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] =
-    m.iterator.map((makeMessage _).tupled).collect { case Some(v) => v }
+    m.iterator.map { case (a, b) => makeMessage(a, b) }.collect { case Some(v) => v }
 
   private def send(chunk: String, msg: ByteBuffer): Unit =
     connection.writeAndRead(msg) match {
@@ -110,7 +110,7 @@ final class ForwardConsumer private[fluflu] (
   def consume(): Unit =
     if (msgQueue.isEmpty && errorQueue.isEmpty) ()
     else {
-      retrieveErrors().foreach((send _).tupled)
-      makeMessages(retrieveElements()).foreach((send _).tupled)
+      retrieveErrors().foreach { case (a, b) => send(a, b) }
+      makeMessages(retrieveElements()).foreach { case (a, b) => send(a, b) }
     }
 }
