@@ -13,10 +13,9 @@ jobs:
       - uses: actions/checkout@v4
       - id: set-scala-versions
         run: |
-          scala212=$(grep "scala2.12" project/Dependencies.scala | sed -E 's/.*= //')
           scala213=$(grep "scala2.13" project/Dependencies.scala | sed -E 's/.*= //')
           scala3=$(grep "scala3" project/Dependencies.scala | sed -E 's/.*= //')
-          echo "versions={\"scala\": [${scala212}, ${scala213}, ${scala3}]}" >> $GITHUB_OUTPUT
+          echo "versions={\"scala\": [${scala213}, ${scala3}]}" >> $GITHUB_OUTPUT
   build:
     needs:
       - setup

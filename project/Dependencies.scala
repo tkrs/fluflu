@@ -2,7 +2,6 @@ import sbt._
 
 object Dependencies {
   val Ver = new {
-    val `scala2.12` = "2.12.19"
     val `scala2.13` = "2.13.14"
     val scala3      = "3.4.2"
 
@@ -16,11 +15,6 @@ object Dependencies {
       val scalacheck = "3.2.18.0"
       val mockito    = "3.2.18.0"
     }
-  }
-
-  def is2_13(v: String): Boolean = CrossVersion.partialVersion(v) match {
-    case Some((2, 13)) => true
-    case _             => false
   }
 
   val Pkg = new {
