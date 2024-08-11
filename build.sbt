@@ -29,7 +29,6 @@ lazy val fluflu = project
         fork              := true,
         scalafmtOnCompile := true,
         scalafixOnCompile := true,
-        scalafixDependencies += OrganizeImports,
         semanticdbEnabled := true,
         semanticdbVersion := scalafixSemanticdb.revision
       )
