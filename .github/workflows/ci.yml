@@ -39,7 +39,7 @@ jobs:
       - run: sbt ++${{ matrix.scala }} examples/run
       - run: sbt ++${{ matrix.scala }} coverageReport
         if: ${{ !startsWith(matrix.scala, '3') }}
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         if: ${{ !startsWith(matrix.scala, '3') }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
