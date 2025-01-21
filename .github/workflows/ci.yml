@@ -35,6 +35,7 @@ jobs:
           java-version: "11"
           distribution: "temurin"
           cache: "sbt"
+      - uses: sbt/setup-sbt@v1
       - run: sbt ++${{ matrix.scala }} coverage test
       - run: sbt ++${{ matrix.scala }} examples/run
       - run: sbt ++${{ matrix.scala }} coverageReport
@@ -56,6 +57,7 @@ jobs:
           java-version: "11"
           distribution: "temurin"
           cache: "sbt"
+      - uses: sbt/setup-sbt@v1
       - run: sbt scalafmtCheckAll
   scalafix:
     runs-on: ubuntu-latest
@@ -66,4 +68,5 @@ jobs:
           java-version: "11"
           distribution: "temurin"
           cache: "sbt"
+      - uses: sbt/setup-sbt@v1
       - run: sbt "scalafixAll --check"
