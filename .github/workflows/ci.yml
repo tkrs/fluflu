@@ -5,23 +5,13 @@ on:
       - master
   pull_request:
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      scala-versions: ${{ steps.set-scala-versions.outputs.versions }}
-    steps:
-      - uses: actions/checkout@v4
-      - id: set-scala-versions
-        run: |
-          scala213=$(grep "scala2.13" project/Dependencies.scala | sed -E 's/.*= //')
-          scala3=$(grep "scala3" project/Dependencies.scala | sed -E 's/.*= //')
-          echo "versions={\"scala\": [${scala213}, ${scala3}]}" >> $GITHUB_OUTPUT
   build:
-    needs:
-      - setup
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.setup.outputs.scala-versions) }}
+      matrix:
+        versions:
+          - scala2
+          - scala3
     runs-on: ubuntu-latest
     services:
       fluentd:
@@ -30,24 +20,28 @@ jobs:
           - 24224:24224
     steps:
       - uses: actions/checkout@v4
+      - id: scala-version
+        run: |
+          scala_version=$(grep "${{ matrix.versions }}" project/Dependencies.scala | sed -E 's/.*= //')
+          echo "value=${scala_version}" >> $GITHUB_OUTPUT
       - uses: actions/setup-java@v4
         with:
           java-version: "11"
           distribution: "temurin"
           cache: "sbt"
       - uses: sbt/setup-sbt@v1
-      - run: sbt ++${{ matrix.scala }} coverage test
-      - run: sbt ++${{ matrix.scala }} examples/run
-      - run: sbt ++${{ matrix.scala }} coverageReport
-        if: ${{ !startsWith(matrix.scala, '3') }}
+      - run: sbt ++${{ steps.scala-version.outputs.value }} coverage test
+      - run: sbt ++${{ steps.scala-version.outputs.value }} examples/run
+      - run: sbt ++${{ steps.scala-version.outputs.value }} coverageReport
+        if: ${{ !startsWith(steps.scala-version.outputs.value, '3') }}
       - uses: codecov/codecov-action@v5
-        if: ${{ !startsWith(matrix.scala, '3') }}
+        if: ${{ !startsWith(steps.scala-version.outputs.value, '3') }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
           fail_ci_if_error: true
           verbose: true
-      - run: sbt ++${{ matrix.scala }} it/test
+      - run: sbt ++${{ steps.scala-version.outputs.value }} it/test
   scalafmt:
     runs-on: ubuntu-latest
     steps:
