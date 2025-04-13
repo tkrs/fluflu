@@ -17,7 +17,7 @@ lazy val fluflu = project
           )
         ),
         scalaVersion       := Ver.scala3,
-        crossScalaVersions := Seq(Ver.`scala2.13`, Ver.scala3),
+        crossScalaVersions := Seq(Ver.scala2, Ver.scala3),
         scalacOptions ++= {
           CrossVersion.partialVersion(scalaVersion.value) match {
             case Some((3, _)) => Nil
