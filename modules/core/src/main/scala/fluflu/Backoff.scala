@@ -1,6 +1,6 @@
 package fluflu
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.Random
 
 trait Backoff {

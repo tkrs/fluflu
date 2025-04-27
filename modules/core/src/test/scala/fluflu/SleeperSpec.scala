@@ -7,7 +7,7 @@ import java.time.ZoneId
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class SleeperSpec extends AnyFunSpec with Matchers {
   describe("giveup") {

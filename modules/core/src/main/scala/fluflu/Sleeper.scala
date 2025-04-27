@@ -4,7 +4,7 @@ import java.time.Clock
 import java.time.Instant
 
 import scala.concurrent.blocking
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 trait Sleeper {
   def giveUp: Boolean

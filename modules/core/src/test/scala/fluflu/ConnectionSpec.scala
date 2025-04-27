@@ -7,15 +7,15 @@ import java.nio.channels.SocketChannel
 import java.time.Clock
 
 import fluflu.Connection.SocketOptions
-import org.mockito.ArgumentMatchers.{eq => eq_, _}
-import org.mockito.Mockito._
+import org.mockito.ArgumentMatchers.{eq as eq_, *}
+import org.mockito.Mockito.*
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.stubbing.Answer
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class ConnectionSpec extends AnyFunSpec with MockitoSugar with Matchers {
   import Connection.ConnectionImpl

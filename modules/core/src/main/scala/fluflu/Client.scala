@@ -1,7 +1,7 @@
 package fluflu
 
 import java.time.Instant
-import java.util.concurrent._
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 
 import com.typesafe.scalalogging.LazyLogging
@@ -14,7 +14,7 @@ import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePack.PackerConfig
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 trait Client {
   final def emit[A: Packer](tag: String, record: A): Either[Exception, Unit] =

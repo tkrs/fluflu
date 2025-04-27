@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import _root_.mess.Fmt
 import _root_.mess.codec.Decoder
 import _root_.mess.codec.Encoder
-import _root_.mess.codec.semiauto._
+import _root_.mess.codec.semiauto.*
 import fluflu.msgpack.Ack
 import fluflu.msgpack.MOption
 import fluflu.msgpack.Packer
