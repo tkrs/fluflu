@@ -1,7 +1,7 @@
 package fluflu
 
 import java.io.IOException
-import java.lang.{Boolean => JBool}
+import java.lang.Boolean as JBool
 import java.net.NetworkInterface
 import java.net.SocketAddress
 import java.net.StandardSocketOptions

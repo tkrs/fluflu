@@ -18,17 +18,11 @@ lazy val fluflu = project
         ),
         scalaVersion       := Ver.scala3,
         crossScalaVersions := Seq(Ver.scala2, Ver.scala3),
-        scalacOptions ++= {
-          CrossVersion.partialVersion(scalaVersion.value) match {
-            case Some((3, _)) => Seq("-Wunused:imports")
-            case _            => compilerOptions ++ warnCompilerOptions
-          }
-        },
-        fork              := true,
-        scalafmtOnCompile := true,
-        scalafixOnCompile := true,
-        semanticdbEnabled := true,
-        semanticdbVersion := scalafixSemanticdb.revision
+        fork               := true,
+        scalafmtOnCompile  := true,
+        scalafixOnCompile  := true,
+        semanticdbEnabled  := true,
+        semanticdbVersion  := scalafixSemanticdb.revision
       )
     )
   )
@@ -46,6 +40,7 @@ lazy val core = project
     description := "fluflu core",
     moduleName  := "fluflu-core"
   )
+  .settings(sharedSettings)
   .settings(
     libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava, Pkg.scalaLogging),
     Test / javaOptions += "-Dnet.bytebuddy.experimental=true"
@@ -56,9 +51,10 @@ lazy val msgpack = project
   .in(file("modules/msgpack"))
   .settings(
     description := "fluflu msgpack",
-    moduleName  := "fluflu-msgpack",
-    libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava)
+    moduleName  := "fluflu-msgpack"
   )
+  .settings(sharedSettings)
+  .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava))
 
 lazy val `msgpack-mess` = project
   .in(file("modules/msgpack-mess"))
@@ -66,6 +62,7 @@ lazy val `msgpack-mess` = project
     description := "fluflu msgpack-mess",
     moduleName  := "fluflu-msgpack-mess"
   )
+  .settings(sharedSettings)
   .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.mess))
   .dependsOn(msgpack % "compile->compile;test->test")
 
@@ -76,6 +73,7 @@ lazy val examples = project
     description := "fluflu examples",
     moduleName  := "fluflu-examples"
   )
+  .settings(sharedSettings)
   .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.logbackClassic))
   .settings(coverageEnabled := false)
   .dependsOn(core, `msgpack-mess`)
@@ -83,23 +81,35 @@ lazy val examples = project
 lazy val it = project
   .in(file("modules/it"))
   .settings(publish / skip := true)
+  .settings(sharedSettings)
   .settings(libraryDependencies ++= Pkg.forTest)
   .dependsOn(core, msgpack % "test->test", `msgpack-mess`)
 
 lazy val compilerOptions = Seq(
   "-deprecation",
   "-encoding",
-  "UTF-8",
-  "-unchecked",
+  "utf-8",
+  "-explaintypes",
   "-feature",
-  "-language:_"
+  "-language:higherKinds",
+  "-unchecked"
 )
 
 lazy val warnCompilerOptions = Seq(
-  "-Xlint",
+  // "-Xlint",
+  "-Xcheckinit",
   // "-Xfatal-warnings",
-  "-Ywarn-extra-implicit",
   "-Wunused:_",
+  "-Ywarn-extra-implicit",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen"
+)
+
+lazy val sharedSettings = Seq(
+  scalacOptions ++= compilerOptions ++ {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((3, _)) => Seq("-Wunused:imports")
+      case _            => compilerOptions ++ warnCompilerOptions ++ Seq("-Xsource:3")
+    }
+  }
 )

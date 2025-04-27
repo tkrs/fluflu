@@ -1,7 +1,7 @@
 package fluflu
 
 import java.nio.ByteBuffer
-import java.nio.charset.StandardCharsets._
+import java.nio.charset.StandardCharsets.*
 import java.util
 import java.util.Base64
 import java.util.UUID

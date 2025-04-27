@@ -4,7 +4,7 @@ import java.util.Random
 
 import org.scalatest.funspec.AnyFunSpec
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 class BackoffSpec extends AnyFunSpec {
   class MyRandom extends Random {
