@@ -20,7 +20,7 @@ lazy val fluflu = project
         crossScalaVersions := Seq(Ver.scala2, Ver.scala3),
         scalacOptions ++= {
           CrossVersion.partialVersion(scalaVersion.value) match {
-            case Some((3, _)) => Nil
+            case Some((3, _)) => Seq("-Wunused:imports")
             case _            => compilerOptions ++ warnCompilerOptions
           }
         },
@@ -99,7 +99,7 @@ lazy val warnCompilerOptions = Seq(
   "-Xlint",
   // "-Xfatal-warnings",
   "-Ywarn-extra-implicit",
-  "-Ywarn-unused:_",
+  "-Wunused:_",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen"
 )
