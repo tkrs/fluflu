@@ -18,24 +18,6 @@ object Packer {
       packer.packString(a)
   }
 
-  implicit def packEvent[A](implicit
-    S: Packer[String],
-    A: Packer[A],
-    T: Packer[Instant],
-    M: Packer[MOption]
-  ): Packer[(String, A, Instant, Option[MOption])] =
-    new Packer[(String, A, Instant, Option[MOption])] {
-      def apply(v: (String, A, Instant, Option[MOption]), packer: MessagePacker): Unit = {
-        val (s, a, t, o) = v
-        val sz           = if (o.isDefined) 4 else 3
-        packer.packArrayHeader(sz)
-        S(s, packer)
-        T(t, packer)
-        A(a, packer)
-        o.foreach(M(_, packer))
-      }
-    }
-
   implicit def packEntry[A](implicit
     A: Packer[A],
     T: Packer[Instant]
