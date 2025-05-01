@@ -1,3 +1,4 @@
+import java.nio.file.Files
 import Dependencies._
 
 lazy val fluflu = project
@@ -5,6 +6,7 @@ lazy val fluflu = project
   .settings(
     inThisBuild(
       Seq(
+        version      := Files.readString(file("version.txt").toPath).trim,
         organization := "com.github.tkrs",
         homepage     := Some(url("https://github.com/tkrs/fluflu")),
         licenses     := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
