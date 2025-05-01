@@ -1,15 +1,15 @@
 package examples
 
 import java.net.InetSocketAddress
-import java.time._
+import java.time.*
 
 import com.typesafe.scalalogging.LazyLogging
-import fluflu._
-import fluflu.msgpack.instances.mess._
+import fluflu.*
+import fluflu.msgpack.instances.mess.*
 import mess.Fmt
 import mess.codec.Encoder
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.Random
 
 /** sbt "examples/runMain examples.Main"
