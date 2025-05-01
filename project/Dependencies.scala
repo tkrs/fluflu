@@ -13,7 +13,7 @@ object Dependencies {
     val scalatest = "3.2.19"
     val scalatestplus = new {
       val scalacheck = "3.2.19.0"
-      val mockito    = "3.2.18.0"
+      val mockito    = "3.2.19.0"
     }
   }
 
@@ -25,7 +25,7 @@ object Dependencies {
 
     lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest
     lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-18" % Ver.scalatestplus.scalacheck
-    lazy val mockito    = "org.scalatestplus" %% "mockito-5-10"    % Ver.scalatestplus.mockito
+    lazy val mockito    = "org.scalatestplus" %% "mockito-5-12"    % Ver.scalatestplus.mockito
 
     lazy val forTest = Seq(scalatest, scalacheck, mockito)
   }
