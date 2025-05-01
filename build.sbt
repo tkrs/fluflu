@@ -33,8 +33,8 @@ lazy val fluflu = project
     Compile / console / scalacOptions += "-Yrepl-class-based"
   )
   .settings(publish / skip := true)
-  .aggregate(core, msgpack, `msgpack-mess`)
-  .dependsOn(core, msgpack, `msgpack-mess`)
+  .aggregate(core)
+  .dependsOn(core)
 
 lazy val core = project
   .in(file("modules/core"))
@@ -44,29 +44,16 @@ lazy val core = project
   )
   .settings(sharedSettings)
   .settings(
-    libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava, Pkg.scalaLogging),
+    libraryDependencies ++= Seq(
+      Pkg.mess,
+      Pkg.msgpackJava,
+      Pkg.scalaLogging,
+      Pkg.scalatest,
+      Pkg.scalacheck,
+      Pkg.mockito
+    ),
     Test / javaOptions += "-Dnet.bytebuddy.experimental=true"
   )
-  .dependsOn(msgpack % "compile->compile;test->test")
-
-lazy val msgpack = project
-  .in(file("modules/msgpack"))
-  .settings(
-    description := "fluflu msgpack",
-    moduleName  := "fluflu-msgpack"
-  )
-  .settings(sharedSettings)
-  .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.msgpackJava))
-
-lazy val `msgpack-mess` = project
-  .in(file("modules/msgpack-mess"))
-  .settings(
-    description := "fluflu msgpack-mess",
-    moduleName  := "fluflu-msgpack-mess"
-  )
-  .settings(sharedSettings)
-  .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.mess))
-  .dependsOn(msgpack % "compile->compile;test->test")
 
 lazy val examples = project
   .in(file("modules/examples"))
@@ -76,16 +63,22 @@ lazy val examples = project
     moduleName  := "fluflu-examples"
   )
   .settings(sharedSettings)
-  .settings(libraryDependencies ++= Pkg.forTest.map(_ % Test) ++ Seq(Pkg.logbackClassic))
+  .settings(libraryDependencies ++= Seq(Pkg.logbackClassic))
   .settings(coverageEnabled := false)
-  .dependsOn(core, `msgpack-mess`)
+  .dependsOn(core)
 
 lazy val it = project
   .in(file("modules/it"))
   .settings(publish / skip := true)
   .settings(sharedSettings)
-  .settings(libraryDependencies ++= Pkg.forTest)
-  .dependsOn(core, msgpack % "test->test", `msgpack-mess`)
+  .settings(
+    libraryDependencies ++= Seq(
+      Pkg.scalatest,
+      Pkg.scalacheck,
+      Pkg.mockito
+    )
+  )
+  .dependsOn(core % "test->test")
 
 lazy val compilerOptions = Seq(
   "-deprecation",

@@ -23,10 +23,8 @@ object Dependencies {
     lazy val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % Ver.scalaLogging
     lazy val logbackClassic = "ch.qos.logback"              % "logback-classic" % Ver.logback
 
-    lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest
-    lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-18" % Ver.scalatestplus.scalacheck
-    lazy val mockito    = "org.scalatestplus" %% "mockito-5-12"    % Ver.scalatestplus.mockito
-
-    lazy val forTest = Seq(scalatest, scalacheck, mockito)
+    lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest                % Test
+    lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-18" % Ver.scalatestplus.scalacheck % Test
+    lazy val mockito    = "org.scalatestplus" %% "mockito-5-12"    % Ver.scalatestplus.mockito    % Test
   }
 }
