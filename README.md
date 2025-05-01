@@ -13,10 +13,7 @@ Yet another fluentd logger for scala
 Add to your `build.sbt`
 
 ```scala
-libraryDependencies ++= Seq(
-  "fluflu-core",
-  "fluflu-msgpack-mess"
-).map(m => "com.github.tkrs" %% m % "x.y.z")
+libraryDependencies += "com.github.tkrs" %% "fluflu-core" % "x.y.z"
 ```
 
 And, so look at this [example](https://github.com/tkrs/fluflu/tree/master/modules/examples/src/main/scala)
