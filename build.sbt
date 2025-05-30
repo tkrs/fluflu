@@ -10,7 +10,7 @@ lazy val fluflu = project
         organization := "com.github.tkrs",
         homepage     := Some(url("https://github.com/tkrs/fluflu")),
         licenses     := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
-        developers := List(
+        developers   := List(
           Developer(
             "tkrs",
             "Takeru Sato",
