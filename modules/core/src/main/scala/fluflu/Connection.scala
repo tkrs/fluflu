@@ -126,7 +126,7 @@ object Connection {
 
       Try(loop(0)) match {
         case v @ Success(_) => v
-        case Failure(e0) =>
+        case Failure(e0)    =>
           if (sleeper.giveUp) Failure(e0)
           else {
             sleeper.sleep(retries)

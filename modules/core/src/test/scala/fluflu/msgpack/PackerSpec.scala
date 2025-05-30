@@ -26,7 +26,7 @@ class PackerSpec extends AnyFunSpec with MsgpackHelper {
 
   describe("Packer[(A, Instant)]") {
     it("should be packed") {
-      val expected = x"92 11 10"
+      val expected                              = x"92 11 10"
       implicit val packInstant: Packer[Instant] = new Packer[Instant] {
         def apply(a: Instant, packer: MessagePacker): Unit =
           packer.packByte(0x11.toByte)
