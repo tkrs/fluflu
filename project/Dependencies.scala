@@ -3,7 +3,7 @@ import sbt._
 object Dependencies {
   val Ver = new {
     val scala2 = "2.13.16"
-    val scala3 = "3.7.1"
+    val scala3 = "3.7.4"
 
     val msgpackJava  = "0.9.9"
     val mess         = "0.3.6"
