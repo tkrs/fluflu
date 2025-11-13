@@ -6,7 +6,6 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 
 import fluflu.msgpack.*
-import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePacker
 import org.scalatest.BeforeAndAfterEach
@@ -16,7 +15,7 @@ import scala.util.Success
 import scala.util.Try
 
 class ForwardConsumerSpec extends AnyFunSpec with BeforeAndAfterEach with MsgpackHelper {
-  type Elem = (String, MessageBufferPacker => Unit)
+  type Elem = (String, ByteBuffer)
 
   var scheduler: ScheduledExecutorService = _
   var connection: Connection              = _
@@ -43,15 +42,27 @@ class ForwardConsumerSpec extends AnyFunSpec with BeforeAndAfterEach with Msgpac
 
   describe("consume") {
     it("should consume messages") {
-      val queue = new ArrayBlockingQueue[Elem](6)
-      (1 to 6).foreach(_ => queue.offer(("tag", (m: MessageBufferPacker) => m.packNil())))
+      val queue  = new ArrayBlockingQueue[Elem](6)
+      val packer = MessagePack.DEFAULT_PACKER_CONFIG.newBufferPacker()
+      (1 to 6).foreach { _ =>
+        packer.packNil()
+        val buffer = packer.toMessageBuffer.sliceAsByteBuffer()
+        queue.offer(("tag", buffer))
+        packer.clear()
+      }
       val consumer = new ForwardConsumer(10, connection, queue)
       consumer.consume()
       assert(queue.size() === 0)
     }
     it("should consume max-pulls messages") {
-      val queue = new ArrayBlockingQueue[Elem](6)
-      (1 to 6).foreach(_ => queue.offer(("tag", (m: MessageBufferPacker) => m.packNil())))
+      val queue  = new ArrayBlockingQueue[Elem](6)
+      val packer = MessagePack.DEFAULT_PACKER_CONFIG.newBufferPacker()
+      (1 to 6).foreach { _ =>
+        packer.packNil()
+        val buffer = packer.toMessageBuffer.sliceAsByteBuffer()
+        queue.offer(("tag", buffer))
+        packer.clear()
+      }
       val consumer = new ForwardConsumer(5, connection, queue)
       consumer.consume()
       assert(queue.size() === 1)
@@ -60,34 +71,43 @@ class ForwardConsumerSpec extends AnyFunSpec with BeforeAndAfterEach with Msgpac
 
   describe("retrieveElements") {
     it("should create Map with tag as key") {
-      val queue = new ArrayBlockingQueue[Elem](3)
-      queue.offer(("a", (m: MessageBufferPacker) => m.writePayload(Array(1.toByte))))
-      queue.offer(("b", (m: MessageBufferPacker) => m.writePayload(Array(2.toByte))))
-      queue.offer(("b", (m: MessageBufferPacker) => m.writePayload(Array(3.toByte))))
+      val queue  = new ArrayBlockingQueue[Elem](3)
+      val packer = MessagePack.DEFAULT_PACKER_CONFIG.newBufferPacker()
+
+      // Create buffer for tag "a"
+      packer.writePayload(Array(1.toByte))
+      val bufferA = packer.toMessageBuffer.sliceAsByteBuffer()
+      queue.offer(("a", bufferA))
+      packer.clear()
+
+      // Create buffer for tag "b" - first element
+      packer.writePayload(Array(2.toByte))
+      val bufferB1 = packer.toMessageBuffer.sliceAsByteBuffer()
+      queue.offer(("b", bufferB1))
+      packer.clear()
+
+      // Create buffer for tag "b" - second element
+      packer.writePayload(Array(3.toByte))
+      val bufferB2 = packer.toMessageBuffer.sliceAsByteBuffer()
+      queue.offer(("b", bufferB2))
+      packer.clear()
+
       val consumer = new ForwardConsumer(5, connection, queue)
       val m        = consumer.retrieveElements()
-
-      val p = MessagePack.DEFAULT_PACKER_CONFIG.newBufferPacker()
 
       {
         val a = m("a")
         assert(a.size === 1)
         val List(aa) = a.toList
-        aa(p)
-        assert(p.toByteArray === Array(1.toByte))
+        assert(aa.array() === Array(1.toByte))
       }
-
-      p.clear()
 
       {
         val b = m("b")
         assert(b.size === 2)
         val List(bb, bbb) = b.toList
-        bb(p)
-        assert(p.toByteArray === Array(2.toByte))
-        p.clear()
-        bbb(p)
-        assert(p.toByteArray === Array(3.toByte))
+        assert(bb.array() === Array(2.toByte))
+        assert(bbb.array() === Array(3.toByte))
       }
     }
   }

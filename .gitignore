@@ -21,3 +21,6 @@ project/plugins/project/
 *.iml
 
 .wercker/
+
+# Build tools (should be installed separately)
+sbt/

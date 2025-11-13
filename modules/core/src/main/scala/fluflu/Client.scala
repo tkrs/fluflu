@@ -1,5 +1,6 @@
 package fluflu
 
+import java.nio.ByteBuffer
 import java.time.Instant
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -10,11 +11,11 @@ import fluflu.msgpack.Ack
 import fluflu.msgpack.MOption
 import fluflu.msgpack.Packer
 import fluflu.msgpack.Unpacker
-import org.msgpack.core.MessageBufferPacker
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessagePack.PackerConfig
 
 import scala.concurrent.duration.*
+import scala.util.control.NonFatal
 
 trait Client {
   final def emit[A: Packer](tag: String, record: A): Either[Exception, Unit] =
@@ -48,7 +49,7 @@ object Client {
         Executors.newScheduledThreadPool(1, Utils.namedThreadFactory(name))
 
       private val running  = new AtomicBoolean()
-      private val queue    = new ConcurrentLinkedQueue[(String, MessageBufferPacker => Unit)]
+      private val queue    = new ConcurrentLinkedQueue[(String, ByteBuffer)]
       private val consumer = new ForwardConsumer(maximumPulls, connection, queue, packerConfig)
       private val worker   = scheduler("fluflu-scheduler")
 
@@ -76,12 +77,21 @@ object Client {
         if (closed || worker.isShutdown) Left(new Exception("Client executor was already shutdown"))
         else {
           logger.trace(s"Queueing message: ${(tag, record, time)}")
-          val fa = (p: MessageBufferPacker) => Packer[(A, Instant)].apply((record, time), p)
-          if (queue.offer(tag -> fa))
-            if (!running.get && running.compareAndSet(false, true)) Worker.start()
-            else Right(())
-          else
-            Left(new Exception("The queue no space is currently available"))
+          // Encode the data before enqueuing
+          try {
+            val packer = packerConfig.newBufferPacker()
+            try {
+              Packer[(A, Instant)].apply((record, time), packer)
+              val encodedData = packer.toMessageBuffer.sliceAsByteBuffer()
+              if (queue.offer(tag -> encodedData))
+                if (!running.get && running.compareAndSet(false, true)) Worker.start()
+                else Right(())
+              else
+                Left(new Exception("The queue no space is currently available"))
+            } finally packer.close()
+          } catch {
+            case NonFatal(e) => Left(new Exception(s"Failed to encode message: $e"))
+          }
         }
 
       def close(): Unit =
