@@ -6,7 +6,7 @@ object Dependencies {
     val scala3 = "3.7.4"
 
     val msgpackJava  = "0.9.9"
-    val mess         = "0.3.6"
+    val mess         = "1.0.2"
     val scalaLogging = "3.9.6"
     val logback      = "1.2.3"
 
