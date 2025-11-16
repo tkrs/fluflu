@@ -33,7 +33,7 @@ trait Consumer {
 final class ForwardConsumer private[fluflu] (
   maximumPulls: Int,
   connection: Connection,
-  val msgQueue: util.Queue[(String, MessageBufferPacker => Unit)],
+  val msgQueue: util.Queue[(String, ByteBuffer)],
   packerConfig: PackerConfig = MessagePack.DEFAULT_PACKER_CONFIG
 )(implicit
   PS: Packer[String],
@@ -49,27 +49,29 @@ final class ForwardConsumer private[fluflu] (
 
   private val b64e = Base64.getEncoder
 
-  type E = (String, MessageBufferPacker => Unit)
+  type E = (String, ByteBuffer)
 
-  def retrieveElements(): Map[String, ListBuffer[MessageBufferPacker => Unit]] =
+  def retrieveElements(): Map[String, ListBuffer[ByteBuffer]] =
     Iterator
       .continually(msgQueue.poll())
       .take(maximumPulls)
       .takeWhile(_ != null)
-      .foldLeft(mutable.Map.empty[String, ListBuffer[MessageBufferPacker => Unit]]) { case (acc, (k, f)) =>
-        acc += k -> (acc.getOrElse(k, ListBuffer.empty) += f)
+      .foldLeft(mutable.Map.empty[String, ListBuffer[ByteBuffer]]) { case (acc, (k, buffer)) =>
+        acc += k -> (acc.getOrElse(k, ListBuffer.empty) += buffer)
       }
       .toMap
 
-  def makeMessage(s: String, fs: ListBuffer[MessageBufferPacker => Unit]): Option[(String, ByteBuffer)] = {
+  def makeMessage(s: String, buffers: ListBuffer[ByteBuffer]): Option[(String, ByteBuffer)] = {
     val packer = mPacker.get()
     try {
       val chunk = b64e.encodeToString(UUID.randomUUID().toString.getBytes(UTF_8))
       logger.trace(s"tag: $s, chunk: $chunk")
       packer.packArrayHeader(3)
       PS.apply(s, packer)
-      packer.packArrayHeader(fs.size)
-      fs.foreach(_(packer))
+      packer.packArrayHeader(buffers.size)
+      buffers.foreach { buffer =>
+        packer.writePayload(buffer.array(), buffer.position(), buffer.remaining())
+      }
       PM.apply(MOption(chunk = Some(chunk)), packer)
       Some(chunk -> packer.toMessageBuffer.sliceAsByteBuffer())
     } catch {
@@ -79,7 +81,7 @@ final class ForwardConsumer private[fluflu] (
     } finally packer.clear()
   }
 
-  def makeMessages(m: Map[String, ListBuffer[MessageBufferPacker => Unit]]): Iterator[(String, ByteBuffer)] =
+  def makeMessages(m: Map[String, ListBuffer[ByteBuffer]]): Iterator[(String, ByteBuffer)] =
     m.iterator.map { case (a, b) => makeMessage(a, b) }.collect { case Some(v) => v }
 
   private def send(chunk: String, msg: ByteBuffer): Unit =
