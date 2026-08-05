@@ -12,7 +12,7 @@ object Dependencies {
 
     val scalatest     = "3.2.19"
     val scalatestplus = new {
-      val scalacheck = "3.2.19.0"
+      val scalacheck = "3.2.20.0"
       val mockito    = "3.2.19.0"
     }
   }
@@ -24,7 +24,7 @@ object Dependencies {
     lazy val logbackClassic = "ch.qos.logback"              % "logback-classic" % Ver.logback
 
     lazy val scalatest  = "org.scalatest"     %% "scalatest"       % Ver.scalatest                % Test
-    lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-18" % Ver.scalatestplus.scalacheck % Test
+    lazy val scalacheck = "org.scalatestplus" %% "scalacheck-1-19" % Ver.scalatestplus.scalacheck % Test
     lazy val mockito    = "org.scalatestplus" %% "mockito-5-12"    % Ver.scalatestplus.mockito    % Test
   }
 }
